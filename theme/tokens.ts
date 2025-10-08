@@ -9,4 +9,5 @@ export const COLORS = {
   TEXT_PRIMARY: "#1B4332",
   TEXT_SECONDARY: "#5F6F65",
   INPUT_BG: "#EEF5F0",
+  WHITE: "#FFFFFF"
 } as const;

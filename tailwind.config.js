@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const tokens = require("./theme/tokens.json");
+const tokens = require("./theme/tokens.ts");
 
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
