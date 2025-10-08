@@ -1,9 +1,13 @@
+// app/index.tsx
+import { Link } from "expo-router";
 import { Text, View } from "react-native";
 
-export default function Index() {
+export default function Landing() {
   return (
-    <View className="flex-1 items-center justify-center">
-      <Text className="text-xl font-bold color-blue-500">Hello World</Text>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <Text>Welcome to Organicy 🎉</Text>
+      <Link href="/(auth)/sign-in">Đăng nhập</Link>
+      <Link href="/(tabs)">Vào ứng dụng</Link>
     </View>
   );
 }
