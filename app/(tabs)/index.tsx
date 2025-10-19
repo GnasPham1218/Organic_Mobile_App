@@ -1,35 +1,67 @@
+// HomeScreen.tsx đã được cải thiện
+
+import React, { useCallback, useState } from "react";
+import { ScrollView, View } from "react-native";
+
+// Giả sử các component này đã được tạo
+import CartDropdown from "@/components/features/cart/CartDropdown";
+import ProductHorizontalGrid from "@/components/features/product/ProductHorizontalGrid";
 import HomeHeader from "@/components/home/HomeHeader";
 import SearchBar from "@/components/home/SearchBar";
 import BannerSlider from "@/components/ui/BannerSlider";
-import React, { useCallback, useState } from "react";
-import { ScrollView, View } from "react-native";
+import SectionHeader from "@/components/ui/SectionHeader"; // Component mới
+// 1. Kết nối với CartContext
+import { useCart } from "@/context/CartContext";
+
+// 2. Dữ liệu được import từ file riêng
+import { mockBanners, mockProducts } from "@/data/mockData";
 
 const HomeScreen = () => {
   const [q, setQ] = useState("");
 
+  // 3. Lấy state và hàm từ context
+  const { cart, addToCart } = useCart();
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const [isCartVisible, setIsCartVisible] = useState(false);
   const handleSearchSubmit = useCallback(() => {
     const s = q.trim();
     if (!s) return;
-    console.log("search:", s);
+    console.log("Searching for:", s);
+    // Logic điều hướng đến trang tìm kiếm...
   }, [q]);
+  const handleToggleCartVisibility = () => {
+    setIsCartVisible(!isCartVisible);
+  };
+  const handleAddToCart = useCallback(
+    (productId: string) => {
+      const productToAdd = mockProducts.find((p) => p.id === productId);
+      if (productToAdd) {
+        // SỬA LẠI: Truyền thẳng productToAdd vào
+        addToCart(productToAdd);
+        console.log("Added to cart:", productToAdd.name);
+      }
+    },
+    [addToCart]
+  );
 
   return (
     <ScrollView
       stickyHeaderIndices={[0]}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
+      className="bg-gray-50" // Thêm màu nền cho toàn bộ scrollview
     >
-      {/* Nhóm sticky: Header + Search */}
-      <View className="bg-white">
-        {/* ✅ nền trắng bên ngoài search */}
+      {/* Sticky Header Section */}
+      <View className="bg-white shadow-sm">
         <HomeHeader
-          cartItemCount={2}
-          messageCount={1}
-          onCartPress={() => console.log("go cart")}
-          onMessagePress={() => console.log("go messages")}
+          // Dữ liệu từ context
+          cartItemCount={cartItemCount}
+          messageCount={1} // Sẽ thay bằng state message sau
+          onCartPress={handleToggleCartVisibility}
+          onMessagePress={() => console.log("Go to messages")}
           logoSource={require("@/assets/logo_organic.png")}
         />
-        <View className="px-1 py-2 bg-white">
+        <View className="px-3 pt-1 pb-3">
           <SearchBar
             value={q}
             onChangeText={setQ}
@@ -38,24 +70,44 @@ const HomeScreen = () => {
         </View>
       </View>
 
-      {/* Nội dung cuộn */}
+      {/* Main Content */}
+      <View className="space-y-4">
+        {/* Banner */}
+        <View className="px-3 mt-3">
+          <BannerSlider
+            images={mockBanners}
+            height={170}
+            autoPlay
+            loop
+            onPressItem={(i) => console.log("Tapped banner", i)}
+          />
+        </View>
 
-      <View className="px-3">
-        <BannerSlider 
-          images={[
-            require("@/assets/banners/b2.jpg"),
-            require("@/assets/banners/b2.jpg"),
-            require("@/assets/banners/b2.jpg"),
-          ]}
-          height={170}
-          borderRadius={45}
-          autoPlay
-          autoPlayInterval={3500}
-          loop
-          resizeMode="contain"  
-          onPressItem={(i) => console.log("tap banner", i)}
-        />
+        {/* Today's Deals Section */}
+        <View>
+          <SectionHeader
+            title="Ưu đãi hôm nay"
+            onSeeAllPress={() => console.log("Go to all deals page")}
+          />
+          <ProductHorizontalGrid
+            products={mockProducts}
+            rowsPerColumn={2}
+            cardWidth={180}
+            onPressProduct={(id) => console.log("Go to product detail", id)}
+            onAddToCart={handleAddToCart} // Kết nối hàm add to cart
+          />
+        </View>
+
+        {/* Có thể thêm các section khác ở đây */}
+        {/* <SectionHeader title="Sản phẩm bán chạy" ... /> */}
+        {/* <ProductHorizontalGrid ... /> */}
+
+        <View className="h-6" />
       </View>
+      <CartDropdown
+        visible={isCartVisible} // <-- Nối "công tắc" vào đây
+        onClose={() => setIsCartVisible(false)} // Để có thể đóng khi nhấn ra ngoài
+      />
     </ScrollView>
   );
 };

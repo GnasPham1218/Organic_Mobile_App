@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const tokens = require("./theme/tokens.ts");
+const { COLORS } = require("./theme/tokens.js");
 
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
@@ -7,7 +7,7 @@ module.exports = {
   darkMode: "media", // hoặc "class" nếu muốn tự toggle
   theme: {
     extend: {
-      colors: tokens.colors,
+      colors: COLORS,
     },
   },
   plugins: [],

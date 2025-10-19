@@ -1,11 +1,6 @@
-import React from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  View,
-} from "react-native";
 import { useRouter } from "expo-router";
+import React from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 import AuthHeader from "@/components/auth/AuthHeader";
 import AuthSwitchLink from "@/components/auth/AuthSwitchLink";

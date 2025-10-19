@@ -1,28 +1,10 @@
+// components/HomeHeader.tsx
 import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { COLORS, ICON_SIZE } from "../theme/tokens";
 
-// ==================== THEME (Organic) ====================
-const ICON_SIZE = { MAIN: 24, SEARCH: 16, CLEAR: 16 } as const;
-
-const COLORS = {
-  PRIMARY: "#2E7D32",
-  ACCENT: "#F59E0B",
-  BACKGROUND: "#FAFAF6",
-  BORDER: "#E7ECE9",
-  TEXT_PRIMARY: "#1B4332",
-  TEXT_SECONDARY: "#5F6F65",
-  INPUT_BG: "#EEF5F0",
-} as const;
-
-// ==================== TYPES ====================
+// TYPES
 interface HomeHeaderProps {
   cartItemCount?: number;
   messageCount?: number;
@@ -31,25 +13,8 @@ interface HomeHeaderProps {
   onMessagePress?: () => void;
 }
 
-interface IconButtonProps {
-  icon: keyof typeof FontAwesome.glyphMap;
-  onPress: () => void;
-  color?: string;
-  size?: number;
-  badge?: number | boolean;
-  badgeContent?: string | number;
-  testID?: string;
-}
-
-interface SearchBarProps {
-  value: string;
-  onChangeText: (text: string) => void;
-  onSubmit: () => void;
-  placeholder?: string;
-}
-
-// ==================== SUB-COMPONENTS ====================
-const IconButton: React.FC<IconButtonProps> = ({
+// SUB-COMPONENTS
+const IconButton: React.FC<any> = ({
   icon,
   onPress,
   color = COLORS.TEXT_PRIMARY,
@@ -60,34 +25,32 @@ const IconButton: React.FC<IconButtonProps> = ({
 }) => {
   const showBadge = badge === true || (typeof badge === "number" && badge > 0);
   const displayContent = badgeContent !== undefined ? String(badgeContent) : "";
-
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="p-2 relative"
+      className="relative p-2"
       activeOpacity={0.7}
-      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       testID={testID}
     >
       <FontAwesome name={icon} size={size} color={color} />
       {showBadge && (
         <View
-          className="absolute top-1 right-1 rounded-full z-10 items-center justify-center"
-          style={[
-            { backgroundColor: COLORS.ACCENT },
-            displayContent ? styles.badgeLg : styles.badgeSm,
-          ]}
+          className={`absolute top-1 right-1 z-10 items-center justify-center rounded-full bg-ACCENT ${
+            displayContent ? "h-4 w-4" : "h-2 w-2"
+          }`}
         >
-          {displayContent ? (
-            <Text style={styles.badgeText}>{displayContent}</Text>
-          ) : null}
+          {displayContent && (
+            <Text className="text-[10px] font-bold leading-[10px] text-WHITE">
+              {displayContent}
+            </Text>
+          )}
         </View>
       )}
     </TouchableOpacity>
   );
 };
 
-const SearchBar: React.FC<SearchBarProps> = ({
+const SearchBar: React.FC<any> = ({
   value,
   onChangeText,
   onSubmit,
@@ -96,11 +59,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleClear = useCallback(() => {
     onChangeText("");
   }, [onChangeText]);
-
   return (
     <View
-      className="flex-1 flex-row items-center rounded-2xl py-2.5 px-4 mx-3"
-      style={{ backgroundColor: COLORS.INPUT_BG }}
+      className="mr-3 flex-1 flex-row items-center rounded-2xl bg-INPUT_BG py-2.5 px-4"
     >
       <FontAwesome
         name="search"
@@ -108,16 +69,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
         color={COLORS.TEXT_SECONDARY}
       />
       <TextInput
-        className="flex-1 ml-2 text-sm"
-        style={[styles.searchInput, { color: COLORS.TEXT_PRIMARY }]}
+        className="ml-2 flex-1 py-0 text-sm text-TEXT_PRIMARY h-[30px]"
         placeholder={placeholder}
         placeholderTextColor={COLORS.TEXT_SECONDARY}
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmit}
         returnKeyType="search"
-        autoCapitalize="none"
-        autoCorrect={false}
         testID="search-input"
       />
       {value.length > 0 && (
@@ -125,7 +83,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
           onPress={handleClear}
           className="ml-2 p-1"
           activeOpacity={0.7}
-          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           testID="clear-search-button"
         >
           <FontAwesome
@@ -139,7 +96,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   );
 };
 
-// ==================== MAIN COMPONENT ====================
+// MAIN COMPONENT
 const HomeHeader: React.FC<HomeHeaderProps> = ({
   cartItemCount = 0,
   messageCount = 0,
@@ -147,87 +104,56 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   onCartPress,
   onMessagePress,
 }) => {
-  const router = useRouter();
   const [searchText, setSearchText] = useState<string>("");
 
   const handleSearchSubmit = useCallback(() => {
-    const trimmedText = searchText.trim();
-    if (trimmedText) {
-      if (onSearchSubmit) onSearchSubmit(trimmedText);
-      // else router.push(`/search?q=${encodeURIComponent(trimmedText)}`);
-    }
+    if (onSearchSubmit) onSearchSubmit(searchText.trim());
   }, [searchText, onSearchSubmit]);
 
   const handleMessagePress = useCallback(() => {
     if (onMessagePress) onMessagePress();
-    // else router.push('/messages');
   }, [onMessagePress]);
 
   const handleCartPress = useCallback(() => {
     if (onCartPress) onCartPress();
-    // else router.push('/cart');
   }, [onCartPress]);
 
-  const handleSearchTextChange = useCallback(
-    (text: string) => setSearchText(text),
-    []
-  );
-
   return (
-    <View
-      className="border-b"
-      style={{ backgroundColor: COLORS.BACKGROUND, borderColor: COLORS.BORDER }}
-    >
+    <View className="border-b border-BORDER bg-BACKGROUND">
       <View className="flex-row items-center justify-between px-4 py-3">
-        {/* Search only (no Drawer) */}
         <SearchBar
           value={searchText}
-          onChangeText={handleSearchTextChange}
+          onChangeText={setSearchText}
           onSubmit={handleSearchSubmit}
         />
-
-        {/* Right actions */}
-        <IconButton
-          icon="shopping-cart"
-          onPress={handleCartPress}
-          color={COLORS.PRIMARY}
-          badge={cartItemCount > 0}
-          badgeContent={
-            cartItemCount > 99
-              ? "99+"
-              : cartItemCount > 0
+        <View className="flex-row items-center">
+          <IconButton
+            icon="shopping-cart"
+            onPress={handleCartPress}
+            color={COLORS.PRIMARY}
+            badge={cartItemCount > 0}
+            badgeContent={
+              cartItemCount > 99
+                ? "99+"
+                : cartItemCount > 0
                 ? cartItemCount
                 : undefined
-          }
-          testID="cart-button"
-        />
-        <IconButton
-          icon="commenting-o"
-          onPress={handleMessagePress}
-          color={COLORS.TEXT_PRIMARY}
-          badge={messageCount > 0}
-          testID="messages-button"
-        />
+            }
+            testID="cart-button"
+          />
+          <IconButton
+            icon="commenting-o"
+            onPress={handleMessagePress}
+            color={COLORS.TEXT_PRIMARY}
+            badge={messageCount > 0}
+            testID="messages-button"
+          />
+        </View>
       </View>
     </View>
   );
 };
 
-// ==================== STYLES ====================
-const styles = StyleSheet.create({
-  searchInput: {
-    height: 30,
-    paddingVertical: 0,
-  },
-  badgeSm: { width: 8, height: 8 },
-  badgeLg: { width: 16, height: 16 },
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "700",
-    lineHeight: 10,
-  },
-});
+
 
 export default HomeHeader;
-export type { HomeHeaderProps, IconButtonProps, SearchBarProps };

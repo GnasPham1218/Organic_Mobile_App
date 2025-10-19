@@ -5,13 +5,13 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
 
-
     "paths": {
       "@/*": ["./*"],
       "@app/*": ["./app/*"],
       "@components/*": ["./components/*"],
       "@theme/*": ["./theme/*"],
-      "@assets/*": ["./assets/*"]
+      "@assets/*": ["./assets/*"],
+      "@data/": ["./data"]
     }
   },
   "include": [
@@ -20,5 +20,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-  ]
+, "theme/tokens.js"  ]
 }
