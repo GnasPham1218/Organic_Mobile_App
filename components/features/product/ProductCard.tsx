@@ -10,25 +10,27 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import { COLORS } from "@/theme/tokens";
 
+// ✨ BƯỚC 1: Cập nhật lại ProductCardProps
 export type ProductCardProps = {
-  id: string;
+  id: number; // Sửa từ 'string' thành 'number'
   name: string;
   image: ImageSourcePropType;
-  price: number;               // giá gốc (trước giảm)
-  salePrice?: number;          // giá sau giảm (nếu có)
-  discountPercent?: number;    // nếu truyền, ưu tiên hiển thị theo % này
-  inStock?: boolean;           // mặc định true
-  currency?: string;           // mặc định "₫"
-  onPress?: (id: string) => void;
-  onAdd?: (id: string) => void;
+  price: number;
+  salePrice?: number;
+  discountPercent?: number;
+  inStock?: boolean;
+  currency?: string;
+  // Sửa kiểu dữ liệu của tham số 'id' thành 'number'
+  onPress?: (id: number) => void; 
+  onAdd?: (id: number) => void;
   testID?: string;
 };
 
+// Hàm formatCurrency không đổi
 const formatCurrency = (n: number, currency = "₫") => {
   try {
     return `${new Intl.NumberFormat("vi-VN").format(n)}${currency}`;
   } catch {
-    // fallback
     return `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}${currency}`;
   }
 };
@@ -46,7 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onAdd,
   testID,
 }) => {
-  // Tính % giảm để hiển thị
+  // Phần logic tính toán không đổi
   const pct = useMemo(() => {
     if (typeof discountPercent === "number") {
       return Math.max(0, Math.min(99, Math.round(discountPercent)));
@@ -59,21 +61,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const hasSale = typeof salePrice === "number" && salePrice < price;
 
+  // ✨ BƯỚC 2: Các hàm xử lý sự kiện vẫn dùng `id` đã được truyền vào
+  // không cần thay đổi gì ở đây vì `id` đã được định nghĩa lại ở trên
   const handleAdd = () => {
     if (!inStock) return;
     onAdd?.(id);
+  };
+
+  const handlePress = () => {
+    onPress?.(id);
   };
 
   return (
     <Pressable
       className="bg-white rounded-xl overflow-hidden border"
       style={{ borderColor: COLORS.BORDER }}
-      onPress={() => onPress?.(id)}
+      onPress={handlePress} // Sử dụng hàm đã tạo
       testID={testID}
     >
+      {/* Toàn bộ phần JSX còn lại không cần thay đổi */}
       {/* Ảnh + badge */}
       <View className="relative w-full">
-        {/* giữ tỷ lệ vuông dễ cho grid: h-40 ~ 160dp (có thể chỉnh) */}
         <View className="w-full h-40 bg-white">
           <Image
             source={image}
@@ -82,7 +90,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         </View>
 
-        {/* Badge % giảm (nếu có) */}
         {pct > 0 && (
           <View
             className="absolute left-2 top-2 px-2 py-1 rounded-full flex-row items-center"
@@ -93,7 +100,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </View>
         )}
 
-        {/* Hết hàng overlay */}
         {!inStock && (
           <View className="absolute inset-0 bg-black/25 items-center justify-center">
             <Text className="text-white font-bold">Hết hàng</Text>
@@ -103,7 +109,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Nội dung */}
       <View className="p-3">
-        {/* Tên sản phẩm */}
         <Text
           className="text-[13px] font-medium"
           style={{ color: COLORS.TEXT_PRIMARY }}

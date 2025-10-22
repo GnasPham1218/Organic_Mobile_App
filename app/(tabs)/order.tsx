@@ -1,7 +1,7 @@
 import { FontAwesome } from "@expo/vector-icons";
+import { Link } from "expo-router";
 import React from "react";
-import { FlatList, Image, Text, View } from "react-native";
-
+import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import type { Order } from "../../data/mockData"; // Import cả kiểu dữ liệu
 import { mockOngoingOrders } from "../../data/mockData";
 
@@ -27,34 +27,39 @@ const StatusBadge: React.FC<{ status: Order["status"] }> = ({ status }) => {
 
 // --- Component con: OrderCard (sửa nhỏ để dùng require) ---
 const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
-  // `require` trả về một ID số, nên source chỉ cần là `firstItemImage`
   const firstItemImage = order.items[0]?.image;
 
   return (
-    <View className="mb-4 overflow-hidden rounded-xl border border-BORDER bg-white shadow-sm">
-      <View className="flex-row items-center p-4">
-        {firstItemImage && (
-          <Image
-            source={firstItemImage}
-            className="h-20 w-20 rounded-lg bg-gray-100"
-          />
-        )}
-        <View className="ml-4 flex-1">
-          <Text className="text-base font-bold text-TEXT_PRIMARY">
-            Mã đơn: {order.id}
-          </Text>
-          <Text className="mt-1 text-sm text-TEXT_SECONDARY">
-            {order.totalItems} sản phẩm
-          </Text>
-          <Text className="mt-2 text-base font-semibold text-PRIMARY">
-            {order.totalPrice}
-          </Text>
+    // Bọc toàn bộ card bằng Link
+    <Link href={`../order/${order.id}`} asChild>
+      <TouchableOpacity // Sử dụng TouchableOpacity để có hiệu ứng nhấn
+        activeOpacity={0.8}
+        className="mb-4 overflow-hidden rounded-xl border border-BORDER bg-white shadow-sm"
+      >
+        <View className="flex-row items-center gap-x-3 p-4">
+          {firstItemImage && (
+            <Image
+              source={firstItemImage}
+              className="h-20 w-20 rounded-lg bg-gray-100"
+            />
+          )}
+          <View className="flex-1">
+            <Text className="text-base font-bold text-TEXT_PRIMARY">
+              Mã đơn: {order.id}
+            </Text>
+            <Text className="mt-1 text-sm text-TEXT_SECONDARY">
+              {order.totalItems} sản phẩm
+            </Text>
+            <Text className="mt-2 text-base font-semibold text-PRIMARY">
+              {order.totalPrice}
+            </Text>
+          </View>
         </View>
-      </View>
-      <View className="border-t border-BORDER bg-gray-50/50 px-4 py-2">
-        <StatusBadge status={order.status} />
-      </View>
-    </View>
+        <View className="border-t border-BORDER bg-gray-50/50 px-4 py-2">
+          <StatusBadge status={order.status} />
+        </View>
+      </TouchableOpacity>
+    </Link>
   );
 };
 
@@ -63,7 +68,7 @@ const OrdersScreen = () => {
   return (
     <View className="flex-1 bg-BACKGROUND">
       {/* Header */}
-      <View className="border-b border-BORDER bg-white py-4">
+      <View className="border-b border-BORDER bg-STATUS_BAR py-4">
         <Text className="text-center text-2xl font-bold text-TEXT_PRIMARY">
           Đơn hàng của bạn
         </Text>

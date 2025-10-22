@@ -1,67 +1,96 @@
-// context/CartContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-// Giữ nguyên interface Product của bạn
-interface Product {
-  id: string;
+// ## Cải thiện kiểu dữ liệu để code rõ ràng hơn ##
+
+// ProductInfo: Thông tin gốc của sản phẩm, không có số lượng
+export interface ProductInfo {
+  product_id: number; // ✨ SỬA 1: Đổi từ 'id: string' thành 'product_id: number'
   name: string;
   price: number;
-  quantity: number;
-  image: any; // Thêm trường image
-  // Thêm các trường khác nếu cần
+  salePrice?: number;
+  image: any;
 }
 
+// CartItem: Sản phẩm khi đã nằm trong giỏ hàng, luôn có số lượng
+export interface CartItem extends ProductInfo {
+  quantity: number;
+}
+
+// ## Định nghĩa Context Type ##
 interface CartContextType {
-  cart: Product[];
-  addToCart: (product: Omit<Product, "quantity">) => void;
-  decrementItem: (productId: string) => void;    // <--- HÀM MỚI
-  removeFromCart: (productId: string) => void; // <--- HÀM MỚI
+  cart: CartItem[];
+  addToCart: (product: ProductInfo, quantity?: number) => void;
+  // ✨ SỬA 2: Đổi kiểu tham số thành number
+  decrementItem: (productId: number) => void;
+  removeFromCart: (productId: number) => void;
+  clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<Product[]>([]);
+export const CartProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  const [cart, setCart] = useState<CartItem[]>([]);
 
-  // Hàm addToCart giữ nguyên, nó sẽ đóng vai trò là nút TĂNG (+)
-  const addToCart = (product: Omit<Product, "quantity">) => {
+  // ## Hàm addToCart đã được cập nhật logic ##
+  const addToCart = (product: ProductInfo, quantityToAdd: number = 1) => {
     setCart((prevCart) => {
-      const existingProduct = prevCart.find((item) => item.id === product.id);
-      if (existingProduct) {
+      // ✨ SỬA 3: So sánh bằng 'product_id'
+      const existingItem = prevCart.find(
+        (item) => item.product_id === product.product_id
+      );
+      if (existingItem) {
         return prevCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+          // ✨ SỬA 4: So sánh bằng 'product_id'
+          item.product_id === product.product_id
+            ? { ...item, quantity: item.quantity + quantityToAdd }
             : item
         );
       }
-      return [...prevCart, { ...product, quantity: 1 }];
+      return [...prevCart, { ...product, quantity: quantityToAdd }];
     });
   };
 
-  // HÀM MỚI: Giảm số lượng đi 1
-  const decrementItem = (productId: string) => {
+  // Giảm số lượng đi 1, nếu về 0 thì xóa
+  const decrementItem = (productId: number) => { // ✨ SỬA 5: Đổi kiểu tham số
     setCart((prevCart) =>
       prevCart
         .map((item) =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity - 1 }
+          // ✨ SỬA 6: So sánh bằng 'product_id'
+          item.product_id === productId
+            ? { ...item, quantity: Math.max(0, item.quantity - 1) }
             : item
         )
-        .filter((item) => item.quantity > 0) // Lọc bỏ sản phẩm nếu số lượng về 0
+        .filter((item) => item.quantity > 0)
     );
   };
-  
-  // HÀM MỚI: Xóa hẳn sản phẩm khỏi giỏ hàng
-  const removeFromCart = (productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+
+  // Xóa hẳn một sản phẩm khỏi giỏ hàng
+  const removeFromCart = (productId: number) => { // ✨ SỬA 7: Đổi kiểu tham số
+    setCart((prevCart) =>
+      // ✨ SỬA 8: So sánh bằng 'product_id'
+      prevCart.filter((item) => item.product_id !== productId)
+    );
   };
 
+  // Xóa toàn bộ giỏ hàng
+  const clearCart = () => {
+    setCart([]);
+  };
 
-  const value = { cart, addToCart, decrementItem, removeFromCart };
+  const value = {
+    cart,
+    addToCart,
+    decrementItem,
+    removeFromCart,
+    clearCart,
+  };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
+// ## Hook useCart không đổi ##
 export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {

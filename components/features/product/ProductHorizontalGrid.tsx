@@ -1,19 +1,25 @@
 import React, { useMemo } from "react";
 import { FlatList, ListRenderItemInfo, View } from "react-native";
-import ProductCard, { ProductCardProps } from "@/components/features/product/ProductCard";
+import ProductCard from "@/components/features/product/ProductCard";
+import { mockProducts } from "@/data/mockData"; // Import để lấy kiểu dữ liệu
+
+// ✨ BƯỚC 1: Cập nhật kiểu dữ liệu để khớp với mockData mới
+type Product = (typeof mockProducts)[0];
 
 type Props = {
-  products: ProductCardProps[];
-  rowsPerColumn?: number;          // số hàng trong 1 cột (mặc định 2)
-  cardWidth?: number;              // bề rộng mỗi thẻ (vd: 180)
-  columnGap?: number;              // khoảng cách giữa các cột
-  rowGap?: number;                 // khoảng cách giữa các hàng
+  products: Product[];
+  rowsPerColumn?: number;
+  cardWidth?: number;
+  columnGap?: number;
+  rowGap?: number;
   contentPaddingHorizontal?: number;
   showsHorizontalScrollIndicator?: boolean;
-  onPressProduct?: (id: string) => void;
-  onAddToCart?: (id: string) => void;
+  // ✨ BƯỚC 2: Sửa kiểu dữ liệu của ID thành number
+  onPressProduct?: (id: number) => void;
+  onAddToCart?: (id: number) => void;
 };
 
+// Hàm chunkIntoColumns không thay đổi
 function chunkIntoColumns<T>(arr: T[], rowsPerCol: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += rowsPerCol) {
@@ -38,16 +44,24 @@ const ProductHorizontalGrid: React.FC<Props> = ({
     [products, rowsPerColumn]
   );
 
-  const renderColumn = ({ item: colItems }: ListRenderItemInfo<ProductCardProps[]>) => {
+  const renderColumn = ({ item: colItems }: ListRenderItemInfo<Product[]>) => {
     return (
       <View>
         {colItems.map((p, rowIdx) => {
           const isLast = rowIdx === colItems.length - 1;
           return (
-            <View key={p.id} style={{ marginBottom: isLast ? 0 : rowGap }}>
+            // ✨ BƯỚC 3: Sửa key từ 'id' thành 'product_id'
+            <View key={p.product_id} style={{ marginBottom: isLast ? 0 : rowGap }}>
               <View style={{ width: cardWidth }}>
                 <ProductCard
-                  {...p}
+                  // Truyền tất cả props của sản phẩm vào ProductCard
+                  // Quan trọng: Component ProductCard cũng cần được cập nhật để dùng product_id
+                  id={p.product_id}
+                  name={p.name}
+                  image={p.image}
+                  price={p.price}
+                  salePrice={p.salePrice}
+                  // ✨ BƯỚC 4: Truyền `product_id` vào các hàm callback
                   onPress={(id) => onPressProduct?.(id)}
                   onAdd={(id) => onAddToCart?.(id)}
                 />
