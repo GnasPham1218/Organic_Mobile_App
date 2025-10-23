@@ -1,7 +1,8 @@
+// components/home/SearchBar.tsx
 import { COLORS, ICON_SIZE } from "@/theme/tokens";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useCallback } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { TextInput, TouchableOpacity, View } from "react-native";
 
 export interface SearchBarProps {
   value: string;
@@ -22,7 +23,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <View
-      className="flex-1 flex-row items-center rounded-2xl py-2.5 px-4 mx-3"
+      className="flex-row items-center rounded-3xl px-4 h-10 mx-3"
       style={{ backgroundColor: COLORS.INPUT_BG }}
       testID={testID}
     >
@@ -31,9 +32,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
         size={ICON_SIZE.SEARCH}
         color={COLORS.TEXT_SECONDARY}
       />
+
       <TextInput
-        className="flex-1 ml-2 text-sm"
-        style={[styles.searchInput, { color: COLORS.TEXT_PRIMARY }]}
+        className="flex-1 ml-3 text-base h-full"
+        style={{ color: COLORS.TEXT_PRIMARY }}
         placeholder={placeholder}
         placeholderTextColor={COLORS.TEXT_SECONDARY}
         value={value}
@@ -43,6 +45,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         autoCapitalize="none"
         autoCorrect={false}
       />
+
       {value.length > 0 && (
         <TouchableOpacity
           onPress={handleClear}
@@ -61,9 +64,5 @@ const SearchBar: React.FC<SearchBarProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  searchInput: { height: 30, paddingVertical: 0 },
-});
 
 export default SearchBar;

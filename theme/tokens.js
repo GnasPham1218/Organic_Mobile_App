@@ -1,6 +1,3 @@
-// theme/tokens.js
-
-// Không cần "as const" trong file .js
 const ICON_SIZE = { MAIN: 24, SEARCH: 16, CLEAR: 16 };
 
 const COLORS = {
@@ -14,7 +11,17 @@ const COLORS = {
   STATUS_BAR: "#FAFAF6",
 };
 
+// ✨ THÊM ĐỐI TƯỢNG FONT_SIZE VÀO ĐÂY
+const FONT_SIZE = {
+  SM: 12,    // Small
+  BASE: 14,  // Base/Medium
+  LG: 16,    // Large
+  XL: 18,    // Extra Large
+  '2XL': 24, // 2 Extra Large
+};
+
 module.exports = {
   ICON_SIZE,
   COLORS,
+  FONT_SIZE, // ✨ Export nó
 };

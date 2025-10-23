@@ -1,28 +1,47 @@
 // app/product/[id].tsx
 
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
-import { Alert, Text, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Alert, FlatList, Image, Text, View } from "react-native";
 
-// ✨ SỬA 1: Đảm bảo đường dẫn import đúng tên file component
-import ProductDetailView from "@/components/features/product/ProductDetail"; 
-import { useCart } from "@/context/CartContext";
-import { mockProducts } from "@/data/mockData";
+import CartDropdown from "@/components/features/cart/CartDropdown";
+import ProductDetailView from "@/components/features/product/ProductDetail";
+import IconButton from "@/components/ui/IconButton";
+import { useCart } from "@/context/cart/CartContext";
+import { mockProducts, mockReviews, mockUsers } from "@/data/mockData";
+
+import { COLORS } from "@/theme/tokens";
+import { FontAwesome } from "@expo/vector-icons";
 
 const ProductDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
+  const [isCartVisible, setIsCartVisible] = useState(false);
 
-  // ✨ SỬA 2: Chuyển đổi ID từ string (trong URL) sang number
   const productIdAsNumber = id ? parseInt(id, 10) : NaN;
 
-  // ✨ SỬA 3: Tìm sản phẩm bằng 'product_id' và ID đã được chuyển đổi
-  const product = mockProducts.find(
-    (p) => p.product_id === productIdAsNumber
-  );
+  // --- product lookup BEFORE hooks so we can read product.rating_avg directly ---
+  const product = mockProducts.find((p) => p.product_id === productIdAsNumber);
 
-  // Xử lý khi không tìm thấy sản phẩm
+  // Hooks must be unconditional
+  const productReviews = useMemo(() => {
+    if (Number.isNaN(productIdAsNumber)) return [];
+    return mockReviews
+      .filter((r) => r.product_id === productIdAsNumber)
+      .map((r) => {
+        const user = mockUsers.find((u) => u.user_id === r.customer_user_id);
+        return {
+          ...r,
+          user_name: user?.name ?? "Ẩn danh",
+          user_avatar: user?.avatar_url ?? "https://i.pravatar.cc/150",
+        };
+      });
+  }, [productIdAsNumber]);
+
+  // TAKE AVERAGE RATING FROM product.rating_avg (no recompute from reviews)
+  const averageRating = product?.rating_avg ?? 0;
+
   if (!product) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -31,7 +50,6 @@ const ProductDetailScreen = () => {
     );
   }
 
-  // Hàm handleAddToCart không đổi
   const handleAddToCart = (quantity: number) => {
     addToCart(product, quantity);
     Alert.alert(
@@ -40,16 +58,132 @@ const ProductDetailScreen = () => {
     );
   };
 
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const ReviewItem: React.FC<{
+    userName: string;
+    userAvatar: string;
+    rating: number;
+    comment: string;
+    date: string;
+  }> = ({ userName, userAvatar, rating, comment, date }) => {
+    return (
+      <View className="flex-row bg-white p-4 rounded-2xl mb-3 shadow-sm">
+        <Image
+          source={{ uri: userAvatar }}
+          className="w-12 h-12 rounded-full mr-3"
+        />
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center mb-1">
+            <Text className="text-base font-semibold text-gray-800">
+              {userName}
+            </Text>
+            <View className="flex-row">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <FontAwesome
+                  key={i}
+                  name={i < rating ? "star" : "star-o"}
+                  size={16}
+                  color="#FACC15"
+                  style={{ marginLeft: i === 0 ? 0 : 4 }}
+                />
+              ))}
+            </View>
+          </View>
+
+          <Text className="text-sm text-gray-700 mb-1">{comment}</Text>
+          <Text className="text-xs text-gray-500">{date}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  const ReviewSection = () => {
+    return (
+      <View className="px-4 pb-6">
+        {/* Header: average rating + count */}
+        <View className="flex-row items-center justify-between mb-3">
+          <View className="flex-row items-center">
+            <Text className="text-xl font-semibold mr-2">Đánh giá</Text>
+            <View className="flex-row items-center">
+              <Text className="text-lg font-semibold mr-2">
+                {averageRating?.toFixed
+                  ? averageRating.toFixed(1)
+                  : averageRating || "0.0"}
+              </Text>
+              <View className="flex-row">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <FontAwesome
+                    key={i}
+                    name={i < Math.round(averageRating) ? "star" : "star-o"}
+                    size={16}
+                    color="#FACC15"
+                    style={{ marginLeft: i === 0 ? 0 : 4 }}
+                  />
+                ))}
+              </View>
+            </View>
+          </View>
+
+          <Text className="text-sm text-gray-500">
+            {productReviews.length} lượt
+          </Text>
+        </View>
+
+        {productReviews.length === 0 ? (
+          <View className="py-6 items-center">
+            <Text className="text-gray-500">
+              Chưa có đánh giá nào cho sản phẩm này.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={productReviews}
+            keyExtractor={(item) => item.review_id.toString()}
+            renderItem={({ item }) => (
+              <ReviewItem
+                userName={item.user_name}
+                userAvatar={item.user_avatar}
+                rating={item.rating}
+                comment={item.comment}
+                date={item.create_at}
+              />
+            )}
+            scrollEnabled={false} // whole page scrolls via ProductDetailView ScrollView
+            ListFooterComponent={<View className="h-4" />}
+          />
+        )}
+      </View>
+    );
+  };
+
   return (
-    <>
-      {/* Ẩn header mặc định vì đã có header tùy chỉnh */}
+    <View style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: false }} />
       <ProductDetailView
         product={product}
         onBackPress={router.back}
         onAddToCart={handleAddToCart}
+        headerRight={
+          <IconButton
+            icon="shopping-cart"
+            onPress={() => setIsCartVisible(true)}
+            color={COLORS.PRIMARY}
+            badge={cartItemCount > 0}
+            badgeContent={cartItemCount > 99 ? "99+" : cartItemCount}
+          />
+        }
+      >
+        {/* Pass review section as children — ProductDetailView will render it INSIDE its ScrollView */}
+        <ReviewSection />
+      </ProductDetailView>
+
+      {/* CartDropdown */}
+      <CartDropdown
+        visible={isCartVisible}
+        onClose={() => setIsCartVisible(false)}
       />
-    </>
+    </View>
   );
 };
 

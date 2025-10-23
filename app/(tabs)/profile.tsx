@@ -1,4 +1,5 @@
 import { FontAwesome } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
@@ -38,6 +39,8 @@ const ProfileMenuItem: React.FC<ProfileMenuItemProps> = ({
 
 // --- Component chính của màn hình Profile ---
 const ProfileScreen = () => {
+  const router = useRouter();
+
   const handleLogout = () => {
     Alert.alert(
       "Đăng xuất",
@@ -52,6 +55,11 @@ const ProfileScreen = () => {
       ],
       { cancelable: true }
     );
+  };
+
+  const handleReturnPolicy = () => {
+    // TODO: navigate to return policy screen or open modal
+    console.log("Navigate to Return & Refund");
   };
 
   return (
@@ -72,12 +80,12 @@ const ProfileScreen = () => {
           <ProfileMenuItem
             icon="user-o"
             label="Thông tin cá nhân"
-            onPress={() => console.log("Navigate to Personal Info")}
+            onPress={() => router.push("/user/detail")}
           />
           <ProfileMenuItem
             icon="map-marker"
             label="Địa chỉ giao hàng"
-            onPress={() => console.log("Navigate to Shipping Address")}
+            onPress={() => router.push("/user/address")}
           />
           <ProfileMenuItem
             icon="history"
@@ -86,14 +94,14 @@ const ProfileScreen = () => {
           />
           <ProfileMenuItem
             icon="credit-card"
-            label="Phương thức thanh toán"
+            label="Lịch sử thanh toán"
             onPress={() => console.log("Navigate to Payment Methods")}
           />
         </View>
 
-        {/* ===== Nhóm CÀI ĐẶT ===== */}
+        {/* ===== Nhóm DỊCH VỤ (thay cho 'CÀI ĐẶT') ===== */}
         <Text className="mt-8 mb-2 text-sm font-semibold text-TEXT_SECONDARY">
-          CÀI ĐẶT
+          DỊCH VỤ
         </Text>
         <View className="mt-3 divide-y divide-BORDER overflow-hidden rounded-xl border border-BORDER">
           <ProfileMenuItem
@@ -103,8 +111,14 @@ const ProfileScreen = () => {
           />
           <ProfileMenuItem
             icon="ticket"
-            label="Điểm thưởng & Mã giảm giá"
+            label="Mã giảm giá"
             onPress={() => console.log("Navigate to Vouchers")}
+          />
+          {/* Mục Đổi trả & Hoàn tiền */}
+          <ProfileMenuItem
+            icon="exchange"
+            label="Đổi trả & Hoàn tiền"
+            onPress={handleReturnPolicy}
           />
         </View>
 

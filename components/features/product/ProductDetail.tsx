@@ -1,4 +1,4 @@
-// components/features/product/ProductDetailView.tsx
+// components/features/product/ProductDetail.tsx
 
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useMemo, useRef, useState } from "react";
@@ -13,8 +13,6 @@ import {
   ViewToken,
 } from "react-native";
 
-// ## BƯỚC 1: Cập nhật Type để khớp với dữ liệu mới ##
-// Giả định kiểu dữ liệu này được import từ mockData.ts
 type ProductFull = {
   product_id: number;
   name: string;
@@ -36,9 +34,10 @@ interface ProductDetailViewProps {
   product: ProductFull;
   onBackPress: () => void;
   onAddToCart: (quantity: number) => void;
+  headerRight?: React.ReactNode;
+  children?: React.ReactNode; // <-- allow children to be rendered inside ScrollView
 }
 
-// Component nhỏ cho các Tab
 const InfoTab: React.FC<{
   label: string;
   isActive: boolean;
@@ -46,9 +45,7 @@ const InfoTab: React.FC<{
 }> = ({ label, isActive, onPress }) => (
   <TouchableOpacity onPress={onPress} className="flex-1 items-center py-3">
     <Text
-      className={`font-semibold ${
-        isActive ? "text-PRIMARY" : "text-TEXT_SECONDARY"
-      }`}
+      className={`font-semibold ${isActive ? "text-PRIMARY" : "text-TEXT_SECONDARY"}`}
     >
       {label}
     </Text>
@@ -60,6 +57,8 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   product,
   onBackPress,
   onAddToCart,
+  headerRight,
+  children, // receive children
 }) => {
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -67,12 +66,15 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const { width: screenWidth } = useWindowDimensions();
 
   const displayPrice = product.salePrice ?? product.price;
+
+  // safe guard: ensure product.images is array
+  const imagesArray = Array.isArray(product.images) ? product.images : [];
+
   const allImages = useMemo(() => {
-    // Tạo một đối tượng cho ảnh thumbnail để nó có cấu trúc giống các ảnh chi tiết
     const thumbnail = { image_id: 0, image_url: product.image };
-    // Trả về một mảng mới, đặt thumbnail ở đầu tiên
-    return [thumbnail, ...product.images];
-  }, [product.image, product.images]);
+    return [thumbnail, ...imagesArray];
+  }, [product.image, imagesArray]);
+
   const handleAddToCartPress = () => {
     onAddToCart(quantity);
   };
@@ -80,7 +82,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-        setActiveImageIndex(viewableItems[0].index);
+        setActiveImageIndex(viewableItems[0].index ?? 0);
       }
     }
   ).current;
@@ -98,10 +100,14 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         <Text className="text-center text-lg font-bold text-TEXT_PRIMARY">
           Chi tiết sản phẩm
         </Text>
+        <View className="absolute right-4 top-0 bottom-0 z-10 flex-row items-center justify-center">
+          {headerRight}
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* ## BƯỚC 2: Slider ảnh sản phẩm ## */}
+      {/* MAIN SCROLL: children will be rendered inside here */}
+      <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
+        {/* Slider ảnh sản phẩm */}
         <View>
           <FlatList
             data={allImages}
@@ -124,33 +130,25 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             {allImages.map((_, index) => (
               <View
                 key={index}
-                className={`h-2 w-2 rounded-full ${
-                  index === activeImageIndex ? "bg-PRIMARY" : "bg-gray-300"
-                }`}
+                className={`h-2 w-2 rounded-full ${index === activeImageIndex ? "bg-PRIMARY" : "bg-gray-300"}`}
               />
             ))}
           </View>
         </View>
 
-        {/* ## BƯỚC 3: Hiển thị thông tin chi tiết ## */}
+        {/* Thông tin chi tiết */}
         <View className="bg-white p-4">
-          <Text className="text-2xl font-bold text-TEXT_PRIMARY">
-            {product.name}
-          </Text>
-          {/* Rating và Unit */}
+          <Text className="text-2xl font-bold text-TEXT_PRIMARY">{product.name}</Text>
           <View className="mt-2 flex-row items-center justify-between">
             <View className="flex-row items-center space-x-2">
               <FontAwesome name="star" size={16} color="#FFC107" />
-              <Text className="font-semibold text-TEXT_PRIMARY">
-                {product.rating_avg}
-              </Text>
+              <Text className="font-semibold text-TEXT_PRIMARY">{product.rating_avg}</Text>
               <Text className="text-TEXT_SECONDARY">(Xem đánh giá)</Text>
             </View>
             <Text className="rounded-md bg-gray-100 px-2 py-1 text-sm font-medium text-TEXT_SECONDARY">
               Đơn vị: {product.unit}
             </Text>
           </View>
-          {/* Giá */}
           <View className="mt-3 flex-row items-baseline">
             <Text className="text-3xl font-bold text-PRIMARY">
               {displayPrice.toLocaleString("vi-VN")}đ
@@ -163,91 +161,59 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </View>
         </View>
 
-        {/* ## BƯỚC 4: Tạo các Tab thông tin ## */}
+        {/* Tabs */}
         <View className="mt-3 bg-white">
           <View className="flex-row border-b border-BORDER">
-            <InfoTab
-              label="Mô tả"
-              isActive={activeTab === "desc"}
-              onPress={() => setActiveTab("desc")}
-            />
-            <InfoTab
-              label="Thông tin"
-              isActive={activeTab === "info"}
-              onPress={() => setActiveTab("info")}
-            />
-            <InfoTab
-              label="Chứng nhận"
-              isActive={activeTab === "certs"}
-              onPress={() => setActiveTab("certs")}
-            />
+            <InfoTab label="Mô tả" isActive={activeTab === "desc"} onPress={() => setActiveTab("desc")} />
+            <InfoTab label="Thông tin" isActive={activeTab === "info"} onPress={() => setActiveTab("info")} />
+            <InfoTab label="Chứng nhận" isActive={activeTab === "certs"} onPress={() => setActiveTab("certs")} />
           </View>
-          {/* Content của Tab */}
+
           <View className="p-4">
             {activeTab === "desc" && (
-              <Text className="text-base leading-6 text-TEXT_SECONDARY">
-                {product.description}
-              </Text>
+              <Text className="text-base leading-6 text-TEXT_SECONDARY">{product.description}</Text>
             )}
+
             {activeTab === "info" && (
               <View className="space-y-3">
                 <View className="flex-row">
-                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">
-                    Xuất xứ
-                  </Text>
-                  <Text className="flex-1 text-TEXT_SECONDARY">
-                    {product.origin_address}
-                  </Text>
+                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">Xuất xứ</Text>
+                  <Text className="flex-1 text-TEXT_SECONDARY">{product.origin_address}</Text>
                 </View>
                 <View className="flex-row">
-                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">
-                    Ngày sản xuất
-                  </Text>
-                  <Text className="flex-1 text-TEXT_SECONDARY">
-                    {product.mfg_date}
-                  </Text>
+                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">Ngày sản xuất</Text>
+                  <Text className="flex-1 text-TEXT_SECONDARY">{product.mfg_date}</Text>
                 </View>
                 <View className="flex-row">
-                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">
-                    Hạn sử dụng
-                  </Text>
-                  <Text className="flex-1 text-TEXT_SECONDARY">
-                    {product.exp_date}
-                  </Text>
+                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">Hạn sử dụng</Text>
+                  <Text className="flex-1 text-TEXT_SECONDARY">{product.exp_date}</Text>
                 </View>
               </View>
             )}
+
             {activeTab === "certs" && (
               <View className="flex-row flex-wrap">
                 {product.certificates.map((cert) => (
-                  <View
-                    key={cert.certificate_id}
-                    className="mr-4 mb-4 items-center"
-                  >
-                    <Image
-                      source={cert.image_url}
-                      className="h-20 w-20"
-                      resizeMode="contain"
-                    />
-                    <Text className="mt-1 text-xs font-medium text-TEXT_SECONDARY">
-                      {cert.name}
-                    </Text>
+                  <View key={cert.certificate_id} className="mr-4 mb-4 items-center">
+                    <Image source={cert.image_url} className="h-20 w-20" resizeMode="contain" />
+                    <Text className="mt-1 text-xs font-medium text-TEXT_SECONDARY">{cert.name}</Text>
                   </View>
                 ))}
                 {product.certificates.length === 0 && (
-                  <Text className="text-TEXT_SECONDARY">
-                    Sản phẩm không có chứng nhận đi kèm.
-                  </Text>
+                  <Text className="text-TEXT_SECONDARY">Sản phẩm không có chứng nhận đi kèm.</Text>
                 )}
               </View>
             )}
           </View>
         </View>
+
+        {/* --- RENDER children HERE so reviews (or any extra content) are inside the same ScrollView --- */}
+        {children}
+
       </ScrollView>
 
-      {/* Footer: Chọn số lượng và thêm vào giỏ (Không đổi) */}
+      {/* Footer: quantity + add to cart */}
       <View className="absolute bottom-0 w-full flex-row items-center justify-between border-t border-BORDER bg-white p-4">
-        {/* Quantity Selector */}
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => setQuantity(Math.max(1, quantity - 1))}
@@ -255,9 +221,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           >
             <FontAwesome name="minus" size={16} color={"#4B5563"} />
           </TouchableOpacity>
-          <Text className="w-14 text-center text-xl font-bold text-TEXT_PRIMARY">
-            {quantity}
-          </Text>
+          <Text className="w-14 text-center text-xl font-bold text-TEXT_PRIMARY">{quantity}</Text>
           <TouchableOpacity
             onPress={() => setQuantity(quantity + 1)}
             className="h-10 w-10 items-center justify-center rounded-full border border-BORDER"
@@ -265,14 +229,9 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <FontAwesome name="plus" size={16} color={"#4B5563"} />
           </TouchableOpacity>
         </View>
-        {/* Add to Cart Button */}
-        <TouchableOpacity
-          onPress={handleAddToCartPress}
-          className="flex-1 rounded-full bg-PRIMARY py-3 ml-4"
-        >
-          <Text className="text-center text-base font-bold text-white">
-            Thêm vào giỏ
-          </Text>
+
+        <TouchableOpacity onPress={handleAddToCartPress} className="flex-1 rounded-full bg-PRIMARY py-3 ml-4">
+          <Text className="text-center text-base font-bold text-white">Thêm vào giỏ</Text>
         </TouchableOpacity>
       </View>
     </View>

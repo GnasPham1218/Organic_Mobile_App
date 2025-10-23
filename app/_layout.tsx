@@ -3,16 +3,15 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CartProvider } from "../context/CartContext";
+import { CartProvider } from "../context/cart/CartContext";
 import "../theme/global.css";
 import { COLORS } from "../theme/tokens"; // Import tokens màu sắc
-
 export default function RootLayout() {
   return (
     <>
       <SafeAreaView
         className="flex-1 bg-STATUS_BAR"
-        edges={["top", "left", "right"]}
+        edges={["top", "left", "right", "bottom"]}
       >
         <StatusBar
           style="dark"

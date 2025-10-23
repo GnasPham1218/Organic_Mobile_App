@@ -18,7 +18,10 @@ const StatusBadge: React.FC<{ status: Order["status"] }> = ({ status }) => {
       className={`flex-row items-center self-start rounded-full px-2.5 py-1 ${bgColor}`}
     >
       <FontAwesome name={iconName} size={12} color={textColor} />
-      <Text className={`ml-1.5 text-xs font-semibold ${textColor}`}>
+      <Text
+        className={`ml-1.5 text-xs font-semibold ${textColor} flex-shrink`}
+        numberOfLines={1}
+      >
         {text}
       </Text>
     </View>

@@ -13,7 +13,7 @@ import SearchBar from "@/components/home/SearchBar";
 import BannerSlider from "@/components/ui/BannerSlider";
 import SectionHeader from "@/components/ui/SectionHeader";
 // 1. Kết nối với CartContext
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/context/cart/CartContext";
 
 // 2. Dữ liệu được import từ file riêng
 import { mockBanners, mockProducts } from "@/data/mockData";
@@ -58,29 +58,29 @@ const HomeScreen = () => {
 
   return (
     // Cấu trúc lại với View gốc để quản lý các lớp overlay tốt hơn
+
     <View className="flex-1 bg-gray-50">
+      <View className="bg-white shadow-sm">
+        <HomeHeader
+          cartItemCount={cartItemCount}
+          messageCount={1}
+          onCartPress={handleToggleCartVisibility}
+          onMessagePress={openChat}
+          logoSource={require("@/assets/logo_organic.png")}
+        />
+        <View className="px-3 py-2">
+          <SearchBar
+            value={q}
+            onChangeText={setQ}
+            onSubmit={handleSearchSubmit}
+          />
+        </View>
+      </View>
       <ScrollView
-        stickyHeaderIndices={[0]}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
         {/* Sticky Header Section */}
-        <View className="bg-white shadow-sm">
-          <HomeHeader
-            cartItemCount={cartItemCount}
-            messageCount={1} // Sẽ thay bằng state message sau
-            onCartPress={handleToggleCartVisibility}
-            onMessagePress={openChat}
-            logoSource={require("@/assets/logo_organic.png")}
-          />
-          <View className="px-3 pt-1 pb-3">
-            <SearchBar
-              value={q}
-              onChangeText={setQ}
-              onSubmit={handleSearchSubmit}
-            />
-          </View>
-        </View>
 
         {/* Main Content */}
         <View className="space-y-4">
@@ -114,8 +114,20 @@ const HomeScreen = () => {
           {/* Có thể thêm các section khác ở đây */}
           {/* <SectionHeader title="Sản phẩm bán chạy" ... /> */}
           {/* <ProductHorizontalGrid ... /> */}
-
-          <View className="h-6" />
+          <View>
+            <SectionHeader
+              title="Ưu đãi hôm nay"
+              onSeeAllPress={() => console.log("Go to all deals page")}
+            />
+            <ProductHorizontalGrid
+              products={mockProducts}
+              rowsPerColumn={2}
+              cardWidth={180}
+              // ✨ SỬA LỖI Ở ĐÂY: Sử dụng hàm handleProductPress
+              onPressProduct={handleProductPress}
+              onAddToCart={handleAddToCart}
+            />
+          </View>
         </View>
       </ScrollView>
 
