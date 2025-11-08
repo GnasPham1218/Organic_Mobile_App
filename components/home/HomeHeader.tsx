@@ -1,5 +1,5 @@
-import AppLogo from "@/components/ui/AppLogo";
-import IconButton from "@/components/ui/IconButton";
+import AppLogo from "@/components/common/AppLogo";
+import IconButton from "@/components/common/IconButton";
 import { COLORS } from "@/theme/tokens";
 import React from "react";
 import { View } from "react-native";
@@ -7,8 +7,10 @@ import { View } from "react-native";
 export interface HomeHeaderProps {
   cartItemCount?: number;
   messageCount?: number;
+  notificationCount?: number; // <-- ĐÃ THÊM
   onCartPress?: () => void;
   onMessagePress?: () => void;
+  onNotificationPress?: () => void; // <-- ĐÃ THÊM
   onLogoPress?: () => void;
   logoSource?: any; // ImageSourcePropType, dùng any để require(...) tiện hơn
 }
@@ -16,8 +18,10 @@ export interface HomeHeaderProps {
 const HomeHeader: React.FC<HomeHeaderProps> = ({
   cartItemCount = 0,
   messageCount = 0,
+  notificationCount = 0, // <-- ĐÃ THÊM
   onCartPress,
   onMessagePress,
+  onNotificationPress, // <-- ĐÃ THÊM
   onLogoPress,
   logoSource, // ví dụ: require("@/assets/logo.png")
 }) => {
@@ -33,7 +37,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           size={100}
           onPress={onLogoPress}
           testID="app-logo"
-          visualScale={1.10}
+          visualScale={1.1}
         />
 
         {/* Actions phải */}
@@ -55,6 +59,18 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             badge={messageCount > 0}
             testID="messages-button"
           />
+          {/* --- ICON CHUÔNG ĐÃ THÊM --- */}
+          <IconButton
+            icon="bell-o"
+            onPress={onNotificationPress ?? (() => {})}
+            color={COLORS.TEXT_PRIMARY}
+            badge={notificationCount > 0}
+            badgeContent={
+              notificationCount > 99 ? "99+" : notificationCount || undefined
+            }
+            testID="notifications-button"
+          />
+          {/* --- KẾT THÚC THÊM MỚI --- */}
         </View>
       </View>
     </View>

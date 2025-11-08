@@ -11,7 +11,8 @@
       "@components/*": ["./components/*"],
       "@theme/*": ["./theme/*"],
       "@assets/*": ["./assets/*"],
-      "@data/": ["./data"]
+      "@data/": ["./data"],
+      "@utils/": ["./utils"]
     }
   },
   "include": [

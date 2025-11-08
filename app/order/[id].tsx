@@ -1,16 +1,13 @@
-// File: app/order/[id].tsx (Phiên bản cuối cùng)
-
-// <<-- Import `useRouter` để điều hướng
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 
-import { mockOngoingOrders } from "@/data/mockData";
 import OrderDetailView from "@/components/features/order/OrderDetailView";
+import { mockAllOrders } from "@/data/mockData";
 
 const OrderDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const order = mockOngoingOrders.find((o) => o.id === id);
+  const order = mockAllOrders.find((o) => o.id === id);
   const router = useRouter(); // <<-- Lấy router
 
   if (!order) {
@@ -29,7 +26,14 @@ const OrderDetailScreen = () => {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Truyền hàm router.back vào prop onBackPress */}
-      <OrderDetailView order={order} onBackPress={router.back} />
+      <OrderDetailView
+        order={order}
+        onBackPress={router.back}
+        onReportIssue={() => {
+          // Chuyển đến màn hình Yêu cầu trả hàng với ID của đơn này
+          router.push(`../return/${order.id}`);
+        }}
+      />
     </>
   );
 };

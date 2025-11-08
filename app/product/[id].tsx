@@ -1,12 +1,9 @@
-// app/product/[id].tsx
-
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { Alert, FlatList, Image, Text, View } from "react-native";
 
-import CartDropdown from "@/components/features/cart/CartDropdown";
+import IconButton from "@/components/common/IconButton";
 import ProductDetailView from "@/components/features/product/ProductDetail";
-import IconButton from "@/components/ui/IconButton";
 import { useCart } from "@/context/cart/CartContext";
 import { mockProducts, mockReviews, mockUsers } from "@/data/mockData";
 
@@ -17,14 +14,13 @@ const ProductDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { cart, addToCart } = useCart();
-  const [isCartVisible, setIsCartVisible] = useState(false);
 
   const productIdAsNumber = id ? parseInt(id, 10) : NaN;
 
-  // --- product lookup BEFORE hooks so we can read product.rating_avg directly ---
+  // --- product lookup
   const product = mockProducts.find((p) => p.product_id === productIdAsNumber);
 
-  // Hooks must be unconditional
+  // --- reviews
   const productReviews = useMemo(() => {
     if (Number.isNaN(productIdAsNumber)) return [];
     return mockReviews
@@ -39,7 +35,6 @@ const ProductDetailScreen = () => {
       });
   }, [productIdAsNumber]);
 
-  // TAKE AVERAGE RATING FROM product.rating_avg (no recompute from reviews)
   const averageRating = product?.rating_avg ?? 0;
 
   if (!product) {
@@ -149,7 +144,7 @@ const ProductDetailScreen = () => {
                 date={item.create_at}
               />
             )}
-            scrollEnabled={false} // whole page scrolls via ProductDetailView ScrollView
+            scrollEnabled={false} // scroll bằng ScrollView của ProductDetailView
             ListFooterComponent={<View className="h-4" />}
           />
         )}
@@ -167,22 +162,15 @@ const ProductDetailScreen = () => {
         headerRight={
           <IconButton
             icon="shopping-cart"
-            onPress={() => setIsCartVisible(true)}
+            onPress={() => router.push("/cart/CartScreen")} // ✨ chuyển sang trang CartScreen
             color={COLORS.PRIMARY}
             badge={cartItemCount > 0}
             badgeContent={cartItemCount > 99 ? "99+" : cartItemCount}
           />
         }
       >
-        {/* Pass review section as children — ProductDetailView will render it INSIDE its ScrollView */}
         <ReviewSection />
       </ProductDetailView>
-
-      {/* CartDropdown */}
-      <CartDropdown
-        visible={isCartVisible}
-        onClose={() => setIsCartVisible(false)}
-      />
     </View>
   );
 };

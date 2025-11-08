@@ -57,10 +57,8 @@ const ProfileScreen = () => {
     );
   };
 
-  const handleReturnPolicy = () => {
-    // TODO: navigate to return policy screen or open modal
-    console.log("Navigate to Return & Refund");
-  };
+  // Bỏ hàm handleReturnPolicy vì đã chuyển vào onPress của item
+  // const handleReturnPolicy = () => { ... };
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
@@ -90,36 +88,37 @@ const ProfileScreen = () => {
           <ProfileMenuItem
             icon="history"
             label="Lịch sử đơn hàng"
-            onPress={() => console.log("Navigate to Order History")}
+            onPress={() => router.push("/order/order-history")}
           />
           <ProfileMenuItem
             icon="credit-card"
             label="Lịch sử thanh toán"
             onPress={() => console.log("Navigate to Payment Methods")}
           />
+          {/* ===>>> MỤC ĐƯỢC DI CHUYỂN ĐẾN ĐÂY <<<=== */}
+          <ProfileMenuItem
+            icon="exchange"
+            label="Lịch sử đổi trả"
+            onPress={() => router.push("/return/ReturnHistoryScreen")}
+          />
         </View>
 
-        {/* ===== Nhóm DỊCH VỤ (thay cho 'CÀI ĐẶT') ===== */}
+        {/* ===== Nhóm DỊCH VỤ ===== */}
         <Text className="mt-8 mb-2 text-sm font-semibold text-TEXT_SECONDARY">
           DỊCH VỤ
         </Text>
         <View className="mt-3 divide-y divide-BORDER overflow-hidden rounded-xl border border-BORDER">
           <ProfileMenuItem
-            icon="bell-o"
-            label="Cài đặt thông báo"
-            onPress={() => console.log("Navigate to Notification Settings")}
+            icon="ticket"
+            label="Mã giảm giá"
+            onPress={() => router.push("/voucher/VoucherListScreen")}
           />
           <ProfileMenuItem
             icon="ticket"
-            label="Mã giảm giá"
-            onPress={() => console.log("Navigate to Vouchers")}
+            label="Khuyến mãi"
+            onPress={() => router.push("/promotion/PromotionListScreen")}
           />
-          {/* Mục Đổi trả & Hoàn tiền */}
-          <ProfileMenuItem
-            icon="exchange"
-            label="Đổi trả & Hoàn tiền"
-            onPress={handleReturnPolicy}
-          />
+          {/* ===>>> ĐÃ XÓA MỤC "LỊCH SỬ ĐỔI TRẢ" KHỎI ĐÂY <<<=== */}
         </View>
 
         {/* ===== Nhóm HỖ TRỢ ===== */}

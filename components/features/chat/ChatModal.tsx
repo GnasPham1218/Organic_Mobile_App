@@ -67,8 +67,8 @@ const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -100}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between border-b border-BORDER bg-white px-4 pt-14 pb-4">
-          <Text className="text-xl font-bold text-TEXT_PRIMARY">
+        <View className="flex-row items-center justify-between border-b border-BORDER bg-white p-4">
+          <Text className="text-lg font-bold text-TEXT_PRIMARY">
             Hỗ trợ khách hàng
           </Text>
           <TouchableOpacity onPress={onClose} className="p-2">

@@ -1,38 +1,38 @@
-// app/_layout.js hoặc app/_layout.tsx
-
+// app/_layout.tsx
+import { CartProvider } from "@/context/cart/CartContext";
+import { ConfirmProvider } from "@/context/confirm/ConfirmContext";
+import { ToastProvider } from "@/context/notifications/ToastContext";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CartProvider } from "../context/cart/CartContext";
 import "../theme/global.css";
-import { COLORS } from "../theme/tokens"; // Import tokens màu sắc
+import { COLORS } from "../theme/tokens";
+
 export default function RootLayout() {
   return (
-    <>
-      <SafeAreaView
-        className="flex-1 bg-STATUS_BAR"
-        edges={["top", "left", "right", "bottom"]}
-      >
-        <StatusBar
-          style="dark"
-          backgroundColor={COLORS.STATUS_BAR} // Sử dụng token
-          translucent={false}
-          hidden={false}
-        />
-
-        <CartProvider>
-          <Stack
-            initialRouteName="index"
-            screenOptions={{ headerShown: false }}
-          >
-            {/* Trang gốc */}
-            <Stack.Screen name="index" />
-
-            {/* Nhóm tabs */}
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
-        </CartProvider>
-      </SafeAreaView>
-    </>
+    <SafeAreaView
+      className="flex-1 bg-STATUS_BAR"
+      edges={["top", "left", "right", "bottom"]}
+    >
+      <StatusBar
+        style="dark"
+        backgroundColor={COLORS.STATUS_BAR}
+        translucent={false}
+        hidden={false}
+      />
+      <ToastProvider>
+        <ConfirmProvider>
+          <CartProvider>
+            <Stack
+              initialRouteName="index"
+              screenOptions={{ headerShown: false }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
+          </CartProvider>
+        </ConfirmProvider>
+      </ToastProvider>
+    </SafeAreaView>
   );
 }

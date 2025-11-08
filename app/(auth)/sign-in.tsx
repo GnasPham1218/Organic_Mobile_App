@@ -6,7 +6,7 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import AuthSwitchLink from "@/components/auth/AuthSwitchLink";
 import LoginForm from "@/components/auth/LoginForm";
 import SocialButtons from "@/components/auth/SocialButtons";
-import DividerWithText from "@/components/ui/DividerWithText";
+import DividerWithText from "@/components/common/DividerWithText";
 
 export default function LoginScreen() {
   const router = useRouter();
