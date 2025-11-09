@@ -45,6 +45,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="category"
+        options={{
+          title: "Danh mục",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={24} name="th" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="order"
         options={{
           title: "Đơn hàng",

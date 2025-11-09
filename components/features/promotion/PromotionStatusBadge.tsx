@@ -33,11 +33,7 @@ const getStatusInfo = (
   };
 };
 
-/**
- * Đây là component "thông minh" dành riêng cho Promotion.
- * Nó tính toán trạng thái và gọi StatusBadge chung với style "absolute"
- * mà 'PromotionProductCard' cần.
- */
+
 const PromotionStatusBadge: React.FC<Props> = ({ startDate, endDate }) => {
   const status = getStatusInfo(startDate, endDate);
 
@@ -45,7 +41,7 @@ const PromotionStatusBadge: React.FC<Props> = ({ startDate, endDate }) => {
     <StatusBadge
       text={status.text}
       variant={status.variant}
-    className="absolute top-0 right-0 rounded-tr-md rounded-bl-md"
+      className="absolute top-0 right-0 rounded-tr-md rounded-bl-md"
     />
   );
 };

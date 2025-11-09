@@ -15,7 +15,7 @@ import type { ImageSourcePropType } from "react-native";
 export const mockProducts = [
   {
     product_id: 1,
-    category_id: 1, // Trái cây
+    category_id: 3, // Trái cây
     name: "Táo Fuji hữu cơ 1kg",
     price: 85000.0,
     salePrice: 69000.0, // Thêm salePrice
@@ -47,7 +47,7 @@ export const mockProducts = [
   },
   {
     product_id: 2,
-    category_id: 4, // Sữa & Sản phẩm từ sữa
+    category_id: 38, // Sữa & Sản phẩm từ sữa
     name: "Sữa chua Hy Lạp nguyên chất 180g",
     price: 42000.0,
     rating_avg: 4.9,
@@ -72,7 +72,7 @@ export const mockProducts = [
   },
   {
     product_id: 3,
-    category_id: 2, // Rau củ
+    category_id: 10, // Rau củ
     name: "Cà rốt Đà Lạt baby 500g",
     price: 32000.0,
     rating_avg: 4.7,
@@ -97,7 +97,7 @@ export const mockProducts = [
   },
   {
     product_id: 4,
-    category_id: 3, // Thịt, cá
+    category_id: 13,
     name: "Thịt ba rọi heo thảo mộc 500g",
     price: 115000.0,
     rating_avg: 4.95,
@@ -127,7 +127,7 @@ export const mockProducts = [
   },
   {
     product_id: 5,
-    category_id: 2, // Rau củ
+    category_id: 9, // Rau củ
     name: "Cải bó xôi Baby 300g",
     price: 28000.0,
     rating_avg: 4.75,
@@ -152,7 +152,7 @@ export const mockProducts = [
   },
   {
     product_id: 6,
-    category_id: 1, // Trái cây
+    category_id: 4, // Trái cây
     name: "Nho đen không hạt Mỹ 500g",
     price: 95000.0,
     salePrice: 79000.0, // Thêm salePrice
@@ -178,7 +178,7 @@ export const mockProducts = [
   },
   {
     product_id: 7,
-    category_id: 1, // Trái cây
+    category_id: 4, // Trái cây
     name: "Nho đen không hạt Mỹ 500g",
     price: 95000.0,
     salePrice: 79000.0, // Thêm salePrice
@@ -204,22 +204,22 @@ export const mockProducts = [
   },
   {
     product_id: 8,
-    category_id: 1, // Trái cây
-    name: "Nho đen không hạt Mỹ 500g",
-    price: 95000.0,
-    salePrice: 79000.0, // Thêm salePrice
-    rating_avg: 4.8,
-    image: require("@/assets/products/grapes.png"),
+    category_id: 4, // Trái Cây Nhập Khẩu
+    name: "Kiwi vàng New Zealand 4 quả",
+    price: 120000.0,
+    salePrice: 99000.0,
+    rating_avg: 4.7,
+    image: require("@/assets/products/kiwi.png"),
     images: [
-      { image_id: 107, image_url: require("@/assets/products/grapes.png") },
+      { image_id: 108, image_url: require("@/assets/products/kiwi.png") },
     ],
     description:
-      "Nho đen không hạt nhập khẩu có vị ngọt đậm đà, vỏ mỏng và mọng nước. Sản phẩm là món tráng miệng tuyệt vời và cung cấp nhiều chất chống oxy hóa.",
-    unit: "hộp 500g",
-    origin_address: "Sunview Vineyards, California, USA",
-    quantity: 95,
-    mfg_date: "2025-10-15",
-    exp_date: "2025-11-10",
+      "Kiwi vàng New Zealand với vị ngọt thanh, thơm mát và giàu vitamin C. Quả chín đều, ruột vàng đẹp mắt, thích hợp cho bữa ăn nhẹ lành mạnh.",
+    unit: "hộp 4 quả",
+    origin_address: "Zespri, New Zealand",
+    quantity: 75,
+    mfg_date: "2025-10-18",
+    exp_date: "2025-11-15",
     certificates: [
       {
         certificate_id: 4,
@@ -230,27 +230,77 @@ export const mockProducts = [
   },
   {
     product_id: 9,
-    category_id: 1, // Trái cây
-    name: "Nho đen không hạt Mỹ 500g",
-    price: 95000.0,
-    salePrice: 79000.0, // Thêm salePrice
-    rating_avg: 4.8,
-    image: require("@/assets/products/grapes.png"),
+    category_id: 19, // Ngũ Cốc Hữu Cơ
+    name: "Yến mạch hữu cơ 500g",
+    price: 65000.0,
+    rating_avg: 4.6,
+    image: require("@/assets/products/oats.png"),
     images: [
-      { image_id: 107, image_url: require("@/assets/products/grapes.png") },
+      { image_id: 109, image_url: require("@/assets/products/oats.png") },
     ],
     description:
-      "Nho đen không hạt nhập khẩu có vị ngọt đậm đà, vỏ mỏng và mọng nước. Sản phẩm là món tráng miệng tuyệt vời và cung cấp nhiều chất chống oxy hóa.",
-    unit: "hộp 500g",
-    origin_address: "Sunview Vineyards, California, USA",
-    quantity: 95,
-    mfg_date: "2025-10-15",
-    exp_date: "2025-11-10",
+      "Yến mạch hữu cơ nguyên chất, giàu chất xơ và dinh dưỡng. Thích hợp cho bữa sáng healthy, nấu cháo hoặc làm bánh.",
+    unit: "túi 500g",
+    origin_address: "Công ty Organic Oats, Úc",
+    quantity: 120,
+    mfg_date: "2025-09-15",
+    exp_date: "2026-03-15",
     certificates: [
       {
-        certificate_id: 4,
-        name: "GlobalG.A.P.",
-        image_url: require("@/assets/certs/globalgap.png"),
+        certificate_id: 2,
+        name: "USDA Organic",
+        image_url: require("@/assets/certs/usda_organic.png"),
+      },
+    ],
+  },
+  {
+    product_id: 10,
+    category_id: 20, // Gạo Hữu Cơ
+    name: "Gạo lứt hữu cơ 1kg",
+    price: 55000.0,
+    salePrice: 45000.0,
+    rating_avg: 4.8,
+    image: require("@/assets/products/rice.png"),
+    images: [
+      { image_id: 110, image_url: require("@/assets/products/rice.png") },
+    ],
+    description:
+      "Gạo lứt hữu cơ giàu dinh dưỡng, chất xơ và vitamin. Gạo thơm ngon, dẻo mềm, tốt cho sức khỏe và người ăn kiêng.",
+    unit: "túi 1kg",
+    origin_address: "Nông trại hữu cơ Mekong, Đồng Tháp",
+    quantity: 200,
+    mfg_date: "2025-10-01",
+    exp_date: "2026-04-01",
+    certificates: [
+      {
+        certificate_id: 1,
+        name: "VietGAP",
+        image_url: require("@/assets/certs/vietgap.png"),
+      },
+    ],
+  },
+  {
+    product_id: 11,
+    category_id: 37, // Sữa Tươi
+    name: "Sữa tươi hữu cơ 1 lít",
+    price: 48000.0,
+    rating_avg: 4.7,
+    image: require("@/assets/products/milk.png"),
+    images: [
+      { image_id: 111, image_url: require("@/assets/products/milk.png") },
+    ],
+    description:
+      "Sữa tươi hữu cơ từ bò ăn cỏ tự nhiên, không chứa kháng sinh và hormone tăng trưởng. Sữa thơm ngon, bổ dưỡng cho cả gia đình.",
+    unit: "hộp 1 lít",
+    origin_address: "Trang trại sữa Organic Milk, Ba Vì, Hà Nội",
+    quantity: 150,
+    mfg_date: "2025-10-20",
+    exp_date: "2025-11-05",
+    certificates: [
+      {
+        certificate_id: 1,
+        name: "VietGAP",
+        image_url: require("@/assets/certs/vietgap.png"),
       },
     ],
   },
@@ -685,7 +735,7 @@ export type PromotionDetail = {
   promotion_id: number;
   product_id: number; // Sẽ khớp với product_id trong mockProducts
   start_date: string; // Dùng string ISO cho đơn giản
-  end_date: string;   // Dùng string ISO
+  end_date: string; // Dùng string ISO
 };
 
 // --- 2. Data mẫu cho Promotion ---
@@ -754,3 +804,321 @@ export const mockPromotionDetails: PromotionDetail[] = [
     end_date: "2025-09-30T23:59:59Z",
   },
 ];
+// data/mockCategories.ts
+export const mockCategories = [
+  // Quà Tặng Trái cây - parent: null
+  {
+    id: 1,
+    slug: "hop-qua-trai-cay",
+    name: "Quà Tặng Trái cây",
+    parent_id: null,
+  },
+  // Trái Cây Theo Mùa - parent: null
+  {
+    id: 2,
+    slug: "trai-cay-theo-mua",
+    name: "Trái Cây Theo Mùa",
+    parent_id: null,
+  },
+  // Children của Trái Cây Theo Mùa (id: 2)
+  {
+    id: 3,
+    slug: "trai-cay-viet",
+    name: "Trái Cây Việt",
+    parent_id: 2,
+  },
+  {
+    id: 4,
+    slug: "trai-cay-nhap-khau",
+    name: "Trái Cây Nhập Khẩu",
+    parent_id: 2,
+  },
+  {
+    id: 5,
+    slug: "trai-cay-say-dong-lanh",
+    name: "Trái Cây Sấy - Đông Lạnh",
+    parent_id: 2,
+  },
+  {
+    id: 6,
+    slug: "nuoc-ep-trai-cay-tuoi",
+    name: "Nước Ép Trái Cây Tươi",
+    parent_id: 2,
+  },
+  // Bếp O - Ready To Eat - parent: null
+  {
+    id: 7,
+    slug: "bep-org-ready-to-eat",
+    name: "Bếp O - Ready To Eat",
+    parent_id: null,
+  },
+  // Rau Củ Quả - parent: null
+  {
+    id: 8,
+    slug: "rau-cu-qua",
+    name: "Rau Củ Quả",
+    parent_id: null,
+  },
+  // Children của Rau Củ Quả (id: 8)
+  {
+    id: 9,
+    slug: "rau-la-huu-co",
+    name: "Rau lá hữu cơ",
+    parent_id: 8,
+  },
+  {
+    id: 10,
+    slug: "cu-qua-huu-co",
+    name: "Củ Quả hữu cơ",
+    parent_id: 8,
+  },
+  {
+    id: 11,
+    slug: "nam",
+    name: "Nấm",
+    parent_id: 8,
+  },
+  // Tươi Sống - parent: null
+  {
+    id: 12,
+    slug: "tuoi-song",
+    name: "Tươi Sống",
+    parent_id: null,
+  },
+  // Children của Tươi Sống (id: 12)
+  {
+    id: 13,
+    slug: "thit-heo-huu-co",
+    name: "Thịt Heo Hữu Cơ",
+    parent_id: 12,
+  },
+  {
+    id: 14,
+    slug: "thit-gia-cam-trung",
+    name: "Thịt Gia Cầm - Trứng",
+    parent_id: 12,
+  },
+  {
+    id: 15,
+    slug: "kho-mot-nang",
+    name: "Khô & Một Nắng",
+    parent_id: 12,
+  },
+  // Bếp O - Ready To Cook - parent: null
+  {
+    id: 16,
+    slug: "ready-to-cook",
+    name: "Bếp O - Ready To Cook",
+    parent_id: null,
+  },
+  // Thực Phẩm Khô - parent: null
+  {
+    id: 17,
+    slug: "thuc-pham-kho",
+    name: "Thực Phẩm Khô",
+    parent_id: null,
+  },
+  // Children của Thực Phẩm Khô (id: 17)
+  {
+    id: 18,
+    slug: "cac-loai-hat-huu-co",
+    name: "Các Loại Hạt Hữu Cơ",
+    parent_id: 17,
+  },
+  {
+    id: 19,
+    slug: "hat-ngu-coc-huu-co",
+    name: "Ngũ Cốc Hữu Cơ",
+    parent_id: 17,
+  },
+  {
+    id: 20,
+    slug: "gao-huu-co",
+    name: "Gạo Hữu Cơ",
+    parent_id: 17,
+  },
+  {
+    id: 21,
+    slug: "mi-nui-huu-co",
+    name: "Mì & Nui Hữu Cơ",
+    parent_id: 17,
+  },
+  {
+    id: 22,
+    slug: "banh-keo-socola",
+    name: "Bánh Kẹo & Socola",
+    parent_id: 17,
+  },
+  {
+    id: 23,
+    slug: "do-kho-khac",
+    name: "Đồ Khô Khác",
+    parent_id: 17,
+  },
+  {
+    id: 24,
+    slug: "nguyen-lieu-lam-banh",
+    name: "Nguyên Liệu Làm Bánh",
+    parent_id: 17,
+  },
+  {
+    id: 25,
+    slug: "snack-organic",
+    name: "Snack Organic",
+    parent_id: 17,
+  },
+  // Gia Vị & Phụ Liệu - parent: null
+  {
+    id: 26,
+    slug: "gia-vi-phu-lieu",
+    name: "Gia Vị & Phụ Liệu",
+    parent_id: null,
+  },
+  // Children của Gia Vị & Phụ Liệu (id: 26)
+  {
+    id: 27,
+    slug: "gia-vi",
+    name: "Gia Vị",
+    parent_id: 26,
+  },
+  {
+    id: 28,
+    slug: "nguyen-phu-lieu",
+    name: "Nguyên - Phụ Liệu",
+    parent_id: 26,
+  },
+  {
+    id: 29,
+    slug: "mat-ong-1",
+    name: "Mật Ong",
+    parent_id: 26,
+  },
+  // Đồ Uống Tốt Sức Khỏe - parent: null
+  {
+    id: 30,
+    slug: "do-uong-huu-co",
+    name: "Đồ Uống Tốt Sức Khỏe",
+    parent_id: null,
+  },
+  // Children của Đồ Uống Tốt Sức Khỏe (id: 30)
+  {
+    id: 31,
+    slug: "tra-huu-co",
+    name: "Trà Hữu Cơ",
+    parent_id: 30,
+  },
+  {
+    id: 32,
+    slug: "caffee-huu-co",
+    name: "Cà Phê Hữu Cơ",
+    parent_id: 30,
+  },
+  {
+    id: 33,
+    slug: "nuoc-ep-huu-co",
+    name: "Nước Ép Hữu Cơ",
+    parent_id: 30,
+  },
+  {
+    id: 34,
+    slug: "nuoc-uong-co-con",
+    name: "Đồ Uống Có Cồn",
+    parent_id: 30,
+  },
+  // Bơ - Sữa - parent: null
+  {
+    id: 35,
+    slug: "bo-sua",
+    name: "Bơ - Sữa",
+    parent_id: null,
+  },
+  // Children của Bơ - Sữa (id: 35)
+  {
+    id: 36,
+    slug: "sua-hat",
+    name: "Sữa Hạt",
+    parent_id: 35,
+  },
+  {
+    id: 37,
+    slug: "sua-tuoi",
+    name: "Sữa Tươi",
+    parent_id: 35,
+  },
+  {
+    id: 38,
+    slug: "sua-chua",
+    name: "Sữa Chua",
+    parent_id: 35,
+  },
+  {
+    id: 39,
+    slug: "bo-phomai",
+    name: "Bơ & Phomai",
+    parent_id: 35,
+  },
+  {
+    id: 40,
+    slug: "sua-dac",
+    name: "Sữa Đặc",
+    parent_id: 35,
+  },
+  // Mẹ & Bé - parent: null
+  {
+    id: 41,
+    slug: "nhom-me-va-be",
+    name: "Mẹ & Bé",
+    parent_id: null,
+  },
+  // Children của Mẹ & Bé (id: 41)
+  {
+    id: 42,
+    slug: "thuc-pham-cho-me",
+    name: "Thực Phẩm Cho Mẹ",
+    parent_id: 41,
+  },
+  {
+    id: 43,
+    slug: "thuc-pham-cho-be",
+    name: "Thực Phẩm Cho Bé",
+    parent_id: 41,
+  },
+  {
+    id: 44,
+    slug: "suc-khoe-cho-be",
+    name: "Sức Khoẻ Cho Bé",
+    parent_id: 41,
+  },
+  {
+    id: 45,
+    slug: "do-dung-cho-be",
+    name: "Đồ Dùng Cho Bé",
+    parent_id: 41,
+  },
+];
+
+export type CategoryType = {
+  id: number;
+  slug: string;
+  name: string;
+  parent_id: number | null;
+};
+
+// Helper function để lấy categories theo parent_id
+export const getCategoriesByParentId = (parentId: number | null) => {
+  return mockCategories.filter((category) => category.parent_id === parentId);
+};
+
+// Helper function để lấy tất cả categories cha (parent_id = null)
+export const getParentCategories = () => {
+  return mockCategories.filter((category) => category.parent_id === null);
+};
+
+// Helper function để lấy tất cả children của một category
+export const getChildCategories = (parentId: number) => {
+  return mockCategories.filter((category) => category.parent_id === parentId);
+};
+// Helper function để lấy category bằng ID
+export const getCategoryById = (id: number) => {
+  return mockCategories.find(category => category.id === id);
+};
