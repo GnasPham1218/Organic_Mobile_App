@@ -1,27 +1,32 @@
+// app/product/[id].tsx
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Alert, FlatList, Image, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Text, View } from "react-native";
 
 import IconButton from "@/components/common/IconButton";
 import ProductDetailView from "@/components/features/product/ProductDetail";
 import { useCart } from "@/context/cart/CartContext";
+import { useToast } from "@/context/notifications/ToastContext";
 import { mockProducts, mockReviews, mockUsers } from "@/data/mockData";
 
 import { COLORS } from "@/theme/tokens";
-import { FontAwesome } from "@expo/vector-icons";
+// ✨ FontAwesome không cần thiết ở đây nữa (đã chuyển xuống component con)
+// import { FontAwesome } from "@expo/vector-icons";
+import ProductReviewList from "@/components/features/product/ProductReviewList";
+import ReviewBottomSheet from "@/components/features/product/ReviewBottomSheet";
 
 const ProductDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { cart, addToCart } = useCart();
+  const { showToast } = useToast();
 
   const productIdAsNumber = id ? parseInt(id, 10) : NaN;
 
-  // --- product lookup
   const product = mockProducts.find((p) => p.product_id === productIdAsNumber);
 
-  // --- reviews
-  const productReviews = useMemo(() => {
+  // --- reviews state (giữ nguyên)
+  const [productReviews, setProductReviews] = useState(() => {
     if (Number.isNaN(productIdAsNumber)) return [];
     return mockReviews
       .filter((r) => r.product_id === productIdAsNumber)
@@ -33,9 +38,66 @@ const ProductDetailScreen = () => {
           user_avatar: user?.avatar_url ?? "https://i.pravatar.cc/150",
         };
       });
-  }, [productIdAsNumber]);
+  });
+  const [averageRating, setAverageRating] = useState(product?.rating_avg ?? 0);
 
-  const averageRating = product?.rating_avg ?? 0;
+  // --- review modal state
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  // ✨ 1. Thêm state lỗi
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const handleOpenReviewModal = () => {
+    setReviewError(null); // ✨ Xóa lỗi cũ khi mở modal
+    setIsReviewModalVisible(true);
+  };
+  const handleCloseReviewModal = () => setIsReviewModalVisible(false);
+
+  const handleSubmitReview = (rating: number, comment: string) => {
+    if (rating === 0 || !comment.trim()) {
+      // ✨ 2. Cập nhật state lỗi thay vì gọi showToast
+      setReviewError("Vui lòng chọn sao và viết bình luận.");
+      return;
+    }
+
+    // Xóa lỗi nếu đã qua
+    setReviewError(null);
+
+    const newReview = {
+      review_id: Date.now(),
+      product_id: productIdAsNumber,
+      customer_user_id: 99,
+      comment: comment.trim(),
+      rating: rating,
+      create_at: new Date().toISOString().split("T")[0],
+      user_name: "Bạn",
+      user_avatar: "https://i.pravatar.cc/150?u=current_user",
+    };
+
+    setProductReviews((prevReviews) => {
+      const updatedReviews = [newReview, ...prevReviews];
+      const totalRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0);
+      const newAverage = totalRating / updatedReviews.length;
+      setAverageRating(newAverage);
+      return updatedReviews;
+    });
+
+    handleCloseReviewModal();
+    // ✨ Toast này VẪN HOẠT ĐỘNG, vì nó chỉ hiển thị sau khi modal đã đóng
+    showToast("success", "Cảm ơn bạn đã đánh giá!");
+  };
+
+  // (Hàm handleAddToCart giữ nguyên)
+  const handleAddToCart = (quantity: number) => {
+    if (!product) {
+      return;
+    }
+    const { quantity: productStock, ...productInfo } = product;
+    addToCart(productInfo, quantity);
+
+    showToast("success", "Đã thêm sản phẩm vào giỏ hàng!");
+  };
+
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   if (!product) {
     return (
@@ -44,113 +106,6 @@ const ProductDetailScreen = () => {
       </View>
     );
   }
-
-  const handleAddToCart = (quantity: number) => {
-    addToCart(product, quantity);
-    Alert.alert(
-      "Thành công",
-      `Đã thêm ${quantity} "${product.name}" vào giỏ hàng.`
-    );
-  };
-
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-  const ReviewItem: React.FC<{
-    userName: string;
-    userAvatar: string;
-    rating: number;
-    comment: string;
-    date: string;
-  }> = ({ userName, userAvatar, rating, comment, date }) => {
-    return (
-      <View className="flex-row bg-white p-4 rounded-2xl mb-3 shadow-sm">
-        <Image
-          source={{ uri: userAvatar }}
-          className="w-12 h-12 rounded-full mr-3"
-        />
-        <View className="flex-1">
-          <View className="flex-row justify-between items-center mb-1">
-            <Text className="text-base font-semibold text-gray-800">
-              {userName}
-            </Text>
-            <View className="flex-row">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <FontAwesome
-                  key={i}
-                  name={i < rating ? "star" : "star-o"}
-                  size={16}
-                  color="#FACC15"
-                  style={{ marginLeft: i === 0 ? 0 : 4 }}
-                />
-              ))}
-            </View>
-          </View>
-
-          <Text className="text-sm text-gray-700 mb-1">{comment}</Text>
-          <Text className="text-xs text-gray-500">{date}</Text>
-        </View>
-      </View>
-    );
-  };
-
-  const ReviewSection = () => {
-    return (
-      <View className="px-4 pb-6">
-        {/* Header: average rating + count */}
-        <View className="flex-row items-center justify-between mb-3">
-          <View className="flex-row items-center">
-            <Text className="text-xl font-semibold mr-2">Đánh giá</Text>
-            <View className="flex-row items-center">
-              <Text className="text-lg font-semibold mr-2">
-                {averageRating?.toFixed
-                  ? averageRating.toFixed(1)
-                  : averageRating || "0.0"}
-              </Text>
-              <View className="flex-row">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <FontAwesome
-                    key={i}
-                    name={i < Math.round(averageRating) ? "star" : "star-o"}
-                    size={16}
-                    color="#FACC15"
-                    style={{ marginLeft: i === 0 ? 0 : 4 }}
-                  />
-                ))}
-              </View>
-            </View>
-          </View>
-
-          <Text className="text-sm text-gray-500">
-            {productReviews.length} lượt
-          </Text>
-        </View>
-
-        {productReviews.length === 0 ? (
-          <View className="py-6 items-center">
-            <Text className="text-gray-500">
-              Chưa có đánh giá nào cho sản phẩm này.
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={productReviews}
-            keyExtractor={(item) => item.review_id.toString()}
-            renderItem={({ item }) => (
-              <ReviewItem
-                userName={item.user_name}
-                userAvatar={item.user_avatar}
-                rating={item.rating}
-                comment={item.comment}
-                date={item.create_at}
-              />
-            )}
-            scrollEnabled={false} // scroll bằng ScrollView của ProductDetailView
-            ListFooterComponent={<View className="h-4" />}
-          />
-        )}
-      </View>
-    );
-  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -161,16 +116,29 @@ const ProductDetailScreen = () => {
         onAddToCart={handleAddToCart}
         headerRight={
           <IconButton
-            icon="shopping-cart"
-            onPress={() => router.push("/cart/CartScreen")} // ✨ chuyển sang trang CartScreen
+            icon="cart-outline"
+            onPress={() => router.push("/cart/CartScreen")}
             color={COLORS.PRIMARY}
             badge={cartItemCount > 0}
             badgeContent={cartItemCount > 99 ? "99+" : cartItemCount}
           />
         }
       >
-        <ReviewSection />
+        <ProductReviewList
+          reviews={productReviews}
+          averageRating={averageRating}
+          onWriteReview={handleOpenReviewModal}
+        />
       </ProductDetailView>
+
+      {/* ✨ 3. Truyền state lỗi và hàm clear vào modal */}
+      <ReviewBottomSheet
+        visible={isReviewModalVisible}
+        onClose={handleCloseReviewModal}
+        onSubmit={handleSubmitReview}
+        errorMessage={reviewError}
+        onClearError={() => setReviewError(null)} // Hàm để xóa lỗi
+      />
     </View>
   );
 };

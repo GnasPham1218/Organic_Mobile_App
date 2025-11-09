@@ -138,55 +138,78 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
         {/* Thông tin chi tiết */}
         <View className="bg-white p-4">
-          <Text className="text-2xl font-bold text-TEXT_PRIMARY">{product.name}</Text>
+          <Text className="text-2xl font-bold text-TEXT_PRIMARY">
+            {product.name}
+          </Text>
           <View className="mt-2 flex-row items-center justify-between">
-            <View className="flex-row items-center space-x-2">
-              <FontAwesome name="star" size={16} color="#FFC107" />
-              <Text className="font-semibold text-TEXT_PRIMARY">{product.rating_avg}</Text>
-              <Text className="text-TEXT_SECONDARY">(Xem đánh giá)</Text>
+            <View className="mt-3 flex-row items-baseline">
+              <Text className="text-3xl font-bold text-PRIMARY">
+                {displayPrice.toLocaleString("vi-VN")}đ
+              </Text>
+              {product.salePrice && (
+                <Text className="ml-3 text-lg text-TEXT_SECONDARY line-through">
+                  {product.price.toLocaleString("vi-VN")}đ
+                </Text>
+              )}
             </View>
             <Text className="rounded-md bg-gray-100 px-2 py-1 text-sm font-medium text-TEXT_SECONDARY">
               Đơn vị: {product.unit}
             </Text>
-          </View>
-          <View className="mt-3 flex-row items-baseline">
-            <Text className="text-3xl font-bold text-PRIMARY">
-              {displayPrice.toLocaleString("vi-VN")}đ
-            </Text>
-            {product.salePrice && (
-              <Text className="ml-3 text-lg text-TEXT_SECONDARY line-through">
-                {product.price.toLocaleString("vi-VN")}đ
-              </Text>
-            )}
           </View>
         </View>
 
         {/* Tabs */}
         <View className="mt-3 bg-white">
           <View className="flex-row border-b border-BORDER">
-            <InfoTab label="Mô tả" isActive={activeTab === "desc"} onPress={() => setActiveTab("desc")} />
-            <InfoTab label="Thông tin" isActive={activeTab === "info"} onPress={() => setActiveTab("info")} />
-            <InfoTab label="Chứng nhận" isActive={activeTab === "certs"} onPress={() => setActiveTab("certs")} />
+            <InfoTab
+              label="Mô tả"
+              isActive={activeTab === "desc"}
+              onPress={() => setActiveTab("desc")}
+            />
+            <InfoTab
+              label="Thông tin"
+              isActive={activeTab === "info"}
+              onPress={() => setActiveTab("info")}
+            />
+            <InfoTab
+              label="Chứng nhận"
+              isActive={activeTab === "certs"}
+              onPress={() => setActiveTab("certs")}
+            />
           </View>
 
           <View className="p-4">
             {activeTab === "desc" && (
-              <Text className="text-base leading-6 text-TEXT_SECONDARY">{product.description}</Text>
+              <Text className="text-base leading-6 text-TEXT_SECONDARY">
+                {product.description}
+              </Text>
             )}
 
             {activeTab === "info" && (
               <View className="space-y-3">
                 <View className="flex-row">
-                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">Xuất xứ</Text>
-                  <Text className="flex-1 text-TEXT_SECONDARY">{product.origin_address}</Text>
+                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">
+                    Xuất xứ
+                  </Text>
+                  <Text className="flex-1 text-TEXT_SECONDARY">
+                    {product.origin_address}
+                  </Text>
                 </View>
                 <View className="flex-row">
-                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">Ngày sản xuất</Text>
-                  <Text className="flex-1 text-TEXT_SECONDARY">{product.mfg_date}</Text>
+                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">
+                    Ngày sản xuất
+                  </Text>
+                  <Text className="flex-1 text-TEXT_SECONDARY">
+                    {product.mfg_date}
+                  </Text>
                 </View>
                 <View className="flex-row">
-                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">Hạn sử dụng</Text>
-                  <Text className="flex-1 text-TEXT_SECONDARY">{product.exp_date}</Text>
+                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">
+                    Hạn sử dụng
+                  </Text>
+                  <Text className="flex-1 text-TEXT_SECONDARY">
+                    {product.exp_date}
+                  </Text>
                 </View>
               </View>
             )}
@@ -194,13 +217,24 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             {activeTab === "certs" && (
               <View className="flex-row flex-wrap">
                 {product.certificates.map((cert) => (
-                  <View key={cert.certificate_id} className="mr-4 mb-4 items-center">
-                    <Image source={cert.image_url} className="h-20 w-20" resizeMode="contain" />
-                    <Text className="mt-1 text-xs font-medium text-TEXT_SECONDARY">{cert.name}</Text>
+                  <View
+                    key={cert.certificate_id}
+                    className="mr-4 mb-4 items-center"
+                  >
+                    <Image
+                      source={cert.image_url}
+                      className="h-20 w-20"
+                      resizeMode="contain"
+                    />
+                    <Text className="mt-1 text-xs font-medium text-TEXT_SECONDARY">
+                      {cert.name}
+                    </Text>
                   </View>
                 ))}
                 {product.certificates.length === 0 && (
-                  <Text className="text-TEXT_SECONDARY">Sản phẩm không có chứng nhận đi kèm.</Text>
+                  <Text className="text-TEXT_SECONDARY">
+                    Sản phẩm không có chứng nhận đi kèm.
+                  </Text>
                 )}
               </View>
             )}
@@ -209,7 +243,6 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
         {/* --- RENDER children HERE so reviews (or any extra content) are inside the same ScrollView --- */}
         {children}
-
       </ScrollView>
 
       {/* Footer: quantity + add to cart */}
@@ -221,7 +254,9 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           >
             <FontAwesome name="minus" size={16} color={"#4B5563"} />
           </TouchableOpacity>
-          <Text className="w-14 text-center text-xl font-bold text-TEXT_PRIMARY">{quantity}</Text>
+          <Text className="w-14 text-center text-xl font-bold text-TEXT_PRIMARY">
+            {quantity}
+          </Text>
           <TouchableOpacity
             onPress={() => setQuantity(quantity + 1)}
             className="h-10 w-10 items-center justify-center rounded-full border border-BORDER"
@@ -230,8 +265,13 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={handleAddToCartPress} className="flex-1 rounded-full bg-PRIMARY py-3 ml-4">
-          <Text className="text-center text-base font-bold text-white">Thêm vào giỏ</Text>
+        <TouchableOpacity
+          onPress={handleAddToCartPress}
+          className="flex-1 rounded-full bg-PRIMARY py-3 ml-4"
+        >
+          <Text className="text-center text-base font-bold text-white">
+            Thêm vào giỏ
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

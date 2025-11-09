@@ -43,33 +43,33 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
         {/* Actions phải */}
         <View className="ml-auto flex-row items-center">
           <IconButton
-            icon="shopping-cart"
-            onPress={onCartPress ?? (() => {})}
-            color={COLORS.PRIMARY}
-            badge={cartItemCount > 0}
-            badgeContent={
-              cartItemCount > 99 ? "99+" : cartItemCount || undefined
-            }
-            testID="cart-button"
-          />
-          <IconButton
-            icon="commenting-o"
-            onPress={onMessagePress ?? (() => {})}
-            color={COLORS.TEXT_PRIMARY}
-            badge={messageCount > 0}
-            testID="messages-button"
-          />
-          {/* --- ICON CHUÔNG ĐÃ THÊM --- */}
-          <IconButton
-            icon="bell-o"
-            onPress={onNotificationPress ?? (() => {})}
-            color={COLORS.TEXT_PRIMARY}
-            badge={notificationCount > 0}
-            badgeContent={
-              notificationCount > 99 ? "99+" : notificationCount || undefined
-            }
-            testID="notifications-button"
-          />
+          icon="cart-outline" // Sửa ở đây
+          onPress={onCartPress ?? (() => {})}
+          color={COLORS.PRIMARY}
+          badge={cartItemCount > 0}
+          badgeContent={
+            cartItemCount > 99 ? "99+" : cartItemCount || undefined
+          }
+          testID="cart-button"
+        />
+        <IconButton
+          icon="chatbubble-ellipses-outline" // Sửa ở đây
+          onPress={onMessagePress ?? (() => {})}
+          color={COLORS.TEXT_PRIMARY}
+          badge={messageCount > 0}
+          testID="messages-button"
+        />
+        {/* --- ICON CHUÔNG ĐÃ THÊM --- */}
+        <IconButton
+          icon="notifications-outline" // Sửa ở đây
+          onPress={onNotificationPress ?? (() => {})}
+          color={COLORS.TEXT_PRIMARY}
+          badge={notificationCount > 0}
+          badgeContent={
+            notificationCount > 99 ? "99+" : notificationCount || undefined
+          }
+          testID="notifications-button"
+        />
           {/* --- KẾT THÚC THÊM MỚI --- */}
         </View>
       </View>

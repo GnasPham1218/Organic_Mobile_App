@@ -3,6 +3,48 @@ import type { ImageSourcePropType } from "react-native";
 
 // Lưu ý: Đường dẫn đến ảnh ('@/assets/...') cần khớp với cấu trúc thư mục của bạn.
 
+// ▼▼▼ BƯỚC 1: ĐỊNH NGHĨA TYPE CHO PRODUCT ▼▼▼
+
+/**
+ * Định nghĩa cho một hình ảnh phụ của sản phẩm
+ */
+export interface ProductImage {
+  image_id: number;
+  image_url: ImageSourcePropType;
+}
+
+/**
+ * Định nghĩa cho một chứng nhận của sản phẩm
+ */
+export interface Certificate {
+  certificate_id: number;
+  name: string;
+  image_url: ImageSourcePropType;
+}
+
+/**
+ * Định nghĩa cấu trúc đầy đủ của một sản phẩm
+ */
+export interface Product {
+  product_id: number;
+  category_id: number;
+  name: string;
+  price: number;
+  salePrice?: number; // Dùng ? vì không phải sản phẩm nào cũng có
+  rating_avg: number;
+  image: ImageSourcePropType;
+  images: ProductImage[];
+  description: string;
+  unit: string;
+  origin_address: string;
+  quantity: number;
+  mfg_date: string;
+  exp_date: string;
+  certificates: Certificate[];
+}
+
+// ▲▲▲ KẾT THÚC PHẦN ĐỊNH NGHĨA TYPE ▲▲▲
+
 // Giả định bạn có các Category với ID:
 // 1: Trái cây
 // 2: Rau củ
@@ -10,9 +52,9 @@ import type { ImageSourcePropType } from "react-native";
 // 4: Sữa & Sản phẩm từ sữa
 // 5: Bánh & Ngũ cốc
 
-// ## BƯỚC 1: Hợp nhất thành một nguồn dữ liệu sản phẩm duy nhất ##
-// Đổi tên "mockProductsFull" thành "mockProducts" và thêm salePrice để logic tính toán hoạt động
-export const mockProducts = [
+// ## BƯỚC 2: Hợp nhất thành một nguồn dữ liệu sản phẩm duy nhất ##
+// ▼▼▼ GÁN TYPE "Product[]" VÀO MẢNG ▼▼▼
+export const mockProducts: Product[] = [
   {
     product_id: 1,
     category_id: 3, // Trái cây
@@ -202,6 +244,7 @@ export const mockProducts = [
       },
     ],
   },
+
   {
     product_id: 8,
     category_id: 4, // Trái Cây Nhập Khẩu
@@ -304,6 +347,84 @@ export const mockProducts = [
       },
     ],
   },
+  // {
+  //   product_id: 8,
+  //   category_id: 4, // Trái Cây Nhập Khẩu
+  //   name: "Kiwi vàng New Zealand 4 quả",
+  //   price: 120000.0,
+  //   salePrice: 99000.0,
+  //   rating_avg: 4.7,
+  //   image: require("@/assets/products/kiwi.png"),
+  //   images: [
+  //     { image_id: 108, image_url: require("@/assets/products/kiwi.png") },
+  //   ],
+  //   description:
+  //     "Kiwi vàng New Zealand với vị ngọt thanh, thơm mát và giàu vitamin C. Quả chín đều, ruột vàng đẹp mắt, thích hợp cho bữa ăn nhẹ lành mạnh.",
+  //   unit: "hộp 4 quả",
+  //   origin_address: "Zespri, New Zealand",
+  //   quantity: 75,
+  //   mfg_date: "2025-10-18",
+  //   exp_date: "2025-11-15",
+  //   certificates: [
+  //     {
+  //       certificate_id: 4,
+  //       name: "GlobalG.A.P.",
+  //       image_url: require("@/assets/certs/globalgap.png"),
+  //     },
+  //   ],
+  // },
+  // {
+  //   product_id: 8,
+  //   category_id: 4, // Trái Cây Nhập Khẩu
+  //   name: "Kiwi vàng New Zealand 4 quả",
+  //   price: 120000.0,
+  //   salePrice: 99000.0,
+  //   rating_avg: 4.7,
+  //   image: require("@/assets/products/kiwi.png"),
+  //   images: [
+  //     { image_id: 108, image_url: require("@/assets/products/kiwi.png") },
+  //   ],
+  //   description:
+  //     "Kiwi vàng New Zealand với vị ngọt thanh, thơm mát và giàu vitamin C. Quả chín đều, ruột vàng đẹp mắt, thích hợp cho bữa ăn nhẹ lành mạnh.",
+  //   unit: "hộp 4 quả",
+  //   origin_address: "Zespri, New Zealand",
+  //   quantity: 75,
+  //   mfg_date: "2025-10-18",
+  //   exp_date: "2025-11-15",
+  //   certificates: [
+  //     {
+  //       certificate_id: 4,
+  //       name: "GlobalG.A.P.",
+  //       image_url: require("@/assets/certs/globalgap.png"),
+  //     },
+  //   ],
+  // },
+  // {
+  //   product_id: 8,
+  //   category_id: 4, // Trái Cây Nhập Khẩu
+  //   name: "Kiwi vàng New Zealand 4 quả",
+  //   price: 120000.0,
+  //   salePrice: 99000.0,
+  //   rating_avg: 4.7,
+  //   image: require("@/assets/products/kiwi.png"),
+  //   images: [
+  //     { image_id: 108, image_url: require("@/assets/products/kiwi.png") },
+  //   ],
+  //   description:
+  //     "Kiwi vàng New Zealand với vị ngọt thanh, thơm mát và giàu vitamin C. Quả chín đều, ruột vàng đẹp mắt, thích hợp cho bữa ăn nhẹ lành mạnh.",
+  //   unit: "hộp 4 quả",
+  //   origin_address: "Zespri, New Zealand",
+  //   quantity: 75,
+  //   mfg_date: "2025-10-18",
+  //   exp_date: "2025-11-15",
+  //   certificates: [
+  //     {
+  //       certificate_id: 4,
+  //       name: "GlobalG.A.P.",
+  //       image_url: require("@/assets/certs/globalgap.png"),
+  //     },
+  //   ],
+  // },
 ];
 
 export const mockBanners = [
@@ -312,12 +433,13 @@ export const mockBanners = [
   require("@/assets/banners/b2.jpg"), // Sửa lại để không bị trùng
 ];
 
-// ## BƯỚC 2: Sửa lại các định nghĩa Type cho nhất quán ##
+// ## BƯỚC 3: Sửa lại các định nghĩa Type cho nhất quán ##
 
 // Lấy kiểu dữ liệu trực tiếp từ mảng mockProducts đã được hợp nhất
+// Dòng này vẫn hoạt động và giờ sẽ tương đương với type "Product"
 export type ProductType = (typeof mockProducts)[0];
 
-// Dùng ProductType để định nghĩa ProductInfo, loại bỏ trường quantity không cần thiết
+// Dùng ProductType (hoặc Product) để định nghĩa ProductInfo, loại bỏ trường quantity không cần thiết
 export type ProductInfo = Omit<ProductType, "quantity">;
 
 // ======================================================
@@ -329,7 +451,7 @@ export type Order = {
   id: string;
   status: OrderStatus; // <-- Dùng type mới
   totalItems: number;
-  items: ProductType[];
+  items: Product[]; // <-- SỬ DỤNG TYPE PRODUCT ĐÃ ĐỊNH NGHĨA
   subtotal: number;
   delivery_fee: number;
   tax_amount: number;
@@ -412,7 +534,7 @@ export type ReturnRequest = {
   return_id: string; // Mã khiếu nại (ví dụ: KN12345)
   order_id: string; // Mã đơn hàng gốc
   status: ReturnStatus;
-  items: ProductType[]; // Các sản phẩm trong đơn
+  items: Product[]; // <-- SỬ DỤNG TYPE PRODUCT ĐÃ ĐỊNH NGHĨA
   totalItems: number;
   reason: string;
   method: ReturnMethod;

@@ -15,10 +15,10 @@ const { width } = Dimensions.get("window");
 
 const Toast: React.FC<Props> = ({ message, type = "info", opacity }) => {
   const styleMap = {
-    success: { color: "bg-green-600", icon: "check-circle" },
-    error: { color: "bg-red-600", icon: "times-circle" },
-    info: { color: "bg-blue-600", icon: "info-circle" },
-    warning: { color: "bg-yellow-500", icon: "exclamation-circle" },
+    success: { color: "bg-green-600/80", icon: "check-circle" },
+    error: { color: "bg-red-600/80", icon: "times-circle" },
+    info: { color: "bg-blue-600/80", icon: "info-circle" },
+    warning: { color: "bg-yellow-500/80", icon: "exclamation-circle" },
   };
 
   const { color, icon } = styleMap[type];

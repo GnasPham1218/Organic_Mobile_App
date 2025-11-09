@@ -1,10 +1,12 @@
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+// ✨ BƯỚC 1: Đổi FontAwesome thành Ionicons
+import { Ionicons } from "@expo/vector-icons";
 import { COLORS, ICON_SIZE } from "@/theme/tokens";
 
 export interface IconButtonProps {
-  icon: keyof typeof FontAwesome.glyphMap;
+  // ✨ BƯỚC 2: Cập nhật kiểu dữ liệu của icon
+  icon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
   color?: string;
   size?: number;
@@ -22,6 +24,7 @@ const IconButton: React.FC<IconButtonProps> = ({
   badgeContent,
   testID,
 }) => {
+  // Logic badge không đổi
   const showBadge = badge === true || (typeof badge === "number" && badge > 0);
   const displayContent = badgeContent !== undefined ? String(badgeContent) : "";
 
@@ -33,7 +36,10 @@ const IconButton: React.FC<IconButtonProps> = ({
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       testID={testID}
     >
-      <FontAwesome name={icon} size={size} color={color} />
+      {/* ✨ BƯỚC 3: Đổi component FontAwesome thành Ionicons */}
+      <Ionicons name={icon} size={size} color={color} />
+
+      {/* Phần badge không cần thay đổi */}
       {showBadge && (
         <View
           className="absolute top-1 right-1 rounded-full z-10 items-center justify-center"
@@ -51,6 +57,7 @@ const IconButton: React.FC<IconButtonProps> = ({
   );
 };
 
+// Styles không đổi
 const styles = StyleSheet.create({
   badgeSm: { width: 8, height: 8 },
   badgeLg: { width: 16, height: 16 },

@@ -9,10 +9,11 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { COLORS } from "@/theme/tokens";
+import DiscountBadge from "./DiscountBadge";
 
-// ✨ BƯỚC 1: Cập nhật lại ProductCardProps
+// ... (ProductCardProps và formatCurrency không đổi)
 export type ProductCardProps = {
-  id: number; // Sửa từ 'string' thành 'number'
+  id: number;
   name: string;
   image: ImageSourcePropType;
   price: number;
@@ -20,13 +21,11 @@ export type ProductCardProps = {
   discountPercent?: number;
   inStock?: boolean;
   currency?: string;
-  // Sửa kiểu dữ liệu của tham số 'id' thành 'number'
-  onPress?: (id: number) => void; 
+  onPress?: (id: number) => void;
   onAdd?: (id: number) => void;
   testID?: string;
 };
 
-// Hàm formatCurrency không đổi
 const formatCurrency = (n: number, currency = "₫") => {
   try {
     return `${new Intl.NumberFormat("vi-VN").format(n)}${currency}`;
@@ -34,6 +33,7 @@ const formatCurrency = (n: number, currency = "₫") => {
     return `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}${currency}`;
   }
 };
+// ...
 
 const ProductCard: React.FC<ProductCardProps> = ({
   id,
@@ -48,7 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onAdd,
   testID,
 }) => {
-  // Phần logic tính toán không đổi
+  // ... (Logic pct, hasSale, handlers không đổi)
   const pct = useMemo(() => {
     if (typeof discountPercent === "number") {
       return Math.max(0, Math.min(99, Math.round(discountPercent)));
@@ -61,8 +61,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const hasSale = typeof salePrice === "number" && salePrice < price;
 
-  // ✨ BƯỚC 2: Các hàm xử lý sự kiện vẫn dùng `id` đã được truyền vào
-  // không cần thay đổi gì ở đây vì `id` đã được định nghĩa lại ở trên
   const handleAdd = () => {
     if (!inStock) return;
     onAdd?.(id);
@@ -76,30 +74,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <Pressable
       className="bg-white rounded-xl overflow-hidden border"
       style={{ borderColor: COLORS.BORDER }}
-      onPress={handlePress} // Sử dụng hàm đã tạo
+      onPress={handlePress}
       testID={testID}
     >
-      {/* Toàn bộ phần JSX còn lại không cần thay đổi */}
-      {/* Ảnh + badge */}
-      <View className="relative w-full">
-        <View className="w-full h-40 bg-white">
+      {/* Ảnh + badge (Không đổi) */}
+
+      <View className="relative w-full items-center py-3">
+        <View className="w-3/4 aspect-square">
           <Image
             source={image}
-            resizeMode="contain"
+            resizeMode="cover"
             style={{ width: "100%", height: "100%" }}
           />
         </View>
-
-        {pct > 0 && (
-          <View
-            className="absolute left-2 top-2 px-2 py-1 rounded-full flex-row items-center"
-            style={{ backgroundColor: COLORS.ACCENT }}
-          >
-            <FontAwesome name="percent" size={10} color="#fff" />
-            <Text className="text-white text-xs font-bold ml-1">-{pct}%</Text>
-          </View>
-        )}
-
+        <DiscountBadge percentage={pct} />
         {!inStock && (
           <View className="absolute inset-0 bg-black/25 items-center justify-center">
             <Text className="text-white font-bold">Hết hàng</Text>
@@ -109,9 +97,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Nội dung */}
       <View className="p-3">
+        {/* ✨ THAY ĐỔI 1: Cố định chiều cao tên sản phẩm */}
         <Text
           className="text-[13px] font-medium"
-          style={{ color: COLORS.TEXT_PRIMARY }}
+          style={{
+            color: COLORS.TEXT_PRIMARY,
+            lineHeight: 18, // Đặt chiều cao 1 dòng
+            height: 36,     // Đặt chiều cao tổng (bằng 2 * lineHeight)
+          }}
           numberOfLines={2}
         >
           {name}
@@ -119,7 +112,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Giá */}
         <View className="mt-2 flex-row items-baseline justify-between">
-          <View className="flex-1">
+          {/* ✨ THAY ĐỔI 2: Cố định chiều cao khu vực giá */}
+          <View
+            className="flex-1"
+            style={{ minHeight: 42 }} // Đủ cao để chứa 2 dòng (giá sale)
+          >
             {hasSale ? (
               <>
                 <Text
@@ -145,7 +142,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </View>
 
-          {/* Nút Thêm */}
+          {/* Nút Thêm (Không thay đổi) */}
           <TouchableOpacity
             className="ml-2 rounded-full items-center justify-center"
             style={{
