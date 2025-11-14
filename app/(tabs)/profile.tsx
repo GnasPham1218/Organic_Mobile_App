@@ -64,7 +64,7 @@ const ProfileScreen = () => {
     <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
       {/* ===== Header ===== */}
       <View className="border-b border-BORDER bg-STATUS_BAR py-4">
-        <Text className="text-center text-2xl font-bold text-TEXT_PRIMARY">
+        <Text className="text-center text-2xl font-bold text-PRIMARY">
           Tài khoản của tôi
         </Text>
       </View>
@@ -93,7 +93,7 @@ const ProfileScreen = () => {
           <ProfileMenuItem
             icon="credit-card"
             label="Lịch sử thanh toán"
-            onPress={() => console.log("Navigate to Payment Methods")}
+            onPress={() => router.push("/user/payment_history")}
           />
           {/* ===>>> MỤC ĐƯỢC DI CHUYỂN ĐẾN ĐÂY <<<=== */}
           <ProfileMenuItem

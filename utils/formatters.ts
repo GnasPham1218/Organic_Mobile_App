@@ -4,7 +4,7 @@ export const formatCurrency = (amount: number) => {
     style: "decimal",
   }).format(amount);
 
-  return `${numberPart} VNĐ`;
+  return `${numberPart} đ`;
 };
 
 //Hàm format ngày

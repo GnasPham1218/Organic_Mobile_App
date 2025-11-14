@@ -2,7 +2,7 @@
 
 import VoucherListView, {
   VoucherFilterType,
-} from "@/components/features/voucher/VoucherListView";
+} from "@/components/screens/voucher/VoucherListView";
 import { mockVouchers } from "@/data/mockData";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";

@@ -1,4 +1,4 @@
-import OrderHistoryView from "@/components/features/order/OrderHistory";
+import OrderHistoryView from "@/components/screens/order/OrderHistory";
 import { mockHistoryOrders, OrderStatus } from "@/data/mockData";
 import { isSameDay } from "@/utils/dates";
 import { type DateTimePickerEvent } from "@react-native-community/datetimepicker";

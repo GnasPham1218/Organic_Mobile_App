@@ -1,6 +1,6 @@
 // app/(tabs)/_layout.tsx (SAU KHI SỬA)
 
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
 import React from "react";
 
@@ -40,7 +40,7 @@ export default function TabLayout() {
         options={{
           title: "Trang chủ",
           tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="home" color={color} />
+            <FontAwesome5 size={24} name="home" color={color} />
           ),
         }}
       />
@@ -49,7 +49,7 @@ export default function TabLayout() {
         options={{
           title: "Danh mục",
           tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="th" color={color} />
+            <FontAwesome5 size={24} name="th" color={color} />
           ),
         }}
       />
@@ -58,7 +58,7 @@ export default function TabLayout() {
         options={{
           title: "Đơn hàng",
           tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="list-alt" color={color} />
+            <FontAwesome5 size={24} name="list-alt" color={color} />
           ),
         }}
       />
@@ -67,7 +67,7 @@ export default function TabLayout() {
         options={{
           title: "Tài khoản",
           tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="user" color={color} />
+            <FontAwesome5 size={24} name="user" color={color} />
           ),
         }}
       />

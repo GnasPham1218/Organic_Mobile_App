@@ -1,35 +1,50 @@
 // HomeScreen.tsx
 
-import { useRouter } from "expo-router";
+// --- 1. React & React Native ---
 import React, { useCallback, useState } from "react";
 import { ScrollView, View } from "react-native";
 
-import ChatModal from "@/components/features/chat/ChatModal";
+// --- 2. Expo (Routing) ---
+import { useRouter } from "expo-router";
+
+// --- 3. UI Components (Các thành phần giao diện) ---
 import BannerSlider from "@/components/common/BannerSlider";
 import SectionHeader from "@/components/common/SectionHeader";
-import NotificationModal from "@/components/features/notifications/NotificationModal";
-import ProductHorizontalGrid from "@/components/features/product/ProductHorizontalGrid";
-import HomeHeader from "@/components/home/HomeHeader";
-import SearchBar from "@/components/home/SearchBar";
+import ChatModal from "@/components/screens/chat/ChatModal";
+import HomeHeader from "@/components/screens/home/HomeHeader";
+import SearchBar from "@/components/screens/home/SearchBar";
+import NotificationModal from "@/components/screens/notifications/NotificationModal";
+import ProductHorizontalGrid from "@/components/screens/product/ProductHorizontalGrid";
+
+// --- 4. Context & Hooks (Quản lý trạng thái) ---
 import { useCart } from "@/context/cart/CartContext";
 import { useToast } from "@/context/notifications/ToastContext";
+
+// --- 5. Data (Dữ liệu mock) ---
 import { mockBanners, mockProducts } from "@/data/mockData";
 
 const HomeScreen = () => {
-  const router = useRouter();
+  // --- States ---
   const [q, setQ] = useState("");
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isNotificationsVisible, setIsNotificationsVisible] = useState(false);
 
+  // --- Hooks ---
+  const router = useRouter();
   const { cart, addToCart } = useCart();
+  const { showToast } = useToast();
+
+  // --- Biến đã tính toán (Memoized/Derived) ---
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  // --- Handlers cho Modal & Overlay ---
   const openChat = () => setIsChatVisible(true);
   const closeChat = () => setIsChatVisible(false);
 
   const openNotifications = () => setIsNotificationsVisible(true);
   const closeNotifications = () => setIsNotificationsVisible(false);
 
+  // --- Handlers cho Logic nghiệp vụ (Business Logic) ---
   const handleSearchSubmit = useCallback(() => {
     const s = q.trim();
     if (!s) return;
@@ -37,7 +52,6 @@ const HomeScreen = () => {
     // Logic điều hướng đến trang tìm kiếm...
   }, [q]);
 
-  const { showToast } = useToast();
   const handleAddToCart = useCallback(
     (productId: number) => {
       const productToAdd = mockProducts.find((p) => p.product_id === productId);
@@ -49,28 +63,31 @@ const HomeScreen = () => {
     [addToCart, showToast]
   );
 
+  // --- Handlers cho Điều hướng (Navigation) ---
   const handleProductPress = (productId: number) => {
     router.push(`/product/${productId}`);
   };
 
-  // 🔹 Khi bấm vào giỏ hàng, chuyển sang trang CartScreen
   const handleCartPress = () => {
-    router.push("/cart/CartScreen"); // trang CartScreen
+    router.push("/cart/CartScreen"); // Điều hướng đến trang giỏ hàng
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="bg-white shadow-sm">
+    <View className="flex-1 ">
+      {/* --- 1. Phần Header (Cố định) --- */}
+      <View className="bg-STATUS_BAR">
+        {/* 1.1. Home Header (Logo, Icons) */}
         <HomeHeader
           cartItemCount={cartItemCount}
           messageCount={1}
           notificationCount={3}
-          onCartPress={handleCartPress} // 🔹 Chuyển hướng thay vì mở modal
+          onCartPress={handleCartPress} // Chuyển hướng thay vì mở modal
           onMessagePress={openChat}
           onNotificationPress={openNotifications}
           logoSource={require("@/assets/logo_organic.png")}
         />
-        <View className="px-3 py-2">
+        {/* 1.2. Thanh tìm kiếm */}
+        <View className="px-3 pt-2 bg-gray-50">
           <SearchBar
             value={q}
             onChangeText={setQ}
@@ -79,9 +96,13 @@ const HomeScreen = () => {
         </View>
       </View>
 
-      <ScrollView contentInsetAdjustmentBehavior="automatic" showsVerticalScrollIndicator={false}>
+      {/* --- 2. Phần Body (Nội dung cuộn được) --- */}
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="space-y-4">
-          {/* Banner */}
+          {/* 2.1. Banner quảng cáo */}
           <View className="px-3 mt-3">
             <BannerSlider
               images={mockBanners}
@@ -92,7 +113,7 @@ const HomeScreen = () => {
             />
           </View>
 
-          {/* Today's Deals */}
+          {/* 2.2. Section: Ưu đãi hôm nay */}
           <View>
             <SectionHeader
               title="Ưu đãi hôm nay"
@@ -107,7 +128,7 @@ const HomeScreen = () => {
             />
           </View>
 
-          {/* Các section khác */}
+          {/* 2.3. Section: Sản phẩm bán chạy */}
           <View>
             <SectionHeader
               title="Sản phẩm bán chạy"
@@ -124,9 +145,12 @@ const HomeScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Overlay components */}
+      {/* --- 3. Các thành phần Overlay (Modals) --- */}
       <ChatModal visible={isChatVisible} onClose={closeChat} />
-      <NotificationModal visible={isNotificationsVisible} onClose={closeNotifications} />
+      <NotificationModal
+        visible={isNotificationsVisible}
+        onClose={closeNotifications}
+      />
     </View>
   );
 };

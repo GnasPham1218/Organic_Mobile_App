@@ -1,5 +1,7 @@
 // data/mockData.ts
+import { Payment } from "@/type/payment";
 import type { ImageSourcePropType } from "react-native";
+// data/mockData.ts
 
 // Lưu ý: Đường dẫn đến ảnh ('@/assets/...') cần khớp với cấu trúc thư mục của bạn.
 
@@ -1242,5 +1244,95 @@ export const getChildCategories = (parentId: number) => {
 };
 // Helper function để lấy category bằng ID
 export const getCategoryById = (id: number) => {
-  return mockCategories.find(category => category.id === id);
+  return mockCategories.find((category) => category.id === id);
 };
+// --- DỮ LIỆU MOCK MỚI (Dán đè lên mock cũ) ---
+
+// Interface mới khớp với bảng Customer_Address
+export interface Address {
+  address_id: number;
+  user_id: number;
+  receiver_name: string;
+  phone: string;
+  province: string;
+  district: string;
+  ward: string;
+  street: string;
+  is_default: boolean;
+  note?: string | null;
+}
+
+// Dữ liệu mẫu mới
+export const mockAddresses: Address[] = [
+  {
+    address_id: 1,
+    user_id: 1,
+    receiver_name: "Sang đẹp traii",
+    phone: "0123 456 789",
+    province: "TP. Hồ Chí Minh",
+    district: "Quận 1",
+    ward: "Phường Bến Nghé",
+    street: "123 Đường ABC",
+    is_default: true,
+    note: "Giao giờ hành chính",
+  },
+  {
+    address_id: 2,
+    user_id: 1,
+    receiver_name: "Nguyễn Văn A",
+    phone: "0987 654 321",
+    province: "TP. Hồ Chí Minh",
+    district: "Quận 1",
+    ward: "Phường Bến Nghé",
+    street: "Tòa nhà Bitexco, 2 Hải Triều",
+    is_default: false,
+    note: null,
+  },
+  {
+    address_id: 3,
+    user_id: 1,
+    receiver_name: "Ahihi",
+    phone: "0123 987 654",
+    province: "TP. Hồ Chí Minh",
+    district: "Quận Phú Nhuận",
+    ward: "Phường 10",
+    street: "456 Đường XYZ",
+    is_default: false,
+    note: "Gọi trước khi giao",
+  },
+]; // Giả sử @/ trỏ về thư mục gốc
+
+export const mockPayments: Payment[] = [
+  {
+    payment_id: 101,
+    method: "E-Wallet",
+    provider: "Ví MoMo",
+    status: "success",
+    amount: 215000,
+    created_at: "2025-11-09T10:30:00Z",
+  },
+  {
+    payment_id: 102,
+    method: "COD",
+    provider: "Thanh toán khi nhận hàng",
+    status: "success",
+    amount: 180000,
+    created_at: "2025-11-08T14:45:00Z",
+  },
+  {
+    payment_id: 103,
+    method: "Credit Card",
+    provider: "VNPay",
+    status: "success",
+    amount: 350000,
+    created_at: "2025-11-07T09:15:00Z",
+  },
+  {
+    payment_id: 104,
+    method: "E-Wallet",
+    provider: "Ví MoMo",
+    status: "pending",
+    amount: 85000,
+    created_at: "2025-11-10T16:00:00Z",
+  },
+];

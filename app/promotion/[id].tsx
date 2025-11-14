@@ -1,10 +1,10 @@
 // File: app/promotion/[id].tsx (hoặc screens/PromotionDetailScreen.tsx)
-import PromotionDetailView from "@/components/features/promotion/PromotionDetailView";
-import type { PromotionDetailWithProduct } from "@/components/features/promotion/PromotionProductCard";
+import PromotionDetailView from "@/components/screens/promotion/PromotionDetailView";
+import type { PromotionDetailWithProduct } from "@/components/screens/promotion/PromotionProductCard";
 import {
+  mockProducts,
   mockPromotionDetails, // <-- KIỂM TRA IMPORT NÀY
-  mockPromotions,       // <-- KIỂM TRA IMPORT NÀY
-  mockProducts,         // <-- KIỂM TRA IMPORT NÀY (phải là 'mockProducts', không phải tên khác)
+  mockPromotions, // <-- KIỂM TRA IMPORT NÀY
 } from "@/data/mockData";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
@@ -35,7 +35,6 @@ const PromotionDetailScreen = () => {
     // 3. Gộp thông tin sản phẩm (Product) vào chi tiết (Detail)
     const combined: PromotionDetailWithProduct[] = details
       .map((detail) => {
-        
         // ▼▼▼ ĐÂY LÀ NƠI QUAN TRỌNG NHẤT ▼▼▼
         // Nó tìm sản phẩm trong 'mockProducts' khớp với 'detail.product_id'
         const product = mockProducts.find(
@@ -87,7 +86,7 @@ const PromotionDetailScreen = () => {
 
   // Render component View (giao diện)
   return (
-    <PromotionDetailView   
+    <PromotionDetailView
       onBackPress={() => router.back()}
       promotion={promotion}
       details={combinedDetails} // <-- 'combinedDetails' đang bị rỗng

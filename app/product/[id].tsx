@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Text, View } from "react-native";
 
 import IconButton from "@/components/common/IconButton";
-import ProductDetailView from "@/components/features/product/ProductDetail";
+import ProductDetailView from "@/components/screens/product/ProductDetail";
 import { useCart } from "@/context/cart/CartContext";
 import { useToast } from "@/context/notifications/ToastContext";
 import { mockProducts, mockReviews, mockUsers } from "@/data/mockData";
@@ -12,8 +12,8 @@ import { mockProducts, mockReviews, mockUsers } from "@/data/mockData";
 import { COLORS } from "@/theme/tokens";
 // ✨ FontAwesome không cần thiết ở đây nữa (đã chuyển xuống component con)
 // import { FontAwesome } from "@expo/vector-icons";
-import ProductReviewList from "@/components/features/product/ProductReviewList";
-import ReviewBottomSheet from "@/components/features/product/ReviewBottomSheet";
+import ProductReviewList from "@/components/screens/product/ProductReviewList";
+import ReviewBottomSheet from "@/components/screens/product/ReviewBottomSheet";
 
 const ProductDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();

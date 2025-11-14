@@ -1,15 +1,15 @@
+import OrderCard from "@/components/screens/order/OrderCard";
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { FlatList, Text, View } from "react-native";
 import { mockOngoingOrders } from "../../data/mockData";
-import OrderCard from "@/components/features/order/OrderCard";
 
 const OrdersScreen = () => {
   return (
     <View className="flex-1 bg-BACKGROUND">
       {/* Header */}
       <View className="border-b border-BORDER bg-STATUS_BAR py-4">
-        <Text className="text-center text-2xl font-bold text-TEXT_PRIMARY">
+        <Text className="text-center text-2xl font-bold text-PRIMARY">
           Đơn hàng của bạn
         </Text>
       </View>

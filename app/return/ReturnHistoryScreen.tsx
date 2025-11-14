@@ -1,6 +1,6 @@
 // File: screens/ReturnHistoryScreen.tsx
 
-import ReturnHistoryView from "@/components/features/return/ReturnHistoryView";
+import ReturnHistoryView from "@/components/screens/return/ReturnHistoryView";
 import { mockReturnRequests, ReturnStatus } from "@/data/mockData";
 import { isSameDay } from "@/utils/dates";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";

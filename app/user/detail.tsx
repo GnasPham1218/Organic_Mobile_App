@@ -1,5 +1,5 @@
 // app/user/detail.tsx
-import ProfileDetail from "@/components/features/user/ProfileDetail"; // điều chỉnh đường dẫn nếu cần
+import ProfileDetail from "@/components/screens/user/ProfileDetail"; // điều chỉnh đường dẫn nếu cần
 import { useRouter } from "expo-router";
 import React from "react";
 import { Alert } from "react-native";

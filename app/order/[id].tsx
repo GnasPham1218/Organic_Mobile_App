@@ -2,7 +2,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 
-import OrderDetailView from "@/components/features/order/OrderDetailView";
+import OrderDetailView from "@/components/screens/order/OrderDetailView";
 import { mockAllOrders } from "@/data/mockData";
 
 const OrderDetailScreen = () => {

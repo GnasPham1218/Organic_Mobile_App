@@ -2,7 +2,7 @@
 
 import PromotionListView, {
   PromotionStatusFilter,
-} from "@/components/features/promotion/PromotionListView";
+} from "@/components/screens/promotion/PromotionListView";
 import { mockPromotions } from "@/data/mockData";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";

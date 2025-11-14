@@ -1,4 +1,5 @@
 // app/_layout.tsx
+import { AddressProvider } from "@/context/address/AddressContext";
 import { CartProvider } from "@/context/cart/CartContext";
 import { ConfirmProvider } from "@/context/confirm/ConfirmContext";
 import { ToastProvider } from "@/context/notifications/ToastContext";
@@ -7,6 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import "../theme/global.css";
 import { COLORS } from "../theme/tokens";
+import AddressEditModal from "./user/AddressEditModal";
 
 export default function RootLayout() {
   return (
@@ -23,13 +25,16 @@ export default function RootLayout() {
       <ToastProvider>
         <ConfirmProvider>
           <CartProvider>
-            <Stack
-              initialRouteName="index"
-              screenOptions={{ headerShown: false }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            </Stack>
+            <AddressProvider>
+              <Stack
+                initialRouteName="index"
+                screenOptions={{ headerShown: false }}
+              >
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              </Stack>
+              <AddressEditModal />
+            </AddressProvider>
           </CartProvider>
         </ConfirmProvider>
       </ToastProvider>
