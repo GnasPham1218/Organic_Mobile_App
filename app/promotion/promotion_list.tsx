@@ -1,5 +1,3 @@
-// File: screens/PromotionListScreen.tsx
-
 import PromotionListView, {
   PromotionStatusFilter,
 } from "@/components/screens/promotion/PromotionListView";
@@ -43,7 +41,6 @@ const PromotionListScreen = () => {
 
   // Xử lý khi nhấn vào một mục
   const handlePressItem = (promotionId: number) => {
-    // Điều hướng đến trang chi tiết, truyền ID
     router.push(`/promotion/${promotionId}`);
   };
 
@@ -55,7 +52,7 @@ const PromotionListScreen = () => {
       statusFilters={statusFilters}
       selectedStatus={selectedStatus}
       onStatusChange={setSelectedStatus}
-      onPressItem={handlePressItem} // Truyền hàm xử lý click
+      onPressItem={handlePressItem} 
     />
   );
 };

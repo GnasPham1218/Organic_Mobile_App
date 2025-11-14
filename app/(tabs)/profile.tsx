@@ -57,8 +57,6 @@ const ProfileScreen = () => {
     );
   };
 
-  // Bỏ hàm handleReturnPolicy vì đã chuyển vào onPress của item
-  // const handleReturnPolicy = () => { ... };
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
@@ -88,7 +86,7 @@ const ProfileScreen = () => {
           <ProfileMenuItem
             icon="history"
             label="Lịch sử đơn hàng"
-            onPress={() => router.push("/order/order-history")}
+            onPress={() => router.push("/order/order_history")}
           />
           <ProfileMenuItem
             icon="credit-card"
@@ -99,7 +97,7 @@ const ProfileScreen = () => {
           <ProfileMenuItem
             icon="exchange"
             label="Lịch sử đổi trả"
-            onPress={() => router.push("/return/ReturnHistoryScreen")}
+            onPress={() => router.push("/return/return_history")}
           />
         </View>
 
@@ -111,14 +109,14 @@ const ProfileScreen = () => {
           <ProfileMenuItem
             icon="ticket"
             label="Mã giảm giá"
-            onPress={() => router.push("/voucher/VoucherListScreen")}
+            onPress={() => router.push("/voucher/voucher_list")}
           />
           <ProfileMenuItem
             icon="ticket"
             label="Khuyến mãi"
-            onPress={() => router.push("/promotion/PromotionListScreen")}
+            onPress={() => router.push("/promotion/promotion_list")}
           />
-          {/* ===>>> ĐÃ XÓA MỤC "LỊCH SỬ ĐỔI TRẢ" KHỎI ĐÂY <<<=== */}
+          
         </View>
 
         {/* ===== Nhóm HỖ TRỢ ===== */}
@@ -129,17 +127,17 @@ const ProfileScreen = () => {
           <ProfileMenuItem
             icon="phone"
             label="Liên hệ với chúng tôi"
-            onPress={() => console.log("Navigate to Contact Us")}
+            onPress={() => router.push('/supports/contact')}
           />
           <ProfileMenuItem
             icon="question-circle-o"
             label="Câu hỏi thường gặp (FAQ)"
-            onPress={() => console.log("Navigate to FAQ")}
+            onPress={() => router.push('/supports/faq')}
           />
           <ProfileMenuItem
             icon="shield"
             label="Chính sách & Điều khoản"
-            onPress={() => console.log("Navigate to Terms & Policies")}
+            onPress={() => router.push('/supports/policy')}
           />
         </View>
 

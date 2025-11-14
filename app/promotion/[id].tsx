@@ -1,10 +1,10 @@
-// File: app/promotion/[id].tsx (hoặc screens/PromotionDetailScreen.tsx)
+
 import PromotionDetailView from "@/components/screens/promotion/PromotionDetailView";
 import type { PromotionDetailWithProduct } from "@/components/screens/promotion/PromotionProductCard";
 import {
   mockProducts,
-  mockPromotionDetails, // <-- KIỂM TRA IMPORT NÀY
-  mockPromotions, // <-- KIỂM TRA IMPORT NÀY
+  mockPromotionDetails,
+  mockPromotions, 
 } from "@/data/mockData";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
@@ -17,7 +17,6 @@ const PromotionDetailScreen = () => {
 
   // Logic tìm nạp và kết hợp dữ liệu
   const { promotion, combinedDetails } = useMemo(() => {
-    // 1. Tìm khuyến mãi chính
     const foundPromotion = mockPromotions.find(
       (p) => p.promotion_id === promotionId
     );
@@ -27,7 +26,6 @@ const PromotionDetailScreen = () => {
     }
 
     // 2. Lọc các chi tiết (details) thuộc khuyến mãi này
-    // <-- KIỂM TRA LOGIC LỌC NÀY
     const details = mockPromotionDetails.filter(
       (d) => d.promotion_id === promotionId
     );
@@ -35,8 +33,6 @@ const PromotionDetailScreen = () => {
     // 3. Gộp thông tin sản phẩm (Product) vào chi tiết (Detail)
     const combined: PromotionDetailWithProduct[] = details
       .map((detail) => {
-        // ▼▼▼ ĐÂY LÀ NƠI QUAN TRỌNG NHẤT ▼▼▼
-        // Nó tìm sản phẩm trong 'mockProducts' khớp với 'detail.product_id'
         const product = mockProducts.find(
           (p) => p.product_id === detail.product_id
         );
@@ -45,7 +41,7 @@ const PromotionDetailScreen = () => {
         // Chỉ trả về nếu tìm thấy sản phẩm
         if (product) {
           return {
-            product: product, // <-- Dùng 'ProductType' đã được alias
+            product: product, 
             start_date: detail.start_date,
             end_date: detail.end_date,
           };

@@ -47,7 +47,7 @@ const OrderHistoryScreen = () => {
     setSelectedDate(null);
   };
 
-  // ▼▼▼ BƯỚC 2: TRẢ VỀ COMPONENT VIEW VÀ TRUYỀN PROPS ▼▼▼
+
   return (
     <OrderHistoryView
       // Dữ liệu
