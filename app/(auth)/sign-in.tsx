@@ -10,7 +10,7 @@ import DividerWithText from "@/components/common/DividerWithText";
 
 export default function LoginScreen() {
   const router = useRouter();
-
+  const logo = require("@assets/logo_organic.png");
   const handleLogin = (payload: { emailOrPhone: string; password: string }) => {
     console.log("Login:", payload);
     // TODO: gọi API đăng nhập...
@@ -31,8 +31,7 @@ export default function LoginScreen() {
           <AuthHeader
             title="Chào mừng trở lại"
             subtitle="Đăng nhập để khám phá thế giới organic"
-            emoji="🌿"
-            circleColor="#6B8E23"
+            imageSource={logo}
           />
 
           <LoginForm
@@ -51,6 +50,11 @@ export default function LoginScreen() {
             prompt="Chưa có tài khoản?"
             linkText="Đăng ký ngay"
             onPress={() => router.push("/(auth)/sign-up")}
+          />
+          <AuthSwitchLink
+            prompt=""
+            linkText="Tiếp tục mà không đăng nhập"
+            onPress={() => router.push("/(tabs)")}
           />
         </View>
       </ScrollView>

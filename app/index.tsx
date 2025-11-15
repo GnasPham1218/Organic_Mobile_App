@@ -1,45 +1,26 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { hasSeenIntro } from "@/utils/introStorage";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native"; // Dùng để hiển thị loading
-
-const HAS_SEEN_INTRO_KEY = "hasSeenIntro";
+import { ActivityIndicator, View } from "react-native";
 
 export default function Index() {
-  const [hasSeenIntro, setHasSeenIntro] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [seen, setSeen] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkIntroStatus = async () => {
-      try {
-        const value = await AsyncStorage.getItem(HAS_SEEN_INTRO_KEY);
-        setHasSeenIntro(value === "true");
-      } catch (e) {
-        console.error("Lỗi khi đọc AsyncStorage: ", e);
-        setHasSeenIntro(false); // Nếu lỗi, cứ cho xem intro
-      } finally {
-        setIsLoading(false);
-      }
+    const load = async () => {
+      setSeen(await hasSeenIntro());
     };
-
-    checkIntroStatus();
+    load();
   }, []);
 
-  // 1. Đang kiểm tra -> Hiển thị loading
-  if (isLoading || hasSeenIntro === null) {
+  if (seen === null) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
-  // 2. Đã kiểm tra, chưa xem intro -> Chuyển đến intro
-  if (true) {
-    return <Redirect href="/intro/IntroScreen" />;
-  }
-
-  // 3. Đã kiểm tra, đã xem intro -> Chuyển đến (tabs)
-  // (Bạn có thể thêm logic kiểm tra đăng nhập ở đây nếu muốn)
+  if (!seen) return <Redirect href="/intro/IntroScreen" />;
   return <Redirect href="/(tabs)" />;
 }

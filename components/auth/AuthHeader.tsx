@@ -1,26 +1,31 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native"; // Import Image
 
 type AuthHeaderProps = {
   title: string;
   subtitle?: string;
-  emoji?: string; // mặc định: 🌿
+  imageSource?: any; // Thay thế emoji bằng imageSource
   circleColor?: string; // mặc định: #6B8E23
 };
 
 const AuthHeader: React.FC<AuthHeaderProps> = ({
   title,
   subtitle,
-  emoji = "🌿",
-  circleColor = "#6B8E23",
+  imageSource, // Sử dụng imageSource thay vì emoji
 }) => {
   return (
-    <View className="items-center gap-2">
-      <View
-        className="w-20 h-20 rounded-full items-center justify-center"
-        style={{ backgroundColor: circleColor }}
-      >
-        <Text className="text-5xl">{emoji}</Text>
+    <View className="items-center gap-3">
+      <View className="w-30 h-30 rounded-full items-center justify-center mb-10">
+        {imageSource ? (
+          <Image
+            source={imageSource}
+            className="w-30 h-28"
+            resizeMode="contain"
+          />
+        ) : (
+          // Nếu không có imageSource, có thể chọn hiển thị emoji mặc định hoặc bỏ qua
+          <Text className="text-5xl">🌿</Text> // Emoji mặc định nếu không có ảnh
+        )}
       </View>
       <Text className="text-3xl font-bold text-gray-800">{title}</Text>
       {subtitle ? (

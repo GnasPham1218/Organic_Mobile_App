@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
+// 1. Import FontAwesome5 từ @expo/vector-icons
+import { FontAwesome5 } from "@expo/vector-icons";
 
 type LoginFormProps = {
   onSubmit: (payload: { emailOrPhone: string; password: string }) => void;
@@ -15,7 +17,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onForgotPress }) => {
     <View className="gap-y-4">
       {/* Email/Phone */}
       <View className="gap-2">
-        <Text className="text-gray-700 font-semibold">Email hoặc Số điện thoại</Text>
+        <Text className="text-gray-700 font-semibold">
+          Email hoặc Số điện thoại
+        </Text>
         <TextInput
           className="bg-[#E6F3E6] rounded-xl px-4 py-3.5 text-gray-800"
           placeholder="Nhập email hoặc số điện thoại"
@@ -46,7 +50,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onForgotPress }) => {
             onPress={() => setShowPassword(!showPassword)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text className="text-xl">{showPassword ? "🙈" : "👁️"}</Text>
+            {/* 2. Sử dụng component FontAwesome5 */}
+            <FontAwesome5
+              name={showPassword ? "eye" : "eye-slash"}
+              size={20}
+              color="#666" // Bạn có thể đổi màu này, ví dụ: #A0A0A0
+            />
           </TouchableOpacity>
         </View>
       </View>

@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import { markIntroAsSeen } from "@/utils/introStorage";
 import { useRouter } from "expo-router"; // Sửa từ useNavigation
 import React, { useRef, useState } from "react";
 import { Dimensions, FlatList, NativeScrollEvent, View } from "react-native";
@@ -10,22 +10,19 @@ const { width } = Dimensions.get("window");
 const INTRO_PAGES: IntroPageData[] = [
   {
     id: "1",
-    image: require("@/assets/banners/b1.jpg"),
+    image: require("@/assets/intro/intro1.png"),
     title: "Thực phẩm hữu cơ tươi sạch mỗi ngày",
     description:
       "Khám phá thế giới thực phẩm hữu cơ chất lượng cao, được tuyển chọn kỹ lưỡng từ các nông trại uy tín. Đảm bảo sức khỏe cho bạn và gia đình.",
   },
   {
     id: "2",
-    image: require("@/assets/banners/b2.jpg"),
+    image: require("@/assets/intro/intro2.png"),
     title: "Giao hàng tận nơi, tiện lợi và nhanh chóng",
     description:
       "Đặt hàng dễ dàng và nhận sản phẩm tươi ngon ngay tại nhà. Chúng tôi cam kết giao hàng nhanh chóng và an toàn.",
   },
 ];
-
-// Key để lưu trữ trong AsyncStorage
-const HAS_SEEN_INTRO_KEY = "hasSeenIntro";
 
 export default function IntroScreen() {
   const router = useRouter(); // Dùng useRouter
@@ -35,15 +32,11 @@ export default function IntroScreen() {
   // Hàm chuyển đến màn hình chính VÀ LƯU TRẠNG THÁI
   const navigateToMainApp = async (): Promise<void> => {
     try {
-      // 1. Lưu lại là đã xem intro
-      await AsyncStorage.setItem(HAS_SEEN_INTRO_KEY, "true");
-
-      // 2. Chuyển hướng đến tabs
-      router.replace("/(tabs)"); // Dùng router.replace để không thể back lại intro
+      await markIntroAsSeen();
+      router.replace("/(auth)/sign-in");
     } catch (e) {
-      console.error("Lỗi khi lưu AsyncStorage hoặc chuyển hướng:", e);
-      // Nếu lỗi, vẫn cho vào app
-      router.replace("/(tabs)");
+      console.error("Lỗi:", e);
+      router.replace("/(auth)/sign-in");
     }
   };
 
@@ -55,8 +48,6 @@ export default function IntroScreen() {
         animated: true,
       });
     }
-    // Nếu là trang cuối cùng, handleNextPage sẽ không làm gì
-    // vì nút "Bắt đầu" đã gọi navigateToMainApp
   };
 
   // Xử lý khi cuộn FlatList

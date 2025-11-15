@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, Image, Dimensions, TouchableOpacity } from 'react-native';
+import React from "react";
+import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
 
 // Lấy chiều rộng màn hình để điều chỉnh kích thước ảnh
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 // Kiểu dữ liệu cho một trang intro
 export interface IntroPageData {
@@ -32,51 +32,61 @@ const IntroPageView: React.FC<IntroPageViewProps> = ({
   onPressStart,
 }) => {
   return (
-    <View className="flex-1 items-center justify-center bg-BACKGROUND p-6">
+    <View className="flex-1 bg-BACKGROUND">
       {/* Nút bỏ qua (chỉ hiển thị nếu không phải trang cuối) */}
       {!isLastPage && (
-        <TouchableOpacity onPress={onPressSkip} className="absolute top-12 right-6 z-10">
-          <Text className="text-base font-semibold text-TEXT_SECONDARY">
+        <TouchableOpacity
+          onPress={onPressSkip}
+          className="absolute top-7 right-6 z-10 bg-green-300/80 px-5 py-2 rounded-full"
+        >
+          <Text className="text-sm font-semibold text-TEXT_SECONDARY">
             Bỏ qua
           </Text>
         </TouchableOpacity>
       )}
 
-      {/* Hình ảnh */}
-      <Image
-        source={page.image}
-        className="w-full h-1/2 rounded-lg mb-8" // Điều chỉnh kích thước tùy theo hình ảnh của bạn
-        resizeMode="contain" // Đảm bảo ảnh hiển thị đẹp
-      />
-      {/* Tiêu đề */}
-      <Text className="text-3xl font-bold text-PRIMARY text-center mb-4">
-        {page.title}
-      </Text>
-      {/* Mô tả */}
-      <Text className="text-base text-TEXT_SECONDARY text-center leading-6 mb-8">
-        {page.description}
-      </Text>
+      {/* Container chính */}
+      <View className="flex-1 pt-20 pb-14 px-6">
+        {/* Hình ảnh */}
+        <View className="flex-1 justify-center items-center mb-4">
+          <Image
+            source={page.image}
+            className="w-full h-full rounded-3xl"
+            resizeMode="cover"
+          />
+        </View>
 
-      {/* Nút điều hướng */}
-      {isLastPage ? (
-        <TouchableOpacity
-          onPress={onPressStart}
-          className="w-full bg-PRIMARY py-4 rounded-full"
-        >
-          <Text className="text-lg font-bold text-white text-center">
-            Bắt đầu mua sắm!
-          </Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          onPress={onPressNext}
-          className="w-full bg-green-500 py-4 rounded-full" // Màu nút Tiếp tục
-        >
-          <Text className="text-lg font-bold text-white text-center">
-            Tiếp tục
-          </Text>
-        </TouchableOpacity>
-      )}
+        {/* Tiêu đề */}
+        <Text className="text-2xl font-bold text-PRIMARY text-center mb-2 px-2">
+          {page.title}
+        </Text>
+
+        {/* Mô tả */}
+        <Text className="text-sm text-TEXT_SECONDARY text-center leading-5 mb-5 px-4">
+          {page.description}
+        </Text>
+
+        {/* Nút điều hướng */}
+        {isLastPage ? (
+          <TouchableOpacity
+            onPress={onPressStart}
+            className="w-full bg-PRIMARY py-4 rounded-2xl"
+          >
+            <Text className="text-lg font-bold text-white text-center">
+              Bắt đầu mua sắm!
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={onPressNext}
+            className="w-full bg-green-500 py-4 rounded-2xl"
+          >
+            <Text className="text-lg font-bold text-white text-center">
+              Tiếp tục
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
