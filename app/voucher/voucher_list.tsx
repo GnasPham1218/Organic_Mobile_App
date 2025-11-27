@@ -1,12 +1,13 @@
-// File: screens/VoucherListScreen.tsx
-
 import VoucherListView, {
   VoucherFilterType,
 } from "@/components/screens/voucher/VoucherListView";
-import { mockVouchers } from "@/data/mockData";
+import { getVouchersAPI } from "@/service/api";
+
+import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-// Định nghĩa các bộ lọc trạng thái
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert } from "react-native";
+
 const statusFilters: { label: string; value: VoucherFilterType | null }[] = [
   { label: "Tất cả", value: null },
   { label: "Freeship", value: "freeship" },
@@ -15,48 +16,89 @@ const statusFilters: { label: string; value: VoucherFilterType | null }[] = [
 
 const VoucherListScreen = () => {
   const router = useRouter();
+
+  // State quản lý dữ liệu và loading
+  const [vouchers, setVouchers] = useState<IVoucher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
   const [selectedType, setSelectedType] = useState<VoucherFilterType | null>(
     null
   );
 
-  // Logic lọc chính
-  const filteredVouchers = useMemo(() => {
-    let vouchers = mockVouchers;
+  // --- 1. Hàm gọi API ---
+  const fetchVouchers = async () => {
+    try {
+      const res = await getVouchersAPI();
+      if (res.data) {
+        // Xử lý tùy theo cấu trúc response của axios interceptor
+        // @ts-ignore
+        const list = res.data.data as IVoucher[];
+        setVouchers(list);
+      }
+    } catch (error) {
+      console.log("Lỗi tải voucher", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
-    // 1. Lọc theo loại
+  useEffect(() => {
+    fetchVouchers();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchVouchers();
+  };
+
+  // --- 2. Xử lý Copy mã ---
+  const handleCopyCode = async (code: string) => {
+    await Clipboard.setStringAsync(code);
+    Alert.alert(
+      "Đã sao chép",
+      `Mã voucher ${code} đã được lưu vào bộ nhớ tạm.`
+    );
+  };
+
+  // --- 3. Logic Lọc & Sắp xếp (Updated fields) ---
+  const filteredVouchers = useMemo(() => {
+    let result = [...vouchers]; // Clone mảng để không ảnh hưởng state gốc
+
+    // A. Lọc theo loại
     if (selectedType === "freeship") {
-      vouchers = vouchers.filter((v) => v.type === "freeship");
+      result = result.filter((v) => v.typeVoucher === "FREESHIP");
     } else if (selectedType === "product_discount") {
-      // "Giảm giá" bao gồm cả 'percent' và 'fixed_amount'
-      vouchers = vouchers.filter(
-        (v) => v.type === "percent" || v.type === "fixed_amount"
+      result = result.filter(
+        (v) => v.typeVoucher === "PERCENT" || v.typeVoucher === "FIXED_AMOUNT"
       );
     }
 
-    // 2. Sắp xếp: đưa voucher "Hết hạn" VÀ "Hết mã" xuống cuối
-    vouchers.sort((a, b) => {
-      // Kiểm tra trạng thái disabled của A
-      const a_expired = new Date(a.end_date) < new Date();
-      const a_outOfStock = a.used_count >= a.quantity;
-      const a_disabled = a_expired || a_outOfStock;
+    // B. Sắp xếp: Đưa voucher không dùng được xuống cuối
+    result.sort((a, b) => {
+      const now = new Date();
 
-      // Kiểm tra trạng thái disabled của B
-      const b_expired = new Date(b.end_date) < new Date();
-      const b_outOfStock = b.used_count >= b.quantity;
-      const b_disabled = b_expired || b_outOfStock;
+      // Check A
+      const a_expired = new Date(a.endDate) < now;
+      const a_outOfStock = a.usedCount >= a.quantity;
+      const a_disabled = !a.active || a_expired || a_outOfStock;
 
-      // A bị vô hiệu hóa, B không -> A xuống cuối
+      // Check B
+      const b_expired = new Date(b.endDate) < now;
+      const b_outOfStock = b.usedCount >= b.quantity;
+      const b_disabled = !b.active || b_expired || b_outOfStock;
+
       if (a_disabled && !b_disabled) return 1;
-      // A không bị vô hiệu hóa, B bị -> A lên đầu
       if (!a_disabled && b_disabled) return -1;
-      // Cả hai cùng trạng thái
-      return 0;
+
+      // Nếu cùng trạng thái, sắp xếp theo ngày hết hạn (càng gần càng lên đầu)
+      return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
     });
 
-    return vouchers;
-  }, [selectedType]);
+    return result;
+  }, [selectedType, vouchers]);
 
-  // Render component View (giao diện)
   return (
     <VoucherListView
       onBackPress={() => router.back()}
@@ -64,6 +106,10 @@ const VoucherListScreen = () => {
       statusFilters={statusFilters}
       selectedType={selectedType}
       onTypeChange={setSelectedType}
+      loading={loading}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      onCopy={handleCopyCode} // Truyền hàm copy xuống
     />
   );
 };

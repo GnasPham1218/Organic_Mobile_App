@@ -6,7 +6,7 @@ const PORT = "8080";
 
 export const AppConfig = {
   // Đường dẫn gốc API
-  BASE_URL: `http://${IP_ADDRESS}:${PORT}`,
+  BASE_URL: `http://${IP_ADDRESS}:${PORT}/api/v1`,
 
   // Đường dẫn hiển thị ảnh
   AVATAR_URL: `http://${IP_ADDRESS}:${PORT}/storage/images/avatar/`,

@@ -1,102 +1,100 @@
 // File: components/features/promotion/PromotionProductCard.tsx
-
-import type { ProductType as Product, Promotion } from "@/data/mockData";
+import { AppConfig } from "@/constants/AppConfig";
 import { formatCurrency } from "@/utils/formatters";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-// ▼▼▼ THÊM IMPORT COMPONENT MỚI ▼▼▼
-import PromotionStatusBadge from "./PromotionStatusBadge";
+import PromotionStatusBadge from "./PromotionStatusBadge"; // Component đã có
+// --- SỬA CẤU TRÚC PROP: Chuyển từ 'detail' sang 'item' ---
+interface Props {
+  item: IPromotionProduct;
+}
 
-// Kiểu dữ liệu (giữ nguyên)
-export type PromotionDetailWithProduct = {
-  product: Product;
-  start_date: string;
-  end_date: string;
-};
-
-const getDisplayPrices = (
-  product: Product,
-  promotion?: Promotion
-): { finalPrice: number; originalPrice: number } => {
-  const originalPrice = product.price;
-  let promoPrice = Infinity;
-
-  if (promotion && promotion.is_active) {
-    if (promotion.type === "percent") {
-      promoPrice = originalPrice * (1 - promotion.value / 100);
-    } else if (promotion.type === "fixed_amount") {
-      const priceAfterFixed = originalPrice - promotion.value;
-      promoPrice = priceAfterFixed > 0 ? priceAfterFixed : 0;
-    }
-  }
-
-  const builtInSalePrice = product.salePrice ?? Infinity;
-  const finalPrice = Math.min(originalPrice, promoPrice, builtInSalePrice);
-
-  return { finalPrice, originalPrice: product.price };
-};
-
-const PromotionProductCard: React.FC<{
-  detail: PromotionDetailWithProduct;
-  promotion?: Promotion;
-}> = ({ detail, promotion }) => {
-  const { product, start_date, end_date } = detail;
-  // ▼▼▼ XÓA DÒNG GỌI HÀM STATUS CŨ ▼▼▼
-  // const status = getStatusBadge(start_date, end_date);
+const PromotionProductCard: React.FC<Props> = ({ item }) => {
   const router = useRouter();
 
-  const { finalPrice, originalPrice } = getDisplayPrices(product, promotion);
-  const showStrikethrough = finalPrice < originalPrice;
+  // Logic kiểm tra tồn kho (MỚI)
+  const isOutOfStock = item.quantity <= 0;
 
-  const handlePress = () => {
-    router.push(`/product/${product.product_id}`);
-  };
+  // Tính % giảm giá để hiển thị
+  const discountPercent =
+    item.promotionType === "PERCENT"
+      ? item.promotionValue
+      : Math.round(
+          ((item.originalPrice - item.discountedPrice) / item.originalPrice) *
+            100
+        );
+
+  // Xử lý ảnh (Dùng placeholder hoặc ghép Base URL)
+  const imageUrl = { uri: `${AppConfig.PRODUCTS_URL}${item.image}` };
 
   return (
     <TouchableOpacity
-      onPress={handlePress}
-      className="mb-3 flex-row items-center rounded-lg border border-BORDER bg-white p-6 px-4 gap-4"
+      // Dùng productId thay vì product.product_id
+      onPress={() => router.push(`/product/${item.productId}`)}
+      disabled={isOutOfStock}
+      className={`mb-3 flex-row rounded-lg border border-gray-200 bg-white p-3 shadow-sm ${
+        isOutOfStock ? "bg-gray-50 opacity-60" : ""
+      }`}
     >
-      {/* Hình ảnh */}
-      <Image
-        source={product.image}
-        className="h-24 w-24 rounded-md border border-BORDER"
-      />
+      {/* --- Cột Trái: Hình ảnh --- */}
+      <View className="relative h-24 w-24 items-center justify-center rounded-md border border-gray-100 bg-gray-50">
+        <Image source={imageUrl} className="h-20 w-20" resizeMode="contain" />
 
-      {/* Khối thông tin */}
-      <View className="flex-1">
-        {/* Tên sản phẩm */}
-        <Text
-          className="flex-shrink text-base font-bold text-TEXT_PRIMARY"
-          numberOfLines={2}
-        >
-          {product.name}
-        </Text>
+        {/* Badge % Giảm giá */}
+        {!isOutOfStock && (
+          <View className="absolute left-0 top-0 rounded-br-lg rounded-tl-md bg-red-600 px-1.5 py-0.5">
+            <Text className="text-[10px] font-bold text-white">
+              -{discountPercent}%
+            </Text>
+          </View>
+        )}
 
-        {/* Giá sản phẩm */}
-        <View className="mt-1 flex-row items-baseline">
-          <Text className="text-base font-bold text-PRIMARY">
-            {formatCurrency(finalPrice)}
+        {/* Badge Hết hàng */}
+        {isOutOfStock && (
+          <View className="absolute inset-0 items-center justify-center rounded-md bg-black/40">
+            <Text className="rounded bg-black/60 px-2 py-1 text-xs font-bold text-white">
+              Hết hàng
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* --- Cột Phải: Thông tin --- */}
+      <View className="ml-3 flex-1 justify-between py-1">
+        <View>
+          <Text className="text-sm font-bold text-gray-800" numberOfLines={2}>
+            {item.productName}
           </Text>
-          {showStrikethrough && (
-            <Text className="ml-2 text-sm text-TEXT_SECONDARY line-through">
-              {formatCurrency(originalPrice)}
+
+          {/* Hiển thị số lượng sắp hết */}
+          {item.quantity > 0 && item.quantity < 10 && (
+            <Text className="mt-1 text-[10px] text-orange-500">
+              🔥 Chỉ còn {item.quantity} sản phẩm
             </Text>
           )}
         </View>
 
-        {/* Thời gian áp dụng */}
-        <Text className="mt-1 text-sm text-TEXT_SECONDARY">
-          Từ: {new Date(start_date).toLocaleString("vi-VN")}
-        </Text>
-        <Text className="mt-1 text-sm text-TEXT_SECONDARY">
-          Đến: {new Date(end_date).toLocaleString("vi-VN")}
-        </Text>
-
+        {/* Giá cả */}
+        <View className="flex-row items-baseline gap-2">
+          <Text
+            className={`text-lg font-bold ${
+              isOutOfStock ? "text-gray-500" : "text-red-600"
+            }`}
+          >
+            {formatCurrency(item.discountedPrice)}
+          </Text>
+          <Text className="text-xs text-gray-400 line-through">
+            {formatCurrency(item.originalPrice)}
+          </Text>
+        </View>
       </View>
 
-      <PromotionStatusBadge startDate={start_date} endDate={end_date} />
+      {/* --- Badge Trạng thái thời gian --- */}
+      <PromotionStatusBadge
+        startDate={item.promotionStartDate}
+        endDate={item.promotionEndDate}
+      />
     </TouchableOpacity>
   );
 };

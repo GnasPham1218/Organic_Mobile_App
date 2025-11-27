@@ -1,57 +1,48 @@
-// File: components/features/promotion/PromotionDetailView.tsx
+// File: components/screens/promotion/PromotionDetailView.tsx
 
 import IconButton from "@/components/common/IconButton";
-import type { Promotion } from "@/data/mockData";
 import { formatCurrency } from "@/utils/formatters";
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { FlatList, Text, View } from "react-native";
-import PromotionProductCard, {
-  PromotionDetailWithProduct,
-} from "./PromotionProductCard";
 
-// Props mà component này nhận
-type PromotionDetailViewProps = {
-  promotion?: Promotion; // Có thể undefined nếu không tìm thấy
-  details: PromotionDetailWithProduct[]; // Danh sách sản phẩm đã gộp
-  onBackPress: () => void;
+import PromotionProductCard from "./PromotionProductCard";
+
+// Giả định một type cơ bản cho Promotion Header (Tùy thuộc vào backend)
+type BasicPromotion = {
+  id: number;
+  name: string;
+  type: "PERCENT" | "FIXED_AMOUNT"; // Đảm bảo khớp với TypePromotion của backend (in hoa)
+  value: number;
+  // ... thêm các trường khác nếu cần
 };
 
 // Helper để render phần tóm tắt đầu trang
-const renderHeaderInfo = (promotion: Promotion) => {
+const renderHeaderInfo = (promotion: BasicPromotion) => {
   const discountText =
-    promotion.type === "percent"
+    promotion.type === "PERCENT"
       ? `Giảm ${promotion.value}%`
       : `Giảm ${formatCurrency(promotion.value)}`;
 
   return (
-    <View className="p-4 bg-white border-b border-BORDER">
-      <Text className="text-2xl font-bold text-TEXT_PRIMARY">
-        {promotion.name}
-      </Text>
-      <Text className="mt-2 text-lg font-semibold text-PRIMARY">
+    <View className="p-4 bg-white border-b border-gray-200">
+      <Text className="text-2xl font-bold text-gray-800">{promotion.name}</Text>
+      <Text className="mt-2 text-lg font-semibold text-red-600">
         {discountText}
       </Text>
-      <View
-        className={`mt-3 inline-flex flex-row items-center rounded-full px-3 py-1 ${
-          promotion.is_active ? "bg-green-100" : "bg-gray-100"
-        }`}
-      >
-        <FontAwesome
-          name={promotion.is_active ? "check-circle" : "times-circle"}
-          size={16}
-          color={promotion.is_active ? "#16A34A" : "#6B7280"}
-        />
-        <Text
-          className={`ml-2 font-semibold ${
-            promotion.is_active ? "text-green-700" : "text-gray-700"
-          }`}
-        >
-          {promotion.is_active ? "Đang hoạt động" : "Không hoạt động"}
-        </Text>
-      </View>
+      <Text className="mt-3 text-sm text-gray-500">
+        Mã khuyến mãi: #{promotion.id}
+      </Text>
     </View>
   );
+};
+
+// Props mà component này nhận
+type PromotionDetailViewProps = {
+  promotion?: BasicPromotion;
+  // --- CHỈNH SỬA: Dùng IPromotionProduct[] thay cho PromotionDetailWithProduct[] ---
+  details: IPromotionProduct[];
+  onBackPress: () => void;
 };
 
 const PromotionDetailView: React.FC<PromotionDetailViewProps> = ({
@@ -60,10 +51,10 @@ const PromotionDetailView: React.FC<PromotionDetailViewProps> = ({
   onBackPress,
 }) => {
   return (
-    <View className="flex-1 bg-BACKGROUND">
+    <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="flex-row items-center justify-center px-4 py-2 bg-STATUS_BAR border-b border-gray-100">
-        <View className="absolute left-4">
+      <View className="flex-row items-center border-b border-gray-100 bg-white px-4 py-3 shadow-sm">
+        <View className="absolute left-4 z-10">
           <IconButton
             icon="arrow-back"
             size={22}
@@ -71,7 +62,7 @@ const PromotionDetailView: React.FC<PromotionDetailViewProps> = ({
             onPress={onBackPress}
           />
         </View>
-        <Text className="text-center text-2xl font-bold text-TEXT_PRIMARY">
+        <Text className="flex-1 text-center text-lg font-bold text-gray-800">
           Chi tiết khuyến mãi
         </Text>
       </View>
@@ -79,22 +70,19 @@ const PromotionDetailView: React.FC<PromotionDetailViewProps> = ({
       {/* --- Danh sách Sản phẩm --- */}
       <FlatList
         data={details}
+        // --- SỬA LỖI CRASH: Dùng item.productId ---
+        keyExtractor={(item) => item.productId.toString()}
+        // --- SỬA PROP: Truyền item vào PromotionProductCard ---
         renderItem={({ item }) => (
-          <PromotionProductCard detail={item} promotion={promotion} />
+          // Đảm bảo PromotionProductCard nhận prop là 'item'
+          <PromotionProductCard item={item} />
         )}
-        keyExtractor={(item) => item.product.product_id.toString()}
         contentContainerStyle={{ padding: 16 }}
         // Hiển thị thông tin chung của Promotion ở đầu danh sách
         ListHeaderComponent={
           <>
-            {promotion ? (
-              renderHeaderInfo(promotion)
-            ) : (
-              <Text className="p-4 text-center text-TEXT_SECONDARY">
-                Không tìm thấy thông tin khuyến mãi.
-              </Text>
-            )}
-            <Text className="mt-4 px-4 text-lg font-bold text-TEXT_PRIMARY">
+            {promotion && renderHeaderInfo(promotion)}
+            <Text className="mt-4 mb-2 text-lg font-bold text-gray-800">
               Sản phẩm áp dụng
             </Text>
           </>
@@ -102,8 +90,8 @@ const PromotionDetailView: React.FC<PromotionDetailViewProps> = ({
         ListEmptyComponent={
           <View className="mt-10 items-center justify-center">
             <FontAwesome name="dropbox" size={60} color="#CBD5E1" />
-            <Text className="mt-4 text-base text-TEXT_SECONDARY">
-              Không có sản phẩm nào áp dụng
+            <Text className="mt-4 text-base text-gray-500">
+              Không có sản phẩm nào áp dụng khuyến mãi này.
             </Text>
           </View>
         }

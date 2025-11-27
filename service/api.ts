@@ -10,7 +10,7 @@ export const api = axios.create({
 });
 
 export const loginAPI = (emailOrPhone: string, password: string) => {
-  const urlBackend = "/api/v1/auth/login";
+  const urlBackend = "/auth/login";
 
   return api.post<IBackendRes<ILogin>>(
     urlBackend,
@@ -25,7 +25,7 @@ export const loginAPI = (emailOrPhone: string, password: string) => {
   );
 };
 export const logoutAPI = () => {
-  const urlBackend = "/api/v1/auth/logout";
+  const urlBackend = "/auth/logout";
   return api.post<IBackendRes<null>>(urlBackend);
 };
 api.interceptors.request.use(
@@ -42,51 +42,51 @@ api.interceptors.request.use(
 );
 /**
  * API Đăng ký tài khoản mới
- * Endpoint: /api/v1/auth/register
+ * Endpoint: /auth/register
  * Lưu ý: API này sẽ tạo user và tự động kích hoạt gửi OTP trong backend
  */
 export const registerUserAPI = (data: IRegisterRequest) => {
-  const urlBackend = "/api/v1/auth/register";
+  const urlBackend = "/auth/register";
   return api.post<IBackendRes<void>>(urlBackend, data);
 };
 
 /**
  * API Xác thực OTP (Dùng sau khi đăng ký xong)
- * Endpoint: /api/v1/auth/verify-otp
+ * Endpoint: /auth/verify-otp
  */
 export const verifyOtpAPI = (data: IVerifyOtpRequest) => {
-  const urlBackend = "/api/v1/auth/verify-otp";
+  const urlBackend = "/auth/verify-otp";
   return api.post<IBackendRes<void>>(urlBackend, data);
 };
 
 /**
  * API Gửi lại mã OTP (Dùng khi hết hạn hoặc user không nhận được mail)
- * Endpoint: /api/v1/auth/send-otp
+ * Endpoint: /auth/send-otp
  */
 export const resendOtpAPI = (email: string) => {
-  const urlBackend = "/api/v1/auth/send-otp";
+  const urlBackend = "/auth/send-otp";
   return api.post<IBackendRes<void>>(urlBackend, { email });
 };
 
 /**
  * API Gửi yêu cầu lấy lại mật khẩu (Gửi OTP qua email)
- * Endpoint: /api/v1/auth/forgot-password
+ * Endpoint: /auth/forgot-password
  */
 export const sendForgotPasswordOtpAPI = (email: string) => {
-  const urlBackend = "/api/v1/auth/forgot-password";
+  const urlBackend = "/auth/forgot-password";
   return api.post<IBackendRes<string>>(urlBackend, { email });
 };
 
 /**
  * API Đặt lại mật khẩu mới (Kèm OTP xác thực)
- * Endpoint: /api/v1/auth/reset-password
+ * Endpoint: /auth/reset-password
  */
 export const resetPasswordAPI = (data: IResetPasswordRequest) => {
-  const urlBackend = "/api/v1/auth/reset-password";
+  const urlBackend = "/auth/reset-password";
   return api.post<IBackendRes<string>>(urlBackend, data);
 };
 export const getAccountAPI = () => {
-  const urlBackend = "/api/v1/auth/account";
+  const urlBackend = "/auth/account";
   return api.get<IBackendRes<IFetchAccount>>(urlBackend);
 };
 // =============================================================================
@@ -97,7 +97,7 @@ export const getAccountAPI = () => {
  * Lấy danh sách tất cả địa chỉ (Thường dùng cho Admin)
  */
 export const getAllAddressesAPI = () => {
-  const urlBackend = "/api/v1/address";
+  const urlBackend = "/address";
   return api.get<IBackendRes<ICustomerAddress[]>>(urlBackend);
 };
 
@@ -105,7 +105,7 @@ export const getAllAddressesAPI = () => {
  * Lấy chi tiết một địa chỉ theo ID
  */
 export const getAddressByIdAPI = (id: number) => {
-  const urlBackend = `/api/v1/address/${id}`;
+  const urlBackend = `/address/${id}`;
   return api.get<IBackendRes<ICustomerAddress>>(urlBackend);
 };
 
@@ -113,7 +113,7 @@ export const getAddressByIdAPI = (id: number) => {
  * Lấy danh sách địa chỉ của một User cụ thể
  */
 export const getAddressesByUserIdAPI = (userId: number) => {
-  const urlBackend = `/api/v1/address/user/${userId}`;
+  const urlBackend = `/address/user/${userId}`;
   return api.get<IBackendRes<ICustomerAddress[]>>(urlBackend);
 };
 
@@ -122,7 +122,7 @@ export const getAddressesByUserIdAPI = (userId: number) => {
  * @param data DTO tạo mới
  */
 export const createAddressAPI = (data: ICreateCustomerAddressDTO) => {
-  const urlBackend = "/api/v1/address";
+  const urlBackend = "/address";
   return api.post<IBackendRes<ICustomerAddress>>(urlBackend, data);
 };
 
@@ -135,7 +135,7 @@ export const updateAddressAPI = (
   id: number,
   data: IUpdateCustomerAddressDTO
 ) => {
-  const urlBackend = `/api/v1/address/${id}`;
+  const urlBackend = `/address/${id}`;
   // Controller Java dùng @PatchMapping
   return api.patch<IBackendRes<ICustomerAddress>>(urlBackend, data);
 };
@@ -145,7 +145,7 @@ export const updateAddressAPI = (
  * @param id ID của địa chỉ cần xóa
  */
 export const deleteAddressAPI = (id: number) => {
-  const urlBackend = `/api/v1/address/${id}`;
+  const urlBackend = `/address/${id}`;
   return api.delete<IBackendRes<void>>(urlBackend);
 };
 
@@ -154,32 +154,32 @@ export const deleteAddressAPI = (id: number) => {
  * @param id ID của địa chỉ muốn đặt làm mặc định
  */
 export const setDefaultAddressAPI = (id: number) => {
-  const urlBackend = `/api/v1/address/${id}/default`;
+  const urlBackend = `/address/${id}/default`;
   return api.patch<IBackendRes<ICustomerAddress>>(urlBackend);
 };
 /**
  * Lấy danh sách đơn hàng theo User ID
- * Endpoint: /api/v1/orders/user-order/{userId}
+ * Endpoint: /orders/user-order/{userId}
  */
 export const getOrdersByUserIdAPI = (userId: number) => {
-  const urlBackend = `/api/v1/orders/user-order/${userId}`;
+  const urlBackend = `/orders/user-order/${userId}`;
   return api.get<IBackendRes<IOrder[]>>(urlBackend);
 };
 /**
  * Lấy chi tiết đầy đủ của một đơn hàng (bao gồm thông tin sản phẩm)
- * Endpoint: /api/v1/order-details/order/{orderId}/full
+ * Endpoint: /order-details/order/{orderId}/full
  */
 export const getOrderDetailFullAPI = (orderId: number) => {
-  const urlBackend = `/api/v1/order-details/order/${orderId}/full`;
+  const urlBackend = `/order-details/order/${orderId}/full`;
   // Backend trả về data là một mảng danh sách sản phẩm trong đơn
   return api.get<IBackendRes<IOrderDetailFull[]>>(urlBackend);
 };
 /**
  * Lấy danh sách sản phẩm có khuyến mãi tốt nhất (Phân trang)
- * Endpoint: /api/v1/products/best-promotion
+ * Endpoint: /products/best-promotion
  */
 export const getBestPromotionProductsAPI = (page: number, size: number) => {
-  const urlBackend = "/api/v1/products/best-promotion";
+  const urlBackend = "/products/best-promotion";
 
   // Truyền tham số page và size qua params
   return api.get<IBackendRes<ISpringRawResponse<IBestPromotionProduct>>>(
@@ -194,10 +194,10 @@ export const getBestPromotionProductsAPI = (page: number, size: number) => {
 };
 /**
  * Lấy danh sách sản phẩm mới về
- * Endpoint: /api/v1/products/new-arrivals
+ * Endpoint: /products/new-arrivals
  */
 export const getNewArrivalsAPI = (page: number, size: number) => {
-  const urlBackend = "/api/v1/products/new-arrivals";
+  const urlBackend = "/products/new-arrivals";
 
   // Truyền tham số page và size qua params
   return api.get<IBackendRes<ISpringRawResponse<IBestPromotionProduct>>>(
@@ -213,22 +213,22 @@ export const getNewArrivalsAPI = (page: number, size: number) => {
 
 /**
  * Lấy giỏ hàng của User hiện tại
- * Endpoint: /api/v1/cart/my-cart
+ * Endpoint: /cart/my-cart
  * Token: Tự động được gắn bởi Interceptor
  */
 export const getMyCartAPI = () => {
-  const urlBackend = "/api/v1/cart/my-cart";
+  const urlBackend = "/cart/my-cart";
   // Trả về IBackendRes chứa mảng các món hàng (ICartItemDTO[])
   return api.get<IBackendRes<ICartItemDTO[]>>(urlBackend);
 };
 
 /**
  * Thêm sản phẩm vào giỏ hàng (Chỉ dùng cho TẠO MỚI HOẶC CỘNG DỒN)
- * Endpoint: /api/v1/items
+ * Endpoint: /items
  * Method: POST
  */
 export const addToCartAPI = (productId: number, quantity: number) => {
-  const urlBackend = "/api/v1/items";
+  const urlBackend = "/items";
 
   // Payload gửi đi
   const data = {
@@ -241,11 +241,11 @@ export const addToCartAPI = (productId: number, quantity: number) => {
 };
 /**
  * Cập nhật số lượng sản phẩm trong giỏ hàng (SET CỨNG số lượng, hoặc XÓA nếu quantity=0)
- * Endpoint: /api/v1/items
+ * Endpoint: /items
  * Method: PUT
  */
 export const updateCartAPI = (productId: number, quantity: number) => {
-  const urlBackend = "/api/v1/items";
+  const urlBackend = "/items";
   const data = { productId: productId, quantity: quantity };
 
   // 💡 LƯU Ý: Không cần if/else ở đây. Ta để cho Context quyết định
@@ -262,27 +262,27 @@ export const updateCartAPI = (productId: number, quantity: number) => {
 
 /**
  * Lấy chi tiết một sản phẩm theo ID
- * Endpoint: /api/v1/products/{id}
+ * Endpoint: /products/{id}
  * Dữ liệu trả về tương ứng với JSON bạn đã cung cấp (data: {...})
  */
 export const getProductDetailAPI = (id: number) => {
-  const urlBackend = `/api/v1/products/${id}`;
+  const urlBackend = `/products/${id}`;
   // IProductDetail là kiểu dữ liệu cho object sản phẩm chi tiết
   return api.get<IBackendRes<IProductDetail>>(urlBackend);
 };
 
 /**
  * Lấy danh sách ảnh phụ của một sản phẩm
- * Endpoint: /api/v1/product-images/product/{productId}
+ * Endpoint: /product-images/product/{productId}
  * Dữ liệu trả về tương ứng với JSON bạn đã cung cấp (data: [{}, {}, ...])
  */
 export const getProductImagesAPI = (productId: number) => {
-  const urlBackend = `/api/v1/product-images/product/${productId}`;
+  const urlBackend = `/product-images/product/${productId}`;
   // IProductImage[] là kiểu dữ liệu cho mảng các đối tượng ảnh phụ
   return api.get<IBackendRes<IProductImage[]>>(urlBackend);
 };
 export const getBestPromotionByProductId = (id: number) => {
-  const urlBackend = `/api/v1/promotion-details/${id}/best-promotion`;
+  const urlBackend = `/promotion-details/${id}/best-promotion`;
   return api.get<IBackendRes<IBestPromotion>>(urlBackend);
 };
 // =============================================================================
@@ -300,7 +300,7 @@ export const getReviewsByProductIdAPI = (
   page: number = 0,
   size: number = 10
 ) => {
-  const urlBackend = `/api/v1/reviews/product/${productId}?page=${page}&size=${size}`;
+  const urlBackend = `/reviews/product/${productId}?page=${page}&size=${size}`;
   return api.get<IBackendRes<ISpringRawResponse<IResReviewDTO>>>(urlBackend);
 };
 
@@ -309,7 +309,7 @@ export const getReviewsByProductIdAPI = (
  * @param id ID của review
  */
 export const getReviewByIdAPI = (id: number) => {
-  const urlBackend = `/api/v1/reviews/${id}`;
+  const urlBackend = `/reviews/${id}`;
   return api.get<IBackendRes<IResReviewDTO>>(urlBackend);
 };
 
@@ -323,7 +323,7 @@ export const getReviewByIdAPI = (id: number) => {
  * - Nếu không đủ điều kiện sẽ throw RuntimeException
  */
 export const createReviewAPI = (data: ICreateReviewDTO) => {
-  const urlBackend = "/api/v1/reviews";
+  const urlBackend = "/reviews";
 
   // --- BƯỚC MAPPING: Chuyển từ phẳng (Flat) sang lồng nhau (Nested) ---
   const payload = {
@@ -346,8 +346,8 @@ export const createReviewAPI = (data: ICreateReviewDTO) => {
  * @param data DTO cập nhật (chỉ gửi các trường cần sửa)
  */
 export const updateReviewAPI = (id: number, data: IUpdateReviewDTO) => {
-  // Nối id vào URL: /api/v1/reviews/10
-  const urlBackend = `/api/v1/reviews/${id}`;
+  // Nối id vào URL: /reviews/10
+  const urlBackend = `/reviews/${id}`;
 
   // Dùng api.patch tương ứng với @PatchMapping của backend
   return api.patch<IBackendRes<IResReviewDTO>>(urlBackend, data);
@@ -358,12 +358,12 @@ export const updateReviewAPI = (id: number, data: IUpdateReviewDTO) => {
  * @param id ID của review cần xóa
  */
 export const deleteReviewAPI = (id: number) => {
-  const urlBackend = `/api/v1/reviews/${id}`;
+  const urlBackend = `/reviews/${id}`;
   return api.delete<IBackendRes<void>>(urlBackend);
 };
 
 export const searchProductsAPI = (query: string) => {
-  const urlBackend = `/api/v1/products/search?query=${encodeURIComponent(
+  const urlBackend = `/products/search?query=${encodeURIComponent(
     query
   )}&size=10`;
 
@@ -386,7 +386,7 @@ export const searchProductsAPI = (query: string) => {
   });
 };
 export const getAllCategoriesAPI = () => {
-  const urlBackend = "/api/v1/categories?size=1000";
+  const urlBackend = "/categories?size=1000";
   return api.get<IBackendRes<ISpringRawResponse<ICategory>>>(urlBackend);
 };
 // Hàm helper để map key sort từ UI sang string sort của Spring Boot
@@ -409,7 +409,7 @@ export const getProductCardListAPI = (
   size: number,
   sortKey?: string
 ) => {
-  let urlBackend = `/api/v1/products?page=${page}&size=${size}`;
+  let urlBackend = `/products?page=${page}&size=${size}`;
   const sortParam = getSortString(sortKey || "");
 
   if (sortParam) {
@@ -426,7 +426,7 @@ export const getProductsByCategoryAPI = (
   size: number,
   sortKey?: string
 ) => {
-  let urlBackend = `/api/v1/product/category/${id}?page=${page}&size=${size}`;
+  let urlBackend = `/product/category/${id}?page=${page}&size=${size}`;
   const sortParam = getSortString(sortKey || "");
 
   if (sortParam) {
@@ -436,13 +436,36 @@ export const getProductsByCategoryAPI = (
   return api.get<IBackendRes<ISpringRawResponse<IProductCard>>>(urlBackend);
 };
 export const getParentCategoriesAPI = () => {
-  const urlBackend = "/api/v1/categories/parents";
+  const urlBackend = "/categories/parents";
   return api.get<IBackendRes<IParentCategory>>(urlBackend);
 };
 /**
  * API Lấy danh sách Voucher
- * Endpoint: /api/v1/vouchers
+
  */
 export const getVouchersAPI = () => {
   return api.get<IBackendRes<IVoucher[]>>("/vouchers");
+};
+/**
+ * API Lấy danh sách Khuyến mãi (Promotions)
+
+ */
+export const getPromotionsAPI = () => {
+  return api.get<IBackendRes<IPromotion[]>>("/promotions");
+};
+/**
+ * API Lấy danh sách sản phẩm theo Promotion ID
+ * Kết quả trả về: IBackendRes < ISpringRawResponse < IPromotionProduct > >
+ */
+export const getProductsByPromotionIdAPI = (
+  id: number,
+  page: number = 1,
+  size: number = 10
+) => {
+  return api.get<IBackendRes<ISpringRawResponse<IPromotionProduct>>>(
+    `/products/promotion/${id}`,
+    {
+      params: { page, size },
+    }
+  );
 };

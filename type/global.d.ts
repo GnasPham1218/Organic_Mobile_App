@@ -640,4 +640,30 @@ declare global {
     usedCount: number;
     active: boolean;
   }
+
+  // =============================================================================
+  // 11. PROMOTIONS
+  // =============================================================================
+  export type PromotionType = "PERCENT" | "FIXED_AMOUNT";
+
+  export interface IPromotion {
+    id: number;
+    name: string;
+    type: PromotionType;
+    value: number;
+    active: boolean;
+  }
+  export interface IPromotionProduct {
+    productId: number;
+    productName: string;
+    slug: string;
+    quantity: number;
+    image: string;
+    originalPrice: number;
+    discountedPrice: number;
+    promotionStartDate: string;
+    promotionEndDate: string;
+    promotionType: "PERCENT" | "FIXED_AMOUNT";
+    promotionValue: number;
+  }
 }

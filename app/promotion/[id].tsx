@@ -1,91 +1,94 @@
+// File: app/promotion/[id].tsx
 
 import PromotionDetailView from "@/components/screens/promotion/PromotionDetailView";
-import type { PromotionDetailWithProduct } from "@/components/screens/promotion/PromotionProductCard";
-import {
-  mockProducts,
-  mockPromotionDetails,
-  mockPromotions, 
-} from "@/data/mockData";
+import { getProductsByPromotionIdAPI } from "@/service/api";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo } from "react";
-import { Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+// Cấu trúc Promotion tối thiểu cho Header của PromotionDetailView
+interface BasicPromotionHeader {
+  id: number;
+  name: string;
+  type: "PERCENT" | "FIXED_AMOUNT";
+  value: number;
+}
 
 const PromotionDetailScreen = () => {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
-  const promotionId = Number(id); // <-- KIỂM TRA ID CÓ CHÍNH XÁC
+  // Lấy ID và các tham số khác
+  const { id, name, type, value } = useLocalSearchParams<{
+    id: string;
+    name?: string;
+    type?: "PERCENT" | "FIXED_AMOUNT"; // Đảm bảo Type là in hoa
+    value?: string;
+  }>();
+  const promotionId = Number(id);
 
-  // Logic tìm nạp và kết hợp dữ liệu
-  const { promotion, combinedDetails } = useMemo(() => {
-    const foundPromotion = mockPromotions.find(
-      (p) => p.promotion_id === promotionId
-    );
+  // State
+  const [products, setProducts] = useState<IPromotionProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  // Có thể thêm state cho pagination/loadingMore nếu cần
 
-    if (!foundPromotion) {
-      return { promotion: undefined, combinedDetails: [] };
+  // Dữ liệu tối thiểu cho Header
+  const promotionHeader: BasicPromotionHeader = {
+    id: promotionId,
+    name: name || "Chi tiết Khuyến mãi",
+    type: (type?.toUpperCase() as "PERCENT" | "FIXED_AMOUNT") || "PERCENT", // Convert to uppercase
+    value: Number(value) || 0,
+  };
+
+  // --- LOGIC GỌI API ---
+  const fetchProducts = async () => {
+    if (isNaN(promotionId)) {
+      setLoading(false);
+      return;
     }
 
-    // 2. Lọc các chi tiết (details) thuộc khuyến mãi này
-    const details = mockPromotionDetails.filter(
-      (d) => d.promotion_id === promotionId
-    );
+    try {
+      setLoading(true);
+      // Gọi API: (id, page, size)
+      const res = await getProductsByPromotionIdAPI(promotionId, 1, 999);
 
-    // 3. Gộp thông tin sản phẩm (Product) vào chi tiết (Detail)
-    const combined: PromotionDetailWithProduct[] = details
-      .map((detail) => {
-        const product = mockProducts.find(
-          (p) => p.product_id === detail.product_id
-        );
-        // ▲▲▲ HÃY CHẮC CHẮN 'mockProducts' CÓ DỮ LIỆU VÀ 'product_id' KHỚP NHAU ▲▲▲
+      if (res.data && res.data.data) {
+        // Lấy mảng sản phẩm từ res.data.data.result
+        setProducts(res.data.data.result);
+      }
+    } catch (error) {
+      console.error("Lỗi tải sản phẩm khuyến mãi:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // Chỉ trả về nếu tìm thấy sản phẩm
-        if (product) {
-          return {
-            product: product, 
-            start_date: detail.start_date,
-            end_date: detail.end_date,
-          };
-        }
-        return null; // Bỏ qua nếu không tìm thấy product
-      })
-      .filter(
-        // Dòng này sẽ lọc bỏ tất cả 'null' nếu 'product' không được tìm thấy
-        (item): item is PromotionDetailWithProduct => item !== null
-      );
+  useEffect(() => {
+    fetchProducts();
+  }, [promotionId]); // Load lại khi ID thay đổi
 
-    // 4. Sắp xếp (Phần này là tùy chọn, không gây lỗi)
-    combined.sort((a, b) => {
-      const now = new Date().getTime();
-      const a_start = new Date(a.start_date).getTime();
-      const a_end = new Date(a.end_date).getTime();
-      const b_start = new Date(b.start_date).getTime();
-      const b_end = new Date(b.end_date).getTime();
-
-      const a_isActive = now >= a_start && now <= a_end;
-      const b_isActive = now >= b_start && now <= b_end;
-
-      if (a_isActive && !b_isActive) return -1;
-      if (!a_isActive && b_isActive) return 1;
-      return 0;
-    });
-
-    return { promotion: foundPromotion, combinedDetails: combined };
-  }, [promotionId]); // <-- Phải phụ thuộc vào promotionId
-
-  if (isNaN(promotionId)) {
+  // --- Xử lý trạng thái tải / ID không hợp lệ ---
+  if (isNaN(promotionId) || loading) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Text>ID Khuyến mãi không hợp lệ.</Text>
-      </View>
+      <SafeAreaView className="flex-1 items-center justify-center bg-gray-50">
+        {isNaN(promotionId) ? (
+          <Text>ID Khuyến mãi không hợp lệ.</Text>
+        ) : (
+          <ActivityIndicator size="large" color="#f97316" />
+        )}
+        {loading && (
+          <Text className="mt-2 text-gray-500">Đang tải dữ liệu...</Text>
+        )}
+      </SafeAreaView>
     );
   }
 
-  // Render component View (giao diện)
   return (
     <PromotionDetailView
       onBackPress={() => router.back()}
-      promotion={promotion}
-      details={combinedDetails} // <-- 'combinedDetails' đang bị rỗng
+      // Truyền dữ liệu Header (promotionHeader)
+      promotion={promotionHeader}
+      // Truyền dữ liệu API (products)
+      details={products}
     />
   );
 };
