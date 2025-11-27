@@ -12,7 +12,8 @@
       "@theme/*": ["./theme/*"],
       "@assets/*": ["./assets/*"],
       "@data/": ["./data"],
-      "@utils/": ["./utils"]
+      "@utils/": ["./utils"],
+      "@service/": ["./service"]
     }
   },
   "include": [
@@ -20,6 +21,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
-, "theme/tokens.js"  ]
+    "nativewind-env.d.ts",
+    "theme/tokens.js"
+  ]
 }

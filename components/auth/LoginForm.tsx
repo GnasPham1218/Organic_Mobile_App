@@ -1,7 +1,6 @@
+import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
-// 1. Import FontAwesome5 từ @expo/vector-icons
-import { FontAwesome5 } from "@expo/vector-icons";
 
 type LoginFormProps = {
   onSubmit: (payload: { emailOrPhone: string; password: string }) => void;

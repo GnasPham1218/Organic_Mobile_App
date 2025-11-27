@@ -1,194 +1,297 @@
-// context/address/AddressContext.tsx
-import { Address, mockAddresses } from "@/data/mockData";
-import { useToast } from "@/context/notifications/ToastContext";
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useMemo,
-} from "react";
+import {
+  createAddressAPI,
+  deleteAddressAPI,
+  getAddressesByUserIdAPI,
+  setDefaultAddressAPI,
+  updateAddressAPI,
+} from "@/service/api";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Alert } from "react-native";
 
-// Định nghĩa form
-type AddressForm = Partial<Address>;
-
-// Định nghĩa mọi thứ Context sẽ cung cấp
-interface AddressContextType {
-  // State
-  addresses: Address[];
-  selectedAddress: Address | null;
-  showAddEditModal: boolean;
-  form: AddressForm;
-  editingAddress: Address | null;
-
-  // Methods
-  setSelectedAddress: (address: Address) => void;
-  setShowAddEditModal: (v: boolean) => void;
-  setForm: React.Dispatch<React.SetStateAction<AddressForm>>;
-  openAddModal: () => void;
-  openEditModal: (addr: Address) => void;
-  saveAddress: () => void;
-  deleteAddress: (id?: number) => void;
-  setDefaultAddress: (id?: number) => void;
-}
-
-// Tạo Context
-const AddressContext = createContext<AddressContextType | undefined>(undefined);
-
-// Form rỗng mặc định (khớp với Partial<Address>)
-const EMPTY_FORM: AddressForm = {
-  receiver_name: "",
-  phone: "",
-  province: "",
-  district: "",
-  ward: "",
-  street: "",
-  is_default: false,
-  note: "",
+// Type cho dữ liệu form
+type AddressFormType = {
+  receiverName: string;
+  phone: string;
+  province: string;
+  district: string;
+  ward: string;
+  street: string;
+  note: string;
+  defaultAddress: boolean;
 };
 
-// Tạo Provider (component bao bọc)
-export const AddressProvider: React.FC<{ children: ReactNode }> = ({
+interface AddressContextType {
+  // Data
+  addresses: ICustomerAddress[];
+  loading: boolean;
+  provinces: IProvince[];
+  districts: IDistrict[];
+  wards: IWard[];
+
+  // Form State
+  showAddEditModal: boolean;
+  setShowAddEditModal: (v: boolean) => void;
+  form: AddressFormType;
+  setForm: React.Dispatch<React.SetStateAction<AddressFormType>>;
+  editingAddress: ICustomerAddress | null;
+
+  // Actions
+  initData: (userId: number) => void;
+  openAddModal: () => void;
+  openEditModal: (addr: ICustomerAddress) => void;
+  saveAddress: () => Promise<void>;
+  deleteAddress: (id: number) => Promise<void>;
+  setDefaultAddress: (id: number) => Promise<void>;
+
+  // Helper select hành chính
+  handleSelectProvince: (provinceName: string) => void;
+  handleSelectDistrict: (districtName: string) => void;
+}
+
+const AddressContext = createContext<AddressContextType | undefined>(undefined);
+
+export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { showToast } = useToast();
+  const [userId, setUserId] = useState<number | null>(null);
+  const [addresses, setAddresses] = useState<ICustomerAddress[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const [addresses, setAddresses] = useState<Address[]>(mockAddresses);
-  const [selectedAddress, setSelectedAddressState] = useState<Address | null>(
-    () => addresses.find((a) => a.is_default) || addresses[0] || null
-  );
+  // Data hành chính
+  const [vietnamData, setVietnamData] = useState<IProvince[]>([]);
+  const [provinces, setProvinces] = useState<IProvince[]>([]);
+  const [districts, setDistricts] = useState<IDistrict[]>([]);
+  const [wards, setWards] = useState<IWard[]>([]);
 
+  // Modal & Form State
   const [showAddEditModal, setShowAddEditModal] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
-  const [form, setForm] = useState<AddressForm>(EMPTY_FORM);
+  const [editingAddress, setEditingAddress] = useState<ICustomerAddress | null>(
+    null
+  );
+  const [form, setForm] = useState<AddressFormType>({
+    receiverName: "",
+    phone: "",
+    province: "",
+    district: "",
+    ward: "",
+    street: "",
+    note: "",
+    defaultAddress: false,
+  });
 
+  // 1. Fetch dữ liệu hành chính Việt Nam khi mount
+  useEffect(() => {
+    const fetchAdministrativeUnits = async () => {
+      try {
+        const response = await fetch(
+          "https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json"
+        );
+        const data = await response.json();
+        setVietnamData(data);
+        setProvinces(data);
+      } catch (error) {
+        console.error("Lỗi tải data hành chính:", error);
+      }
+    };
+    fetchAdministrativeUnits();
+  }, []);
+
+  // 2. Load danh sách địa chỉ khi có userId
+  const fetchAddresses = async (uid: number) => {
+    if (!uid) return;
+    try {
+      setLoading(true);
+      const res = await getAddressesByUserIdAPI(uid);
+      if (res.data && res.data.data) {
+        // Sort: Mặc định lên đầu
+        const sorted = res.data.data.sort(
+          (a, b) => Number(b.defaultAddress) - Number(a.defaultAddress)
+        );
+        setAddresses(sorted);
+      }
+    } catch (error) {
+      console.log("Lỗi tải danh sách địa chỉ:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initData = (uid: number) => {
+    setUserId(uid);
+    fetchAddresses(uid);
+  };
+
+  // 3. Logic Form & Modal
   const openAddModal = () => {
-    setForm(EMPTY_FORM);
     setEditingAddress(null);
+    setForm({
+      receiverName: "",
+      phone: "",
+      province: "",
+      district: "",
+      ward: "",
+      street: "",
+      note: "",
+      defaultAddress: false,
+    });
+    setDistricts([]); // Reset huyện
+    setWards([]); // Reset xã
     setShowAddEditModal(true);
   };
 
-  const openEditModal = (addr: Address) => {
-    setForm(addr);
+  const openEditModal = (addr: ICustomerAddress) => {
     setEditingAddress(addr);
+    setForm({
+      receiverName: addr.receiverName,
+      phone: addr.phone,
+      province: addr.province,
+      district: addr.district,
+      ward: addr.ward,
+      street: addr.street,
+      note: addr.note || "",
+      defaultAddress: addr.defaultAddress,
+    });
+
+    // Logic tái tạo danh sách Huyện/Xã dựa trên tên đã lưu (Khá phức tạp vì cần tìm ngược lại ID)
+    // Để đơn giản: Khi sửa, nếu muốn đổi địa chỉ hành chính thì người dùng chọn lại từ đầu (Tỉnh -> Huyện -> Xã)
+    const selectedProv = vietnamData.find((p) => p.Name === addr.province);
+    if (selectedProv) {
+      setDistricts(selectedProv.Districts);
+      const selectedDist = selectedProv.Districts.find(
+        (d) => d.Name === addr.district
+      );
+      if (selectedDist) {
+        setWards(selectedDist.Wards);
+      }
+    }
+
     setShowAddEditModal(true);
   };
 
-  const closeModal = () => {
-    setShowAddEditModal(false);
-    setForm(EMPTY_FORM);
-    setEditingAddress(null);
+  // 4. Logic Chọn Hành chính (Cascading)
+  const handleSelectProvince = (provinceName: string) => {
+    const province = vietnamData.find((p) => p.Name === provinceName);
+    setForm((prev) => ({
+      ...prev,
+      province: provinceName,
+      district: "",
+      ward: "",
+    }));
+    setDistricts(province ? province.Districts : []);
+    setWards([]);
   };
 
-  // ▼▼▼ SỬA LỖI TẠI ĐÂY ▼▼▼
-  const saveAddress = () => {
-    // 1. SỬA LỖI VALIDATION: Thêm tất cả các trường string bắt buộc
+  const handleSelectDistrict = (districtName: string) => {
+    const district = districts.find((d) => d.Name === districtName);
+    setForm((prev) => ({ ...prev, district: districtName, ward: "" }));
+    setWards(district ? district.Wards : []);
+  };
+
+  // 5. CRUD Actions
+  const saveAddress = async () => {
+    if (!userId) return;
+    // Validate cơ bản
     if (
-      !form.receiver_name ||
+      !form.receiverName ||
       !form.phone ||
       !form.province ||
       !form.district ||
       !form.ward ||
       !form.street
     ) {
-      showToast("error", "Vui lòng điền đủ thông tin được yêu cầu");
+      Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin bắt buộc (*)");
       return;
     }
 
-    if (editingAddress) {
-      // --- Cập nhật ---
-      setAddresses((prev) =>
-        prev.map((addr) =>
-          addr.address_id === editingAddress.address_id
-            ? ({ ...addr, ...form } as Address) // Dùng as Address để đảm bảo
-            : addr
-        )
-      );
-      showToast("success", "Cập nhật địa chỉ thành công");
-    } else {
-      // --- Thêm mới ---
+    try {
+      if (editingAddress) {
+        // --- UPDATE ---
+        const payload: IUpdateCustomerAddressDTO = {
+          receiverName: form.receiverName,
+          phone: form.phone,
+          province: form.province,
+          district: form.district,
+          ward: form.ward,
+          street: form.street,
+          note: form.note,
+          defaultAddress: form.defaultAddress,
+        };
+        await updateAddressAPI(editingAddress.id, payload);
+        Alert.alert("Thành công", "Cập nhật địa chỉ thành công");
+      } else {
+        // --- CREATE ---
+        const payload: ICreateCustomerAddressDTO = {
+          userId: userId,
+          receiverName: form.receiverName,
+          phone: form.phone,
+          province: form.province,
+          district: form.district,
+          ward: form.ward,
+          street: form.street,
+          note: form.note,
+          defaultAddress: form.defaultAddress,
+        };
+        await createAddressAPI(payload);
+        Alert.alert("Thành công", "Thêm địa chỉ mới thành công");
+      }
 
-      // 2. SỬA LỖI TẠO OBJECT (Lỗi 2322)
-      // Tạo object mới tuân thủ 'Address',
-      // không dùng spread '...form' (vì nó là Partial<Address>)
-      const newAddress: Address = {
-        address_id: Date.now(), // ID tạm
-        user_id: 1, // User ID tạm
-
-        // Các trường đã được validate (nên dùng !)
-        receiver_name: form.receiver_name!,
-        phone: form.phone!,
-        province: form.province!,
-        district: form.district!,
-        ward: form.ward!,
-        street: form.street!,
-
-        // Các trường tùy chọn (dùng || để có giá trị mặc định)
-        is_default: form.is_default || false,
-        note: form.note || null,
-      };
-
-      setAddresses((prev) => [newAddress, ...prev]);
-      showToast("success", "Thêm địa chỉ mới thành công");
+      setShowAddEditModal(false);
+      fetchAddresses(userId); // Reload list
+    } catch (error) {
+      console.log("Save address error:", error);
+      Alert.alert("Lỗi", "Không thể lưu địa chỉ. Vui lòng thử lại.");
     }
-    closeModal();
-  };
-  // ▲▲▲ KẾT THÚC SỬA LỖI ▲▲▲
-
-  const deleteAddress = (id?: number) => {
-    if (!id) return;
-    setAddresses((prev) => prev.filter((addr) => addr.address_id !== id));
-    showToast("success", "Đã xóa địa chỉ");
   };
 
-  const setDefaultAddress = (id?: number) => {
-    if (!id) return;
-    setAddresses((prev) =>
-      prev.map((addr) => ({
-        ...addr,
-        is_default: addr.address_id === id,
-      }))
-    );
-    // Cập nhật luôn selectedAddress nếu đang ở trang checkout
-    const newDefault = addresses.find(a => a.address_id === id);
-    if(newDefault) {
-      setSelectedAddressState(newDefault);
+  const deleteAddress = async (id: number) => {
+    try {
+      await deleteAddressAPI(id);
+      if (userId) fetchAddresses(userId);
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể xóa địa chỉ này.");
     }
-    showToast("success", "Đã đặt làm địa chỉ mặc định");
   };
 
-  const setSelectedAddress = (address: Address) => {
-    setSelectedAddressState(address);
+  const setDefaultAddress = async (id: number) => {
+    try {
+      await setDefaultAddressAPI(id);
+      if (userId) fetchAddresses(userId);
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể đặt mặc định.");
+    }
   };
-
-  const value = useMemo(
-    () => ({
-      addresses,
-      selectedAddress,
-      showAddEditModal,
-      form,
-      editingAddress,
-      setSelectedAddress,
-      setShowAddEditModal,
-      setForm,
-      openAddModal,
-      openEditModal,
-      saveAddress,
-      deleteAddress,
-      setDefaultAddress,
-    }),
-    [addresses, selectedAddress, showAddEditModal, form, editingAddress]
-  );
 
   return (
-    <AddressContext.Provider value={value}>{children}</AddressContext.Provider>
+    <AddressContext.Provider
+      value={{
+        addresses,
+        loading,
+        provinces,
+        districts,
+        wards,
+        showAddEditModal,
+        setShowAddEditModal,
+        form,
+        setForm,
+        editingAddress,
+        initData,
+        openAddModal,
+        openEditModal,
+        saveAddress,
+        deleteAddress,
+        setDefaultAddress,
+        handleSelectProvince,
+        handleSelectDistrict,
+      }}
+    >
+      {children}
+    </AddressContext.Provider>
   );
 };
 
 export const useAddress = () => {
   const context = useContext(AddressContext);
-  if (context === undefined) {
-    throw new Error("useAddress must be used within an AddressProvider");
-  }
+  if (!context)
+    throw new Error("useAddress must be used within AddressProvider");
   return context;
 };

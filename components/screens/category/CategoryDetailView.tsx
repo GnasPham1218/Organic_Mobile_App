@@ -1,45 +1,48 @@
-// components/screens/category/CategoryDetailView.tsx
-import { SortOrder } from "@/app/category/[id]"; // Import type từ screen
-import { CategoryType, Product } from "@/data/mockData";
+import { SortOrder } from "@/app/category/[id]";
 import React from "react";
 
 // Import các component con
-import FilterBottomSheet from "@/components/screens/category/FilterBottomSheet";
-import SortBottomSheet from "@/components/screens/category/SortBottomSheet";
+
+import SortBottomSheet from "@/components/screens/category/SortBottomSheet"; // Check path
 import ProductVerticalGrid from "@/components/screens/product/ProductVerticalGrid";
 import CategoryHeader from "./CategoryHeader";
 import CategoryListEmpty from "./CategoryListEmpty";
 import CategoryListHeader from "./CategoryListHeader";
+import FilterBottomSheet from "./FilterBottomSheet";
 
-// Định nghĩa tất cả props mà component này sẽ nhận
+// Interface Props cập nhật
 interface CategoryDetailViewProps {
-  products: Product[];
-  categoryProducts: Product[];
-  currentCategory: CategoryType | undefined;
+  products: IProductCard[]; // Dùng interface global
+  categoryName: string;
   cartItemCount: number;
+
   isFilteredOrSorted: boolean;
   sortOrder: SortOrder;
   appliedMinPrice: number | null;
   appliedMaxPrice: number | null;
   isSortModalVisible: boolean;
   isFilterModalVisible: boolean;
+
   onBackPress: () => void;
   onCartPress: () => void;
   onProductPress: (productId: number) => void;
-  onAddToCart: (productId: number) => void;
+  onAddToCart: (product: IProductCard) => void;
+
   onFilterPress: () => void;
   onCloseFilterModal: () => void;
   onApplyFilters: (min: number | null, max: number | null) => void;
+
   onSortPress: () => void;
   onCloseSortModal: () => void;
   onSelectSort: (order: SortOrder) => void;
   onResetFiltersAndSort: () => void;
+
+  onEndReached?: () => void;
 }
 
 const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({
   products,
-  categoryProducts,
-  currentCategory,
+  categoryName,
   cartItemCount,
   isFilteredOrSorted,
   sortOrder,
@@ -58,12 +61,13 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({
   onCloseSortModal,
   onSelectSort,
   onResetFiltersAndSort,
+  onEndReached,
 }) => {
-  // Định nghĩa Header cho FlatList (nhận props từ component cha)
+  // Header cho FlatList
   const ListHeader = () => (
     <CategoryListHeader
-      categoryName={currentCategory?.name}
-      productCount={products.length}
+      categoryName={categoryName}
+      productCount={products.length} // Số lượng đã load
       isFilteredOrSorted={isFilteredOrSorted}
       onFilterPress={onFilterPress}
       onSortPress={onSortPress}
@@ -73,20 +77,18 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({
 
   return (
     <>
-      {/* Header chính */}
       <CategoryHeader
         onBackPress={onBackPress}
         onCartPress={onCartPress}
         cartItemCount={cartItemCount}
       />
 
-      {/* Lưới sản phẩm */}
       <ProductVerticalGrid
         products={products}
         onPressProduct={onProductPress}
         onAddToCart={onAddToCart}
-        ListHeaderComponent={ListHeader} // Dùng component đã định nghĩa ở trên
-        ListEmptyComponent={CategoryListEmpty} // Dùng component riêng
+        ListHeaderComponent={ListHeader}
+        ListEmptyComponent={CategoryListEmpty}
         numColumns={2}
         contentPaddingHorizontal={16}
         columnGap={12}
@@ -95,9 +97,10 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({
           paddingTop: 12,
           paddingBottom: 20,
         }}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
       />
 
-      {/* Modal Sắp xếp */}
       <SortBottomSheet
         visible={isSortModalVisible}
         onClose={onCloseSortModal}
@@ -105,14 +108,14 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({
         currentSort={sortOrder}
       />
 
-      {/* Modal Lọc */}
+      {/* Tạm thời truyền mảng rỗng vào allProducts vì API phân trang không trả về hết */}
       <FilterBottomSheet
         visible={isFilterModalVisible}
         onClose={onCloseFilterModal}
         onApply={onApplyFilters}
         currentMinPrice={appliedMinPrice}
         currentMaxPrice={appliedMaxPrice}
-        allProducts={categoryProducts} // Truyền danh sách CHƯA lọc giá
+        allProducts={[]}
       />
     </>
   );

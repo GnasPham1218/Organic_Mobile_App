@@ -1,58 +1,101 @@
-// File: components/orders/StatusBadge.tsx (Cập nhật)
+// File: components/screens/order/StatusBadge.tsx
 
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
-// ▼▼▼ Import type mới từ mockData ▼▼▼
-import type { OrderStatus } from "@/data/mockData"; // <-- Sửa đường dẫn nếu cần
 
-// Định nghĩa giao diện cho mỗi trạng thái
+// Định nghĩa cấu hình hiển thị
 type StatusDisplayConfig = {
-  bgColor: string;
-  textColor: string;
+  bgColor: string; // Class background Tailwind
+  textColorClass: string; // Class text color Tailwind
+  iconColor: string; // Mã Hex cho Icon (FontAwesome cần Hex)
   icon: React.ComponentProps<typeof FontAwesome>["name"];
   text: string;
 };
 
-// ▼▼▼ Dùng một đối tượng tra cứu (lookup object) cho sạch sẽ ▼▼▼
-const statusConfig: Record<OrderStatus, StatusDisplayConfig> = {
-  processing: {
+// Map trạng thái từ Backend (Key viết hoa) sang Giao diện
+const statusConfig: Record<string, StatusDisplayConfig> = {
+  // 1. Trạng thái chờ / Đang xử lý
+  PENDING: {
     bgColor: "bg-amber-100",
-    textColor: "text-amber-600",
+    textColorClass: "text-amber-700",
+    iconColor: "#b45309", // amber-700
+    icon: "clock-o",
+    text: "Đang xử lý",
+  },
+  PROCESSING: {
+    bgColor: "bg-amber-100",
+    textColorClass: "text-amber-700",
+    iconColor: "#b45309",
     icon: "cogs",
     text: "Đang xử lý",
   },
-  shipping: {
+
+  // 2. Trạng thái giao hàng
+  SHIPPING: {
     bgColor: "bg-sky-100",
-    textColor: "text-sky-600",
+    textColorClass: "text-sky-700",
+    iconColor: "#0369a1", // sky-700
     icon: "truck",
     text: "Đang giao",
   },
-  completed: {
+
+  // 3. Trạng thái hoàn thành
+  DELIVERED: {
     bgColor: "bg-green-100",
-    textColor: "text-green-600",
+    textColorClass: "text-green-700",
+    iconColor: "#15803d", // green-700
     icon: "check-circle",
     text: "Hoàn thành",
   },
-  cancelled: {
+  COMPLETED: {
+    // Fallback nếu backend trả về completed
+    bgColor: "bg-green-100",
+    textColorClass: "text-green-700",
+    iconColor: "#15803d",
+    icon: "check-circle",
+    text: "Hoàn thành",
+  },
+
+  // 4. Trạng thái hủy
+  CANCELLED: {
     bgColor: "bg-red-100",
-    textColor: "text-red-600",
+    textColorClass: "text-red-700",
+    iconColor: "#b91c1c", // red-700
     icon: "times-circle",
     text: "Đã hủy",
   },
 };
 
-const StatusBadge: React.FC<{ status: OrderStatus }> = ({ status }) => {
-  // Lấy config an toàn, nếu không có thì fallback
-  const config = statusConfig[status] || statusConfig.processing;
+// Config mặc định (cho trường hợp status lạ)
+const defaultConfig: StatusDisplayConfig = {
+  bgColor: "bg-gray-100",
+  textColorClass: "text-gray-600",
+  iconColor: "#4b5563",
+  icon: "question-circle",
+  text: "Không xác định",
+};
+
+// Component nhận vào string (linh hoạt hơn enum cứng)
+const StatusBadge: React.FC<{ status: string | null | undefined }> = ({
+  status,
+}) => {
+  // 1. Chuẩn hóa input: Chuyển về chữ in hoa để khớp với key
+  const statusKey = status ? status.toUpperCase() : "PENDING";
+
+  // 2. Lấy config hoặc fallback
+  const config = statusConfig[statusKey] || defaultConfig;
 
   return (
     <View
       className={`flex-row items-center self-start rounded-full px-2.5 py-1 ${config.bgColor}`}
     >
-      <FontAwesome name={config.icon} size={12} color={config.textColor} />
+      {/* FontAwesome cần mã màu Hex */}
+      <FontAwesome name={config.icon} size={12} color={config.iconColor} />
+
+      {/* Text dùng class Tailwind */}
       <Text
-        className={`ml-1.5 text-xs font-semibold ${config.textColor} flex-shrink`}
+        className={`ml-1.5 text-xs font-semibold ${config.textColorClass} flex-shrink`}
         numberOfLines={1}
       >
         {config.text}

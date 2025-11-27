@@ -1,20 +1,27 @@
 // components/features/product/ProductDetail.tsx
-
 import IconButton from "@/components/common/IconButton";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useMemo, useRef, useState } from "react";
 import {
   FlatList,
   Image,
+  Keyboard,
   ScrollView,
   Text,
+  TextInput, // Đã sửa vị trí import đúng
   TouchableOpacity,
   useWindowDimensions,
   View,
   ViewToken,
 } from "react-native";
+import ImageView from "react-native-image-viewing";
 
-type ProductFull = {
+// Import Context
+import { useCart } from "@/context/cart/CartContext";
+import { useToast } from "@/context/notifications/ToastContext";
+
+// --- Types giữ nguyên ---
+export type ProductFull = {
   product_id: number;
   name: string;
   price: number;
@@ -28,15 +35,22 @@ type ProductFull = {
   quantity: number;
   mfg_date: string;
   exp_date: string;
-  certificates: { certificate_id: number; name: string; image_url: any }[];
+  certificates: {
+    certificate_id: number;
+    name: string;
+    logo_url: any;
+    document_url: any;
+    certNo: string;
+    date: string;
+  }[];
 };
 
 interface ProductDetailViewProps {
   product: ProductFull;
   onBackPress: () => void;
-  onAddToCart: (quantity: number) => void;
+  onAddToCart?: (quantity: number) => void;
   headerRight?: React.ReactNode;
-  children?: React.ReactNode; // <-- allow children to be rendered inside ScrollView
+  children?: React.ReactNode;
 }
 
 const InfoTab: React.FC<{
@@ -59,25 +73,110 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   onBackPress,
   onAddToCart,
   headerRight,
-  children, // receive children
+  children,
 }) => {
-  const [quantity, setQuantity] = useState(1);
+  // Lấy hàm addToCart từ Context
+  const { addToCart } = useCart();
+  const { showToast } = useToast();
+
+  // State quản lý số lượng (String để xử lý input rỗng)
+  const [quantityStr, setQuantityStr] = useState("1");
+
+  // Các state UI khác
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<"desc" | "info" | "certs">("desc");
+  const [selectedCert, setSelectedCert] = useState<any>(null);
+  const [isProductViewerVisible, setIsProductViewerVisible] = useState(false);
+  const [selectedProductImageIndex, setSelectedProductImageIndex] = useState(0);
+
   const { width: screenWidth } = useWindowDimensions();
 
+  // Tính toán giá
   const displayPrice = product.salePrice ?? product.price;
+  const hasDiscount = product.salePrice && product.salePrice < product.price;
 
-  // safe guard: ensure product.images is array
+  // Xử lý ảnh
   const imagesArray = Array.isArray(product.images) ? product.images : [];
-
   const allImages = useMemo(() => {
-    const thumbnail = { image_id: 0, image_url: product.image };
+    const thumbnail = { image_id: -1, image_url: product.image };
     return [thumbnail, ...imagesArray];
   }, [product.image, imagesArray]);
 
-  const handleAddToCartPress = () => {
-    onAddToCart(quantity);
+  const productImagesForViewer = useMemo(() => {
+    return allImages.map((img) => ({ uri: img.image_url.uri }));
+  }, [allImages]);
+
+  const imagesForCertViewer = selectedCert
+    ? [{ uri: selectedCert.document_url.uri }]
+    : [];
+
+  // --- 1. LOGIC XỬ LÝ NHẬP SỐ LƯỢNG ---
+  const handleQuantityChange = (text: string) => {
+    const cleanText = text.replace(/[^0-9]/g, "");
+    if (cleanText === "") {
+      setQuantityStr("");
+      return;
+    }
+
+    let val = parseInt(cleanText, 10);
+    const maxStock = product.quantity;
+
+    if (val > maxStock) {
+      val = maxStock;
+      showToast("warning", `Chỉ còn ${maxStock} sản phẩm trong kho`);
+    }
+    setQuantityStr(val.toString());
+  };
+
+  const handleQuantityBlur = () => {
+    let val = parseInt(quantityStr || "0", 10);
+    if (val <= 0) {
+      setQuantityStr("1");
+    }
+  };
+
+  const updateQuantity = (delta: number) => {
+    let currentVal = parseInt(quantityStr || "0", 10);
+    let newVal = currentVal + delta;
+    const maxStock = product.quantity;
+
+    if (newVal < 1) newVal = 1;
+    if (newVal > maxStock) {
+      newVal = maxStock;
+      showToast("warning", `Chỉ còn ${maxStock} sản phẩm`);
+    }
+    setQuantityStr(newVal.toString());
+  };
+
+  // --- 2. HÀM NÀY CHỈ CHẠY KHI BẤM NÚT "THÊM VÀO GIỎ" ---
+  const handleAddToCartPress = async () => {
+    Keyboard.dismiss(); // Đóng bàn phím
+
+    const quantity = parseInt(quantityStr, 10);
+    const maxStock = product.quantity;
+
+    // Validate lại lần cuối trước khi gọi API
+    if (quantity > maxStock) {
+      showToast("error", `Không đủ hàng. Kho còn: ${maxStock}`);
+      setQuantityStr(maxStock.toString());
+      return;
+    }
+    if (quantity <= 0) {
+      showToast("warning", "Số lượng phải lớn hơn 0");
+      setQuantityStr("1");
+      return;
+    }
+
+    // Gọi hàm từ Context
+    if (addToCart) {
+      // Lưu ý: Việc gọi await addToCart() ở đây sẽ kích hoạt
+      // refreshCart() trong Context -> Gây re-render component này.
+      // Đây là hành vi bình thường.
+      await addToCart(product, quantity);
+    } else if (onAddToCart) {
+      onAddToCart(quantity);
+      showToast("success", "Đã thêm vào giỏ hàng");
+    }
   };
 
   const onViewableItemsChanged = useRef(
@@ -87,6 +186,11 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       }
     }
   ).current;
+
+  const openProductViewer = (index: number) => {
+    setSelectedProductImageIndex(index);
+    setIsProductViewerVisible(true);
+  };
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -98,26 +202,35 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           color="#333"
           onPress={onBackPress}
         />
-
-        <Text className="text-center text-2xl font-bold text-TEXT_PRIMARY">
+        <Text
+          className="text-center text-lg font-bold text-TEXT_PRIMARY max-w-[70%] truncate"
+          numberOfLines={1}
+        >
           Chi tiết sản phẩm
         </Text>
         <View>{headerRight}</View>
       </View>
 
-      {/* MAIN SCROLL: children will be rendered inside here */}
-      <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
-        {/* Slider ảnh sản phẩm */}
-        <View>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 140 }}
+        keyboardShouldPersistTaps="handled" // Quan trọng: Giúp bấm nút được ngay cả khi đang mở phím
+      >
+        {/* Slider Image */}
+        <View className="bg-white pb-2">
           <FlatList
             data={allImages}
             keyExtractor={(item) => item.image_id.toString()}
-            renderItem={({ item }) => (
-              <Image
-                source={item.image_url}
-                style={{ width: screenWidth, height: screenWidth * 0.9 }}
-                resizeMode="contain"
-              />
+            renderItem={({ item, index }) => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => openProductViewer(index)}
+              >
+                <Image
+                  source={item.image_url}
+                  style={{ width: screenWidth, height: screenWidth * 0.65 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
             )}
             horizontal
             pagingEnabled
@@ -125,8 +238,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
           />
-          {/* Pagination Dots */}
-          <View className="absolute bottom-4 w-full flex-row justify-center gap-x-2">
+          <View className="absolute bottom-4 w-full flex-row justify-center gap-x-2 pointer-events-none">
             {allImages.map((_, index) => (
               <View
                 key={index}
@@ -136,29 +248,36 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </View>
         </View>
 
-        {/* Thông tin chi tiết */}
-        <View className="bg-white p-4">
+        {/* Thông tin sản phẩm */}
+        <View className="bg-white p-4 pt-2">
           <Text className="text-2xl font-bold text-TEXT_PRIMARY">
             {product.name}
           </Text>
           <View className="mt-2 flex-row items-center justify-between">
-            <View className="mt-3 flex-row items-baseline">
-              <Text className="text-3xl font-bold text-PRIMARY">
-                {displayPrice.toLocaleString("vi-VN")}đ
-              </Text>
-              {product.salePrice && (
-                <Text className="ml-3 text-lg text-TEXT_SECONDARY line-through">
+            <View className="mt-2 flex-col">
+              {hasDiscount && (
+                <Text className="text-sm text-TEXT_SECONDARY line-through mb-1">
                   {product.price.toLocaleString("vi-VN")}đ
                 </Text>
               )}
+              <Text
+                className={`text-3xl font-bold ${hasDiscount ? "text-red-600" : "text-PRIMARY"}`}
+              >
+                {displayPrice.toLocaleString("vi-VN")}đ
+              </Text>
             </View>
-            <Text className="rounded-md bg-gray-100 px-2 py-1 text-sm font-medium text-TEXT_SECONDARY">
-              Đơn vị: {product.unit}
-            </Text>
+            <View className="items-end">
+              <Text className="rounded-md bg-gray-100 px-2 py-1 text-sm font-medium text-TEXT_SECONDARY">
+                Đơn vị: {product.unit}
+              </Text>
+              <Text className="mt-1 text-xs text-TEXT_SECONDARY">
+                Kho: {product.quantity}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Tabs */}
+        {/* Tabs giữ nguyên */}
         <View className="mt-3 bg-white">
           <View className="flex-row border-b border-BORDER">
             <InfoTab
@@ -178,7 +297,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             />
           </View>
 
-          <View className="p-4">
+          <View className="p-4 min-h-[150px]">
             {activeTab === "desc" && (
               <Text className="text-base leading-6 text-TEXT_SECONDARY">
                 {product.description}
@@ -189,6 +308,14 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               <View className="space-y-3">
                 <View className="flex-row">
                   <Text className="w-28 font-semibold text-TEXT_PRIMARY">
+                    Đơn vị tính
+                  </Text>
+                  <Text className="flex-1 text-TEXT_SECONDARY">
+                    {product.unit}
+                  </Text>
+                </View>
+                <View className="flex-row">
+                  <Text className="w-28 font-semibold text-TEXT_PRIMARY">
                     Xuất xứ
                   </Text>
                   <Text className="flex-1 text-TEXT_SECONDARY">
@@ -197,7 +324,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 </View>
                 <View className="flex-row">
                   <Text className="w-28 font-semibold text-TEXT_PRIMARY">
-                    Ngày sản xuất
+                    Ngày SX
                   </Text>
                   <Text className="flex-1 text-TEXT_SECONDARY">
                     {product.mfg_date}
@@ -205,7 +332,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 </View>
                 <View className="flex-row">
                   <Text className="w-28 font-semibold text-TEXT_PRIMARY">
-                    Hạn sử dụng
+                    Hạn SD
                   </Text>
                   <Text className="flex-1 text-TEXT_SECONDARY">
                     {product.exp_date}
@@ -216,23 +343,25 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
             {activeTab === "certs" && (
               <View className="flex-row flex-wrap">
-                {product.certificates.map((cert) => (
-                  <View
-                    key={cert.certificate_id}
-                    className="mr-4 mb-4 items-center"
-                  >
-                    <Image
-                      source={cert.image_url}
-                      className="h-20 w-20"
-                      resizeMode="contain"
-                    />
-                    <Text className="mt-1 text-xs font-medium text-TEXT_SECONDARY">
-                      {cert.name}
-                    </Text>
-                  </View>
-                ))}
-                {product.certificates.length === 0 && (
-                  <Text className="text-TEXT_SECONDARY">
+                {product.certificates && product.certificates.length > 0 ? (
+                  product.certificates.map((cert) => (
+                    <TouchableOpacity
+                      key={cert.certificate_id}
+                      className="mr-4 mb-4 items-center"
+                      onPress={() => setSelectedCert(cert)}
+                    >
+                      <Image
+                        source={cert.logo_url}
+                        className="h-20 w-20 rounded-md bg-gray-50"
+                        resizeMode="contain"
+                      />
+                      <Text className="mt-1 text-xs font-medium text-TEXT_SECONDARY text-center max-w-[80px]">
+                        {cert.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Text className="text-TEXT_SECONDARY italic">
                     Sản phẩm không có chứng nhận đi kèm.
                   </Text>
                 )}
@@ -241,39 +370,98 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </View>
         </View>
 
-        {/* --- RENDER children HERE so reviews (or any extra content) are inside the same ScrollView --- */}
         {children}
       </ScrollView>
 
-      {/* Footer: quantity + add to cart */}
-      <View className="absolute bottom-0 w-full flex-row items-center justify-between border-t border-BORDER bg-white p-4">
+      {/* Footer: Thêm vào giỏ hàng */}
+      <View className="absolute bottom-0 w-full flex-row items-center justify-between border-t border-BORDER bg-white p-4 pb-6 shadow-2xl">
         <View className="flex-row items-center">
+          {/* Nút giảm */}
           <TouchableOpacity
-            onPress={() => setQuantity(Math.max(1, quantity - 1))}
-            className="h-10 w-10 items-center justify-center rounded-full border border-BORDER"
+            onPress={() => updateQuantity(-1)}
+            className="h-10 w-10 items-center justify-center rounded-full border border-BORDER bg-gray-50 active:bg-gray-200"
           >
-            <FontAwesome name="minus" size={16} color={"#4B5563"} />
+            <FontAwesome name="minus" size={14} color={"#4B5563"} />
           </TouchableOpacity>
-          <Text className="w-14 text-center text-xl font-bold text-TEXT_PRIMARY">
-            {quantity}
-          </Text>
+
+          {/* Input nhập số lượng */}
+          <TextInput
+            className="w-14 text-center text-xl font-bold text-TEXT_PRIMARY py-0"
+            keyboardType="numeric"
+            value={quantityStr}
+            onChangeText={handleQuantityChange}
+            onBlur={handleQuantityBlur}
+            selectTextOnFocus
+          />
+
+          {/* Nút tăng */}
           <TouchableOpacity
-            onPress={() => setQuantity(quantity + 1)}
-            className="h-10 w-10 items-center justify-center rounded-full border border-BORDER"
+            onPress={() => updateQuantity(1)}
+            className="h-10 w-10 items-center justify-center rounded-full border border-BORDER bg-gray-50 active:bg-gray-200"
           >
-            <FontAwesome name="plus" size={16} color={"#4B5563"} />
+            <FontAwesome name="plus" size={14} color={"#4B5563"} />
           </TouchableOpacity>
         </View>
 
+        {/* Nút Submit - Gọi hàm handleAddToCartPress */}
         <TouchableOpacity
           onPress={handleAddToCartPress}
-          className="flex-1 rounded-full bg-PRIMARY py-3 ml-4"
+          className="flex-1 rounded-full bg-PRIMARY py-3 ml-4 shadow-sm active:bg-green-700"
         >
-          <Text className="text-center text-base font-bold text-white">
+          <Text className="text-center text-base font-bold text-white uppercase">
             Thêm vào giỏ
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Viewers giữ nguyên */}
+      <ImageView
+        images={imagesForCertViewer}
+        imageIndex={0}
+        visible={!!selectedCert}
+        onRequestClose={() => setSelectedCert(null)}
+        swipeToCloseEnabled={true}
+        doubleTapToZoomEnabled={true}
+        FooterComponent={() => (
+          <View className="bg-black/60 p-4 w-full items-center pb-8">
+            <Text className="text-white font-bold text-lg text-center mb-1">
+              {selectedCert?.name}
+            </Text>
+            <View className="flex-row space-x-4">
+              <Text className="text-gray-300 text-sm">
+                Số:{" "}
+                <Text className="font-bold">
+                  {selectedCert?.certNo || "--"}
+                </Text>
+              </Text>
+              <Text className="text-gray-300 text-sm">| </Text>
+              <Text className="text-gray-300 text-sm">
+                Ngày:{" "}
+                <Text className="font-bold">{selectedCert?.date || "--"}</Text>
+              </Text>
+            </View>
+          </View>
+        )}
+      />
+
+      <ImageView
+        images={productImagesForViewer}
+        imageIndex={selectedProductImageIndex}
+        visible={isProductViewerVisible}
+        onRequestClose={() => setIsProductViewerVisible(false)}
+        swipeToCloseEnabled={true}
+        doubleTapToZoomEnabled={true}
+        FooterComponent={({ imageIndex }) => (
+          <View className="bg-black/60 p-4 w-full items-center pb-8">
+            <Text className="text-white font-bold text-base">
+              {product.name}
+            </Text>
+            <Text className="text-gray-300 text-sm mt-1">
+              Ảnh {imageIndex + 1} / {productImagesForViewer.length}
+            </Text>
+          </View>
+        )}
+      />
     </View>
   );
 };

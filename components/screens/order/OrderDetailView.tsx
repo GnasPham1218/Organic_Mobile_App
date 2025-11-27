@@ -1,67 +1,61 @@
+import IconButton from "@/components/common/IconButton";
+import StatusBadge from "@/components/screens/order/StatusBadge";
+import { AppConfig } from "@/constants/AppConfig";
+import { formatCurrency, formatOrderId } from "@/utils/formatters";
+import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
-// ▼▼▼ CẬP NHẬT 1: Import OrderStatus và hàm formatCurrency ▼▼▼
-import IconButton from "@/components/common/IconButton";
-import type { Order, OrderStatus } from "@/data/mockData";
-import { formatCurrency } from "@/utils/formatters"; // <-- SỬ DỤNG HÀM NÀY
-
-// Lấy kiểu Product từ kiểu Order
-type Product = Order["items"][0];
-
 // --- Component con cho từng sản phẩm ---
-const OrderDetailItem: React.FC<{ item: Product }> = ({ item }) => {
-  const displayPrice = "salePrice" in item ? item.salePrice : item.price;
-
-  // ▼▼▼ CẬP NHẬT 2: Xóa hàm formatCurrency local ở đây ▼▼▼
-  // const formatCurrency = (amount: number) => { ... }; // <-- ĐÃ XÓA
-
+const OrderDetailItem: React.FC<{ item: IOrderDetailFull }> = ({ item }) => {
   return (
     <View className="flex-row items-center border-b border-BORDER py-4 last:border-b-0 gap-x-3">
-      <Image source={item.image} className="h-16 w-16 rounded-lg bg-gray-100" />
-      <View className=" flex-1">
+      <Image
+        source={{ uri: `${AppConfig.PRODUCTS_URL}${item.product.image}` }}
+        className="h-16 w-16 rounded-lg bg-gray-100"
+      />
+      <View className="flex-1">
         <Text className="font-semibold text-TEXT_PRIMARY" numberOfLines={2}>
-          {item.name}
+          {item.product.name}
         </Text>
-        <Text className="text-sm text-TEXT_SECONDARY">Số lượng: 1</Text>
+        <Text className="text-sm text-TEXT_SECONDARY mt-1">
+          Số lượng: {item.quantity}
+        </Text>
       </View>
       <Text className="font-semibold text-TEXT_PRIMARY">
-        {/* Hàm này giờ sẽ lấy từ import (với format "VNĐ") */}
-        {formatCurrency(displayPrice!)}
+        {formatCurrency(item.price)}
       </Text>
     </View>
   );
 };
 
-// --- Component chính để hiển thị toàn bộ chi tiết đơn hàng ---
-const OrderDetailView: React.FC<{
-  order: Order;
+// --- Component chính ---
+type OrderDetailViewProps = {
+  order: IOrder;
+  items: IOrderDetailFull[];
+  totalAmount: number;
   onBackPress: () => void;
   onCancelOrder?: () => void;
   onConfirmReception?: () => void;
-  onReportIssue?: () => void; // <-- THÊM MỚI
-}> = ({
+  onReportIssue?: () => void;
+};
+
+const OrderDetailView: React.FC<OrderDetailViewProps> = ({
   order,
+  items,
+  totalAmount,
   onBackPress,
   onCancelOrder,
   onConfirmReception,
-  onReportIssue, // <-- THÊM MỚI
+  onReportIssue,
 }) => {
-  // ▼▼▼ CẬP NHẬT 3: Xóa hàm formatCurrency local ở đây ▼▼▼
-  // const formatCurrency = (amount: number) => { ... }; // <-- ĐÃ XÓA
-
-  // ▼▼▼ CẬP NHẬT 4: Logic hiển thị Trạng thái (cho cả 4 trạng thái) ▼▼▼
-  const statusDisplay: Record<OrderStatus, { text: string; color: string }> = {
-    processing: { text: "Đang xử lý", color: "text-amber-600" },
-    shipping: { text: "Đang giao hàng", color: "text-sky-600" },
-    completed: { text: "Hoàn thành", color: "text-green-600" },
-    cancelled: { text: "Đã hủy", color: "text-red-600" },
-  };
-  const currentStatus = statusDisplay[order.status] || statusDisplay.processing;
+  const status = order.statusOrder
+    ? order.statusOrder.toUpperCase()
+    : "PENDING";
 
   return (
     <View className="flex-1 bg-BACKGROUND">
-      {/* Header tùy chỉnh (Không đổi) */}
+      {/* Header */}
       <View className="flex-row items-center justify-center px-4 py-2 bg-STATUS_BAR border-b border-gray-100">
         <View className="absolute left-4">
           <IconButton
@@ -78,120 +72,97 @@ const OrderDetailView: React.FC<{
 
       <ScrollView className="flex-1">
         <View className="p-4">
-          {/* Thông tin chung */}
+          {/* 1. Thông tin chung */}
           <View className="rounded-xl border border-BORDER bg-white p-4">
-            <View className="flex-row justify-between">
+            <View className="flex-row justify-between items-center">
               <Text className="text-base font-semibold text-TEXT_PRIMARY">
                 Mã đơn hàng:
               </Text>
-              <Text className="text-base text-TEXT_PRIMARY">#{order.id}</Text>
+              <Text className="text-base text-TEXT_PRIMARY">
+                {formatOrderId(order.id)}
+              </Text>
             </View>
 
-            {/* ▼▼▼ CẬP NHẬT 5: SỬA HIỂN THỊ TRẠNG THÁI ▼▼▼ */}
-            <View className="mt-2 flex-row justify-between">
+            <View className="mt-2 flex-row justify-between items-center">
               <Text className="text-base font-semibold text-TEXT_PRIMARY">
                 Trạng thái:
               </Text>
-              <Text className={`font-semibold ${currentStatus.color}`}>
-                {currentStatus.text}
-              </Text>
+              <StatusBadge status={status} />
             </View>
-            {/* ▲▲▲ KẾT THÚC SỬA TRẠNG THÁI ▲▲▲ */}
 
-            {/* Thời gian đặt hàng (Không đổi) */}
             <View className="mt-2 flex-row justify-between">
               <Text className="text-base font-semibold text-TEXT_PRIMARY">
-                Thời gian đặt hàng:
+                Ngày đặt hàng:
               </Text>
               <Text className="text-base text-TEXT_SECONDARY">
-                {new Date(order.order_at).toLocaleString("vi-VN", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {new Date(order.orderAt).toLocaleString("vi-VN")}
               </Text>
             </View>
 
-            {/* Địa chỉ (Không đổi) */}
+            {/* ===> THÊM PHẦN NÀY: Ngày nhận hàng (Nếu có) <=== */}
+            {order.actualDate && (
+              <View className="mt-2 flex-row justify-between">
+                <Text className="text-base font-semibold text-TEXT_PRIMARY">
+                  Ngày nhận hàng:
+                </Text>
+                <Text className="text-base text-green-600 font-medium">
+                  {new Date(order.actualDate).toLocaleString("vi-VN")}
+                </Text>
+              </View>
+            )}
+
+            {/* Địa chỉ */}
             <View className="my-3 border-t border-dashed border-BORDER" />
             <View>
-              <Text className="text-base font-semibold text-TEXT_PRIMARY">
-                Địa chỉ nhận hàng:
+              <View className="flex-row items-center mb-1">
+                <FontAwesome name="map-marker" size={16} color="#4B5563" />
+                <Text className="text-base font-semibold text-TEXT_PRIMARY ml-2">
+                  Địa chỉ nhận hàng:
+                </Text>
+              </View>
+              <Text className="mt-1 text-base text-TEXT_SECONDARY leading-5 pl-6">
+                {order.shipAddress}
               </Text>
-              <Text className="mt-1 text-base text-TEXT_SECONDARY">
-                {order.ship_address}
-              </Text>
+              {order.note ? (
+                <Text className="mt-2 text-sm italic text-gray-500 pl-6">
+                  {`Ghi chú: "${order.note}"`}
+                </Text>
+              ) : null}
             </View>
           </View>
 
-          {/* Danh sách sản phẩm (Không đổi) */}
+          {/* 2. Danh sách sản phẩm */}
           <View className="mt-4 rounded-xl border border-BORDER bg-white p-4">
             <Text className="mb-2 text-lg font-bold text-TEXT_PRIMARY">
-              {order.totalItems} Sản phẩm
+              Danh sách sản phẩm ({items.length})
             </Text>
-            {order.items.map((item) => (
-              <OrderDetailItem key={item.product_id} item={item} />
+            {items.map((item, index) => (
+              <OrderDetailItem key={`${item.productId}_${index}`} item={item} />
             ))}
           </View>
 
-          {/* Tổng kết giá tiền */}
+          {/* 3. Tổng kết giá tiền */}
           <View className="mt-4 rounded-xl border border-BORDER bg-white p-4">
             <Text className="mb-4 text-lg font-bold text-TEXT_PRIMARY">
               Tổng kết đơn hàng
             </Text>
 
-            {/* ▼▼▼ CẬP NHẬT 6: SỬA LỖI LOGIC (subtotal) ▼▼▼ */}
             <View className="flex-row justify-between">
               <Text className="text-base text-TEXT_SECONDARY">
                 Tổng tiền hàng
               </Text>
               <Text className="text-base text-TEXT_SECONDARY">
-                {formatCurrency(order.subtotal)}
-              </Text>
-            </View>
-            {/* ▲▲▲ KẾT THÚC SỬA LỖI ▲▲▲ */}
-
-            {/* Phí vận chuyển (Không đổi) */}
-            <View className="mt-2 flex-row justify-between">
-              <Text className="text-base text-TEXT_SECONDARY">
-                Phí vận chuyển
-              </Text>
-              <Text className="text-base text-TEXT_SECONDARY">
-                {formatCurrency(order.delivery_fee)}
+                {formatCurrency(totalAmount)}
               </Text>
             </View>
 
-            {/* Thuế (Không đổi) */}
-            <View className="mt-2 flex-row justify-between">
-              <Text className="text-base text-TEXT_SECONDARY">Thuế</Text>
-              <Text className="text-base text-TEXT_SECONDARY">
-                {formatCurrency(order.tax_amount)}
-              </Text>
-            </View>
-
-            {/* Giảm giá (Không đổi) */}
-            {order.discount_amount > 0 && (
-              <View className="mt-2 flex-row justify-between">
-                <Text className="text-base text-TEXT_SECONDARY">
-                  Giảm giá {order.voucher_code && `(${order.voucher_code})`}
-                </Text>
-                <Text className="text-base text-red-600">
-                  {/* Dùng dấu trừ là đúng */}
-                  {formatCurrency(-order.discount_amount)}
-                </Text>
-              </View>
-            )}
-
-            {/* Thành tiền (Không đổi) */}
             <View className="mt-4 border-t border-dashed border-BORDER pt-4">
               <View className="flex-row justify-between">
                 <Text className="text-lg font-bold text-TEXT_PRIMARY">
                   Thành tiền
                 </Text>
                 <Text className="text-lg font-bold text-PRIMARY">
-                  {formatCurrency(order.final_total)}
+                  {formatCurrency(totalAmount)}
                 </Text>
               </View>
             </View>
@@ -199,45 +170,41 @@ const OrderDetailView: React.FC<{
         </View>
       </ScrollView>
 
-      {/* ▼▼▼ CẬP NHẬT 7: SỬA LOGIC NÚT BẤM (FOOTER) ▼▼▼ */}
-      {/* ▼▼▼ THÊM ĐIỀU KIỆN KIỂM TRA BÊN NGOÀI ▼▼▼ */}
-      {order.status !== "cancelled" && (
-        <View className="border-t border-BORDER bg-white p-4 shadow-lg min-h-[70px]">
-          {/* 1. Nút Hủy đơn hàng */}
-          {order.status === "processing" && (
+      {/* 4. Footer Buttons */}
+      {status !== "CANCELLED" && (
+        <View className="border-t border-BORDER bg-white p-4 shadow-lg min-h-[80px]">
+          {(status === "PENDING" || status === "PROCESSING") && (
             <TouchableOpacity
               onPress={onCancelOrder}
-              className="rounded-lg border border-red-600 py-3"
+              className="rounded-lg border border-red-600 py-3 bg-white"
               activeOpacity={0.7}
             >
-              <Text className="text-center text-base font-semibold text-red-600">
+              <Text className="text-center text-base font-bold text-red-600">
                 Hủy đơn hàng
               </Text>
             </TouchableOpacity>
           )}
 
-          {/* 2. Nút Đã nhận */}
-          {order.status === "shipping" && (
+          {status === "SHIPPING" && (
             <TouchableOpacity
               onPress={onConfirmReception}
               className="rounded-lg bg-PRIMARY py-3"
               activeOpacity={0.7}
             >
-              <Text className="text-center text-base font-semibold text-white">
+              <Text className="text-center text-base font-bold text-white">
                 Đã nhận được hàng
               </Text>
             </TouchableOpacity>
           )}
 
-          {/* 3. Nút Khiếu nại */}
-          {order.status === "completed" && (
+          {status === "DELIVERED" && (
             <TouchableOpacity
-              onPress={onReportIssue} // <-- Dùng prop mới
-              className="rounded-lg border bg-amber-600 border-amber-600 py-3" // Màu vàng cam
+              onPress={onReportIssue}
+              className="rounded-lg border border-amber-500 bg-amber-50 py-3"
               activeOpacity={0.7}
             >
-              <Text className="text-center text-base font-semibold text-white ">
-                Khiếu nại
+              <Text className="text-center text-base font-bold text-amber-600">
+                Yêu cầu Trả hàng / Khiếu nại
               </Text>
             </TouchableOpacity>
           )}

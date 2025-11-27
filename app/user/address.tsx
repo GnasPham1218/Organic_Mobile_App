@@ -1,20 +1,47 @@
 // app/user/address.tsx
 import ShippingAddress from "@/components/screens/user/ShippingAddress";
-// ✨ 1. Import hook mới (thay thế useAddressLogic)
-import { useAddress } from "@/context/address/AddressContext";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect } from "react";
+// Import Provider và Hook
+import { AddressProvider, useAddress } from "@/context/address/AddressContext";
+import { ActivityIndicator, View } from "react-native";
 
-export default function AddressPage() {
+// 1. Tạo Component con để dùng được hook useAddress
+const AddressContent = () => {
   const router = useRouter();
-  // ✨ 2. Lấy toàn bộ logic từ Context
-  const logic = useAddress();
+  const { userId } = useLocalSearchParams();
+
+  // Bây giờ gọi hook ở đây mới an toàn vì đã nằm trong Provider
+  const { initData, loading } = useAddress();
+
+  useEffect(() => {
+    if (userId) {
+      initData(Number(userId));
+    }
+  }, [userId]);
+
+  if (loading && !userId) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#16a34a" />
+      </View>
+    );
+  }
 
   return (
     <>
-      {/* Ẩn Header mặc định của trang này */}
       <Stack.Screen options={{ headerShown: false }} />
-      {/* ✨ 3. Truyền logic vào component con */}
-      <ShippingAddress onBack={() => router.back()} {...logic} />
+      {/* ShippingAddress đã tự kết nối context bên trong nó, chỉ cần truyền onBack */}
+      <ShippingAddress onBack={() => router.back()} />
     </>
+  );
+};
+
+// 2. Component chính export ra ngoài (Bọc Provider)
+export default function AddressPage() {
+  return (
+    <AddressProvider>
+      <AddressContent />
+    </AddressProvider>
   );
 }

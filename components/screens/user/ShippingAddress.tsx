@@ -1,54 +1,33 @@
-import type { Address } from "@/data/mockData";
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import {
-  FlatList,
-  Modal, // Thêm lại Modal
-  ScrollView,
-  Text, // Thêm lại ScrollView
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-// ✨ 1. Import hook useConfirm
-import { useConfirm } from "@/context/confirm/ConfirmContext";
+import AddressEditModal from "@/app/user/AddressEditModal";
 import IconButton from "@/components/common/IconButton";
 
-// ✨ Tách props ra để dễ đọc
-type AddressLogicProps = {
-  addresses: Address[];
-  showAddEditModal: boolean;
-  setShowAddEditModal: (v: boolean) => void;
-  form: Partial<Address>;
-  setForm: React.Dispatch<React.SetStateAction<Partial<Address>>>;
-  editingAddress: Address | null;
-  openAddModal: () => void;
-  openEditModal: (addr: Address) => void;
-  saveAddress: () => void;
-  deleteAddress: (id?: number) => void;
-  setDefaultAddress: (id?: number) => void;
-};
+import { useAddress } from "@/context/address/AddressContext"; // Hook lấy data
+import { useConfirm } from "@/context/confirm/ConfirmContext"; // Hook xác nhận xóa
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type ShippingAddressProps = AddressLogicProps & {
+type ShippingAddressProps = {
   onBack: () => void;
 };
 
 /**
- * Component Card địa chỉ
+ * Component Card hiển thị từng địa chỉ
+ * Lưu ý: Đã cập nhật field name theo Interface mới (receiverName, defaultAddress...)
  */
 const AddressCard: React.FC<{
-  addr: Address;
+  addr: ICustomerAddress;
   onEdit: () => void;
-  onDelete: () => void; // Sẽ được gọi bởi showConfirm
+  onDelete: () => void;
   onSetDefault: () => void;
 }> = ({ addr, onEdit, onDelete, onSetDefault }) => {
   return (
     <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
       {/* Phần Thông tin */}
       <View className="flex-row justify-between items-start mb-3">
-        <Text className="text-base font-semibold text-gray-800 flex-1">
-          {addr.receiver_name}
+        <Text className="text-base font-semibold text-gray-800 flex-1 mr-2">
+          {addr.receiverName}
         </Text>
         <TouchableOpacity onPress={onEdit} className="p-1">
           <Ionicons name="pencil" size={18} color="#6B7280" />
@@ -59,15 +38,15 @@ const AddressCard: React.FC<{
       <Text className="text-sm text-gray-700 leading-5">
         {`${addr.street}, ${addr.ward}, ${addr.district}, ${addr.province}`}
       </Text>
-      {addr.note && (
+      {addr.note ? (
         <Text className="text-xs italic text-gray-500 mt-2">
           Ghi chú: {addr.note}
         </Text>
-      )}
+      ) : null}
 
       {/* Phần Actions */}
       <View className="flex-row justify-between items-center mt-4 pt-3 border-t border-gray-100">
-        {addr.is_default ? (
+        {addr.defaultAddress ? (
           <View className="bg-green-100 py-1 px-3 rounded-full">
             <Text className="text-green-700 text-xs font-semibold">
               Mặc định
@@ -84,7 +63,6 @@ const AddressCard: React.FC<{
           </TouchableOpacity>
         )}
 
-        {/* ✨ Nút xóa này sẽ gọi prop 'onDelete' (đã được bọc bởi confirm) */}
         <TouchableOpacity onPress={onDelete} className="p-1">
           <Ionicons name="trash-outline" size={20} color="#EF4444" />
         </TouchableOpacity>
@@ -94,47 +72,41 @@ const AddressCard: React.FC<{
 };
 
 /**
- * Component Giao diện chính
+ * Component Giao diện chính Quản lý địa chỉ
  */
-const ShippingAddress: React.FC<ShippingAddressProps> = ({
-  addresses,
-  showAddEditModal,
-  setShowAddEditModal,
-  form,
-  setForm,
-  editingAddress,
-  openAddModal,
-  openEditModal,
-  saveAddress,
-  deleteAddress,
-  setDefaultAddress,
-  onBack,
-}) => {
+const ShippingAddress: React.FC<ShippingAddressProps> = ({ onBack }) => {
   const { bottom } = useSafeAreaInsets();
-  // ✨ 2. Khởi tạo hook
+
+  // 1. Lấy Data & Action từ AddressContext
+  const {
+    addresses,
+    openAddModal,
+    openEditModal,
+    deleteAddress,
+    setDefaultAddress,
+  } = useAddress();
+
+  // 2. Lấy Action từ ConfirmContext
   const { showConfirm } = useConfirm();
 
-  // ✨ 3. Tạo một hàm mới để xử lý việc xóa
-  const handleDeletePress = (address: Address) => {
-    // Gọi modal xác nhận
+  // 3. Xử lý xóa với Confirm Modal
+  const handleDeletePress = (address: ICustomerAddress) => {
     showConfirm({
       title: "Xác nhận xóa",
-      message: `Bạn có chắc chắn muốn xóa địa chỉ "${address.receiver_name}"?`,
+      message: `Bạn có chắc chắn muốn xóa địa chỉ của "${address.receiverName}"?`,
       confirmText: "Xóa",
-      confirmVariant: "destructive", // Nút màu đỏ
-      onConfirm: () => {
-        // Chỉ gọi hàm xóa thật sự khi người dùng bấm "Xóa"
-        deleteAddress(address.address_id);
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        await deleteAddress(address.id);
       },
-      // onCancel không cần làm gì cả, modal sẽ tự đóng
     });
   };
 
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="flex-row items-center justify-center px-4 py-2 bg-STATUS_BAR border-b border-gray-100">
-        <View className="absolute left-4">
+      <View className="flex-row items-center justify-center px-4 py-2 bg-white border-b border-gray-100 mt-8">
+        <View className="absolute left-4 top-2">
           <IconButton
             icon="arrow-back"
             size={22}
@@ -142,7 +114,7 @@ const ShippingAddress: React.FC<ShippingAddressProps> = ({
             onPress={onBack}
           />
         </View>
-        <Text className="text-center text-2xl font-bold text-TEXT_PRIMARY">
+        <Text className="text-center text-xl font-bold text-gray-800 pt-2">
           Địa chỉ của tôi
         </Text>
       </View>
@@ -150,26 +122,28 @@ const ShippingAddress: React.FC<ShippingAddressProps> = ({
       {/* Danh sách địa chỉ */}
       <FlatList
         data={addresses}
-        keyExtractor={(item) => item.address_id.toString()}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <AddressCard
             addr={item}
             onEdit={() => openEditModal(item)}
-            // ✨ 4. Gọi hàm handleDeletePress mới thay vì deleteAddress
             onDelete={() => handleDeletePress(item)}
-            onSetDefault={() => setDefaultAddress(item.address_id)}
+            onSetDefault={() => setDefaultAddress(item.id)}
           />
         )}
         ListEmptyComponent={
-          <Text className="text-center text-gray-500 py-10">
-            Bạn chưa có địa chỉ nào.
-          </Text>
+          <View className="items-center justify-center py-20">
+            <Ionicons name="location-outline" size={48} color="#9CA3AF" />
+            <Text className="text-center text-gray-500 mt-4">
+              Bạn chưa có địa chỉ nào.
+            </Text>
+          </View>
         }
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         ItemSeparatorComponent={() => <View className="h-3" />}
       />
 
-      {/* Nút Thêm mới (Sticky) */}
+      {/* Nút Thêm mới (Sticky Bottom) */}
       <View
         className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100"
         style={{
@@ -180,136 +154,21 @@ const ShippingAddress: React.FC<ShippingAddressProps> = ({
       >
         <TouchableOpacity
           onPress={openAddModal}
-          className="bg-green-600 py-3.5 rounded-lg flex-row justify-center items-center"
-          disabled={addresses.length >= 5} // Logic cũ giữ nguyên
+          className="bg-green-600 py-3.5 rounded-xl flex-row justify-center items-center shadow-sm"
+          disabled={addresses.length >= 5} // Giới hạn 5 địa chỉ
+          style={{ opacity: addresses.length >= 5 ? 0.6 : 1 }}
         >
           <Ionicons name="add" size={20} color="white" />
-          <Text className="text-white font-semibold text-base ml-2">
+          <Text className="text-white font-bold text-base ml-2">
             Thêm địa chỉ mới ({addresses.length}/5)
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Modal: Thêm / Sửa địa chỉ (Thiết kế lại) */}
-      <Modal visible={showAddEditModal} animationType="slide" transparent>
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-2xl max-h-[90%]">
-            {/* Header Modal */}
-            <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
-              <Text className="text-lg font-semibold text-gray-800">
-                {editingAddress ? "Sửa địa chỉ" : "Thêm địa chỉ mới"}
-              </Text>
-              <TouchableOpacity
-                onPress={() => setShowAddEditModal(false)}
-                className="p-1"
-              >
-                <Ionicons name="close" size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Form Fields */}
-            <ScrollView
-              className="p-4"
-              contentContainerStyle={{ paddingBottom: 20 }}
-            >
-              <View className="flex-col gap-4">
-                <TextInput
-                  placeholder="Họ & tên người nhận"
-                  value={form.receiver_name}
-                  onChangeText={(v) =>
-                    setForm((s) => ({ ...s, receiver_name: v }))
-                  }
-                  className="bg-gray-100 px-4 py-3 rounded-lg text-base"
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TextInput
-                  placeholder="Số điện thoại"
-                  value={form.phone}
-                  onChangeText={(v) => setForm((s) => ({ ...s, phone: v }))}
-                  keyboardType="phone-pad"
-                  className="bg-gray-100 px-4 py-3 rounded-lg text-base"
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TextInput
-                  placeholder="Tỉnh/Thành phố"
-                  value={form.province}
-                  onChangeText={(v) => setForm((s) => ({ ...s, province: v }))}
-                  className="bg-gray-100 px-4 py-3 rounded-lg text-base"
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TextInput
-                  placeholder="Quận/Huyện"
-                  value={form.district}
-                  onChangeText={(v) => setForm((s) => ({ ...s, district: v }))}
-                  className="bg-gray-100 px-4 py-3 rounded-lg text-base"
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TextInput
-                  placeholder="Phường/Xã"
-                  value={form.ward}
-                  onChangeText={(v) => setForm((s) => ({ ...s, ward: v }))}
-                  className="bg-gray-100 px-4 py-3 rounded-lg text-base"
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TextInput
-                  placeholder="Đường, số nhà"
-                  value={form.street}
-                  onChangeText={(v) => setForm((s) => ({ ...s, street: v }))}
-                  className="bg-gray-100 px-4 py-3 rounded-lg text-base"
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TextInput
-                  placeholder="Ghi chú (tùy chọn)"
-                  value={form.note || ""} // Đảm bảo value không phải là null/undefined
-                  onChangeText={(v) => setForm((s) => ({ ...s, note: v }))}
-                  className="bg-gray-100 px-4 py-3 rounded-lg text-base"
-                  placeholderTextColor="#9CA3AF"
-                />
-
-                {/* Checkbox Đặt mặc định */}
-                <TouchableOpacity
-                  onPress={() =>
-                    setForm((s) => ({ ...s, is_default: !s.is_default }))
-                  }
-                  className="flex-row items-center mt-2"
-                >
-                  <Ionicons
-                    name={form.is_default ? "checkbox" : "square-outline"}
-                    size={22}
-                    color={form.is_default ? "#16A34A" : "#6B7280"}
-                  />
-                  <Text className="text-gray-700 text-base ml-2">
-                    Đặt làm mặc định
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-
-            {/* Nút hành động Modal */}
-            <View
-              className="flex-row gap-3 p-4 border-t border-gray-200"
-              style={{ paddingBottom: bottom || 16 }}
-            >
-              <TouchableOpacity
-                onPress={() => setShowAddEditModal(false)}
-                className="flex-1 rounded-lg border border-gray-300 py-3.5"
-              >
-                <Text className="text-center font-semibold text-gray-700">
-                  Hủy
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={saveAddress}
-                className="flex-1 rounded-lg bg-green-600 py-3.5"
-              >
-                <Text className="text-center font-semibold text-white">
-                  {editingAddress ? "Cập nhật" : "Lưu"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* ✨ Modal Thêm/Sửa Địa chỉ 
+         Được import từ file riêng, tự nó quản lý logic hiển thị dựa trên Context
+      */}
+      <AddressEditModal />
     </View>
   );
 };

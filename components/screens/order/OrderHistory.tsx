@@ -13,29 +13,26 @@ import {
 // Import các component và type cần thiết
 import IconButton from "@/components/common/IconButton";
 import OrderCard from "@/components/screens/order/OrderCard";
-import type { Order, OrderStatus } from "@/data/mockData";
 
 // Định nghĩa props mà component này sẽ nhận
 type OrderHistoryProps = {
-  // Dữ liệu
-  orders: Order[];
-  statusFilters: { label: string; value: OrderStatus | null }[];
+  orders: IOrder[];
 
-  // State
-  selectedStatus: OrderStatus | null;
+  statusFilters: { label: string; value: string | null }[];
+  selectedStatus: string | null;
+
   selectedDate: Date | null;
   showDatePicker: boolean;
 
   // Hàm xử lý sự kiện
   onBackPress: () => void;
-  onStatusChange: (status: OrderStatus | null) => void;
+  onStatusChange: (status: string | null) => void; // Sửa type tham số
   onDateChange: (event: DateTimePickerEvent, date?: Date) => void;
   onShowDatePicker: () => void;
   onClearDateFilter: () => void;
 };
 
 const OrderHistory: React.FC<OrderHistoryProps> = ({
-  // Nhận props từ component cha
   orders,
   statusFilters,
   selectedStatus,
@@ -74,7 +71,6 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({
           {statusFilters.map((filter) => (
             <TouchableOpacity
               key={filter.label}
-              // ▼▼▼ Gọi hàm prop ▼▼▼
               onPress={() => onStatusChange(filter.value)}
               className={`mr-2 rounded-full px-4 py-2 border ${
                 selectedStatus === filter.value
@@ -101,7 +97,6 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({
         </Text>
         <View className="flex-row items-center gap-x-2">
           <TouchableOpacity
-            // ▼▼▼ Gọi hàm prop ▼▼▼
             onPress={onShowDatePicker}
             className="flex-1 rounded-lg border border-BORDER bg-gray-50 p-3"
           >
@@ -113,11 +108,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({
           </TouchableOpacity>
           {/* Nút reset ngày */}
           {selectedDate && (
-            <TouchableOpacity
-              // ▼▼▼ Gọi hàm prop ▼▼▼
-              onPress={onClearDateFilter}
-              className="p-2"
-            >
+            <TouchableOpacity onPress={onClearDateFilter} className="p-2">
               <FontAwesome name="times-circle" size={20} color="#9CA3AF" />
             </TouchableOpacity>
           )}
@@ -127,8 +118,13 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({
       {/* --- Danh sách đơn hàng --- */}
       <FlatList
         data={orders}
-        renderItem={({ item }) => <OrderCard order={item} />}
-        keyExtractor={(item) => item.id}
+        // 4. SỬA keyExtractor (id API là number nên cần toString)
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          // ⚠️ LƯU Ý: Component OrderCard bên trong cũng cần phải sửa
+          // để nhận prop 'order' là kiểu IOrder thay vì kiểu cũ.
+          <OrderCard order={item} />
+        )}
         contentContainerStyle={{ padding: 16 }}
         ListEmptyComponent={
           <View className="mt-20 items-center justify-center">
@@ -146,7 +142,6 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({
           value={selectedDate || new Date()}
           mode="date"
           display="default"
-          // ▼▼▼ Gọi hàm prop ▼▼▼
           onChange={onDateChange}
         />
       )}

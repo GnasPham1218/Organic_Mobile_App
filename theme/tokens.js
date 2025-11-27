@@ -8,14 +8,11 @@ const COLORS = {
   TEXT_PRIMARY: "#1B4332",
   TEXT_SECONDARY: "#5F6F65",
   TEXT_SEARCH: "#0F0F05FF",
-  INPUT_BG: "#86ED8BFF",
+  INPUT_BG: "#E6F3E6",
   STATUS_BAR: "#FAFAF6",
 };
-
-
 
 module.exports = {
   ICON_SIZE,
   COLORS,
-
 };

@@ -1,58 +1,61 @@
 // components/features/product/ReviewBottomSheet.tsx
 import { FontAwesome } from "@expo/vector-icons";
-// ✨ Thêm useEffect
-import React, { useState, useEffect } from "react"; 
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 interface ReviewBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (rating: number, comment: string) => void;
-  errorMessage?: string | null; // ✨ 1. Thêm prop mới
-  onClearError: () => void; // ✨ 2. Thêm prop để xóa lỗi khi user tương tác
+  errorMessage?: string | null;
+  onClearError: () => void;
+  // ✅ UPDATE 1: Thêm props để nhận dữ liệu cũ khi sửa
+  initialRating?: number;
+  initialComment?: string;
 }
 
 export default function ReviewBottomSheet({
   visible,
   onClose,
   onSubmit,
-  errorMessage, // ✨
-  onClearError, // ✨
+  errorMessage,
+  onClearError,
+  // ✅ UPDATE 2: Nhận props
+  initialRating = 0,
+  initialComment = "",
 }: ReviewBottomSheetProps) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
-  // ✨ Reset state nội bộ khi modal được mở
+  // ✅ UPDATE 3: Logic reset form thông minh hơn
   useEffect(() => {
     if (visible) {
-      setRating(0);
-      setComment("");
+      // Nếu có dữ liệu cũ truyền vào (đang sửa) thì set, ngược lại thì reset
+      setRating(initialRating || 0);
+      setComment(initialComment || "");
     }
-  }, [visible]);
-
+  }, [visible, initialRating, initialComment]);
 
   const handleSubmit = () => {
-    // Component cha sẽ kiểm tra lỗi và gửi prop 'errorMessage'
     onSubmit(rating, comment);
   };
 
-  // ✨ Tạo các hàm handler mới để xóa lỗi khi người dùng tương tác
   const handleSetRating = (newRating: number) => {
     setRating(newRating);
-    onClearError(); // Xóa lỗi
+    onClearError();
   };
 
   const handleSetComment = (text: string) => {
     setComment(text);
-    onClearError(); // Xóa lỗi
+    onClearError();
   };
 
   return (
@@ -78,9 +81,13 @@ export default function ReviewBottomSheet({
           {/* Header */}
           <View className="flex-row items-center justify-center p-4 border-b border-gray-100 relative">
             <Text className="text-lg font-semibold text-gray-800">
+              {/* Đổi tiêu đề tùy theo ngữ cảnh nếu thích, ở đây giữ nguyên cho đơn giản */}
               Viết đánh giá của bạn
             </Text>
-            <TouchableOpacity onPress={onClose} className="absolute right-4 top-4">
+            <TouchableOpacity
+              onPress={onClose}
+              className="absolute right-4 top-4"
+            >
               <FontAwesome name="close" size={20} color="#333" />
             </TouchableOpacity>
           </View>
@@ -96,7 +103,7 @@ export default function ReviewBottomSheet({
               {Array.from({ length: 5 }).map((_, i) => (
                 <TouchableOpacity
                   key={i}
-                  onPress={() => handleSetRating(i + 1)} // ✨ Gắn handler mới
+                  onPress={() => handleSetRating(i + 1)}
                   className="p-2"
                 >
                   <FontAwesome
@@ -116,10 +123,10 @@ export default function ReviewBottomSheet({
               multiline
               textAlignVertical="top"
               value={comment}
-              onChangeText={handleSetComment} // ✨ Gắn handler mới
+              onChangeText={handleSetComment}
             />
 
-            {/* ✨ 3. Thêm khu vực hiển thị lỗi inline */}
+            {/* Error Message */}
             {errorMessage && (
               <View className="flex-row items-center mt-3">
                 <FontAwesome name="warning" size={14} color="#DC2626" />
@@ -128,7 +135,6 @@ export default function ReviewBottomSheet({
                 </Text>
               </View>
             )}
-
           </View>
 
           {/* Footer */}
