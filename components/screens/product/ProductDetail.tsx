@@ -1,5 +1,7 @@
 // components/features/product/ProductDetail.tsx
 import IconButton from "@/components/common/IconButton";
+import { useCart } from "@/context/cart/CartContext";
+import { useToast } from "@/context/notifications/ToastContext";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useMemo, useRef, useState } from "react";
 import {
@@ -8,7 +10,7 @@ import {
   Keyboard,
   ScrollView,
   Text,
-  TextInput, // Đã sửa vị trí import đúng
+  TextInput,
   TouchableOpacity,
   useWindowDimensions,
   View,
@@ -16,11 +18,16 @@ import {
 } from "react-native";
 import ImageView from "react-native-image-viewing";
 
-// Import Context
-import { useCart } from "@/context/cart/CartContext";
-import { useToast } from "@/context/notifications/ToastContext";
+// --- TYPES ---
+interface IDescriptionItem {
+  subtitle: string;
+  text: string;
+}
+interface IDescriptionSection {
+  heading: string;
+  items: IDescriptionItem[];
+}
 
-// --- Types giữ nguyên ---
 export type ProductFull = {
   product_id: number;
   name: string;
@@ -29,7 +36,7 @@ export type ProductFull = {
   rating_avg: number;
   image: any;
   images: { image_id: number; image_url: any }[];
-  description: string;
+  description: string | any;
   unit: string;
   origin_address: string;
   quantity: number;
@@ -53,6 +60,76 @@ interface ProductDetailViewProps {
   children?: React.ReactNode;
 }
 
+// --- COMPONENT XỬ LÝ MÔ TẢ (ĐÃ NÂNG CẤP) ---
+const ProductDescription: React.FC<{ description: string | any }> = ({
+  description,
+}) => {
+  const content = useMemo(() => {
+    // 1. Nếu đã là Object/Array thì trả về luôn
+    if (typeof description !== "string") {
+      return description;
+    }
+
+    const trimmed = description.trim();
+    if (!trimmed) return null;
+
+    try {
+      // 2. Thử Parse JSON chuẩn (dấu ngoặc kép)
+      return JSON.parse(trimmed);
+    } catch (e) {
+      try {
+        // 3. Nếu lỗi JSON, thử Parse dạng Python Literal / JS Object (dấu nháy đơn)
+        // Cách này an toàn để chuyển đổi chuỗi "{'a': 1}" thành Object
+
+        return new Function("return " + trimmed)();
+      } catch (e2) {
+        // 4. Nếu cả 2 cách đều lỗi -> Trả về null để hiển thị text thuần
+        return null;
+      }
+    }
+  }, [description]);
+
+  // Render trường hợp là văn bản thuần túy (Plain Text)
+  if (!content || !Array.isArray(content)) {
+    return (
+      <Text className="text-base leading-6 text-TEXT_SECONDARY text-justify">
+        {typeof description === "string" ? description : ""}
+      </Text>
+    );
+  }
+
+  // Render trường hợp là JSON có cấu trúc (Structured Data)
+  return (
+    <View>
+      {(content as IDescriptionSection[]).map((section, index) => (
+        <View key={index} className="mb-5">
+          {/* Heading */}
+          {section.heading ? (
+            <Text className="text-lg font-bold text-green-700 mb-2 border-l-4 border-green-600 pl-2">
+              {section.heading}
+            </Text>
+          ) : null}
+
+          {/* Items */}
+          {section.items.map((item, idx) => (
+            <View key={idx} className="mb-3 pl-1">
+              {item.subtitle ? (
+                <Text className="text-base font-bold text-gray-800 mb-1">
+                  • {item.subtitle}:
+                </Text>
+              ) : null}
+              <Text className="text-sm text-gray-600 leading-6 text-justify">
+                {item.text}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+};
+
+// --- TAB HELPER ---
 const InfoTab: React.FC<{
   label: string;
   isActive: boolean;
@@ -68,6 +145,7 @@ const InfoTab: React.FC<{
   </TouchableOpacity>
 );
 
+// --- MAIN COMPONENT ---
 const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   product,
   onBackPress,
@@ -75,14 +153,10 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   headerRight,
   children,
 }) => {
-  // Lấy hàm addToCart từ Context
   const { addToCart } = useCart();
   const { showToast } = useToast();
 
-  // State quản lý số lượng (String để xử lý input rỗng)
   const [quantityStr, setQuantityStr] = useState("1");
-
-  // Các state UI khác
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<"desc" | "info" | "certs">("desc");
   const [selectedCert, setSelectedCert] = useState<any>(null);
@@ -91,11 +165,9 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
   const { width: screenWidth } = useWindowDimensions();
 
-  // Tính toán giá
   const displayPrice = product.salePrice ?? product.price;
   const hasDiscount = product.salePrice && product.salePrice < product.price;
 
-  // Xử lý ảnh
   const imagesArray = Array.isArray(product.images) ? product.images : [];
   const allImages = useMemo(() => {
     const thumbnail = { image_id: -1, image_url: product.image };
@@ -110,17 +182,15 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     ? [{ uri: selectedCert.document_url.uri }]
     : [];
 
-  // --- 1. LOGIC XỬ LÝ NHẬP SỐ LƯỢNG ---
+  // --- Logic Quantity ---
   const handleQuantityChange = (text: string) => {
     const cleanText = text.replace(/[^0-9]/g, "");
     if (cleanText === "") {
       setQuantityStr("");
       return;
     }
-
     let val = parseInt(cleanText, 10);
     const maxStock = product.quantity;
-
     if (val > maxStock) {
       val = maxStock;
       showToast("warning", `Chỉ còn ${maxStock} sản phẩm trong kho`);
@@ -139,7 +209,6 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     let currentVal = parseInt(quantityStr || "0", 10);
     let newVal = currentVal + delta;
     const maxStock = product.quantity;
-
     if (newVal < 1) newVal = 1;
     if (newVal > maxStock) {
       newVal = maxStock;
@@ -148,14 +217,11 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     setQuantityStr(newVal.toString());
   };
 
-  // --- 2. HÀM NÀY CHỈ CHẠY KHI BẤM NÚT "THÊM VÀO GIỎ" ---
   const handleAddToCartPress = async () => {
-    Keyboard.dismiss(); // Đóng bàn phím
-
+    Keyboard.dismiss();
     const quantity = parseInt(quantityStr, 10);
     const maxStock = product.quantity;
 
-    // Validate lại lần cuối trước khi gọi API
     if (quantity > maxStock) {
       showToast("error", `Không đủ hàng. Kho còn: ${maxStock}`);
       setQuantityStr(maxStock.toString());
@@ -167,11 +233,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       return;
     }
 
-    // Gọi hàm từ Context
     if (addToCart) {
-      // Lưu ý: Việc gọi await addToCart() ở đây sẽ kích hoạt
-      // refreshCart() trong Context -> Gây re-render component này.
-      // Đây là hành vi bình thường.
       await addToCart(product, quantity);
     } else if (onAddToCart) {
       onAddToCart(quantity);
@@ -213,7 +275,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 140 }}
-        keyboardShouldPersistTaps="handled" // Quan trọng: Giúp bấm nút được ngay cả khi đang mở phím
+        keyboardShouldPersistTaps="handled"
       >
         {/* Slider Image */}
         <View className="bg-white pb-2">
@@ -277,7 +339,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </View>
         </View>
 
-        {/* Tabs giữ nguyên */}
+        {/* Tabs */}
         <View className="mt-3 bg-white">
           <View className="flex-row border-b border-BORDER">
             <InfoTab
@@ -298,10 +360,9 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </View>
 
           <View className="p-4 min-h-[150px]">
+            {/* Sử dụng Component ProductDescription đã nâng cấp */}
             {activeTab === "desc" && (
-              <Text className="text-base leading-6 text-TEXT_SECONDARY">
-                {product.description}
-              </Text>
+              <ProductDescription description={product.description} />
             )}
 
             {activeTab === "info" && (
@@ -373,10 +434,9 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         {children}
       </ScrollView>
 
-      {/* Footer: Thêm vào giỏ hàng */}
+      {/* Footer */}
       <View className="absolute bottom-0 w-full flex-row items-center justify-between border-t border-BORDER bg-white p-4 pb-6 shadow-2xl">
         <View className="flex-row items-center">
-          {/* Nút giảm */}
           <TouchableOpacity
             onPress={() => updateQuantity(-1)}
             className="h-10 w-10 items-center justify-center rounded-full border border-BORDER bg-gray-50 active:bg-gray-200"
@@ -384,7 +444,6 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <FontAwesome name="minus" size={14} color={"#4B5563"} />
           </TouchableOpacity>
 
-          {/* Input nhập số lượng */}
           <TextInput
             className="w-14 text-center text-xl font-bold text-TEXT_PRIMARY py-0"
             keyboardType="numeric"
@@ -394,7 +453,6 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             selectTextOnFocus
           />
 
-          {/* Nút tăng */}
           <TouchableOpacity
             onPress={() => updateQuantity(1)}
             className="h-10 w-10 items-center justify-center rounded-full border border-BORDER bg-gray-50 active:bg-gray-200"
@@ -403,7 +461,6 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Nút Submit - Gọi hàm handleAddToCartPress */}
         <TouchableOpacity
           onPress={handleAddToCartPress}
           className="flex-1 rounded-full bg-PRIMARY py-3 ml-4 shadow-sm active:bg-green-700"
@@ -414,7 +471,7 @@ const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Viewers giữ nguyên */}
+      {/* Viewers */}
       <ImageView
         images={imagesForCertViewer}
         imageIndex={0}

@@ -439,3 +439,10 @@ export const getParentCategoriesAPI = () => {
   const urlBackend = "/api/v1/categories/parents";
   return api.get<IBackendRes<IParentCategory>>(urlBackend);
 };
+/**
+ * API Lấy danh sách Voucher
+ * Endpoint: /api/v1/vouchers
+ */
+export const getVouchersAPI = () => {
+  return api.get<IBackendRes<IVoucher[]>>("/vouchers");
+};

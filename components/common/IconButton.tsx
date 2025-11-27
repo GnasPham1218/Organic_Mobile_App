@@ -1,8 +1,8 @@
 import React from "react";
-import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 // ✨ BƯỚC 1: Đổi FontAwesome thành Ionicons
-import { Ionicons } from "@expo/vector-icons";
 import { COLORS, ICON_SIZE } from "@/theme/tokens";
+import { Ionicons } from "@expo/vector-icons";
 
 export interface IconButtonProps {
   // ✨ BƯỚC 2: Cập nhật kiểu dữ liệu của icon
@@ -42,14 +42,19 @@ const IconButton: React.FC<IconButtonProps> = ({
       {/* Phần badge không cần thay đổi */}
       {showBadge && (
         <View
-          className="absolute top-1 right-1 rounded-full z-10 items-center justify-center"
+          className="absolute top-1 rounded-full z-10 items-center justify-center"
           style={[
-            { backgroundColor: COLORS.ACCENT },
+            {
+              backgroundColor: "red",
+              right: displayContent.length >= 2 ? -4 : 1, // 👈 Đẩy qua phải nếu 2 chữ số
+            },
             displayContent ? styles.badgeLg : styles.badgeSm,
           ]}
         >
           {displayContent ? (
-            <Text style={styles.badgeText}>{displayContent}</Text>
+            <Text style={styles.badgeText} numberOfLines={1}>
+              {displayContent}
+            </Text>
           ) : null}
         </View>
       )}
@@ -57,15 +62,25 @@ const IconButton: React.FC<IconButtonProps> = ({
   );
 };
 
-// Styles không đổi
 const styles = StyleSheet.create({
-  badgeSm: { width: 8, height: 8 },
-  badgeLg: { width: 16, height: 16 },
+  badgeSm: {
+    width: 8,
+    height: 8,
+  },
+  badgeLg: {
+    minWidth: 16, // 👈 Đủ cho 2 chữ số
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3, // 👈 Cho phép co giãn nhẹ
+    justifyContent: "center",
+    alignItems: "center",
+  },
   badgeText: {
     color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "700",
-    lineHeight: 10,
+    lineHeight: 12,
+    textAlign: "center",
   },
 });
 

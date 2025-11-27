@@ -5,13 +5,7 @@ import { useToast } from "@/context/notifications/ToastContext";
 import { addToCartAPI, getMyCartAPI, updateCartAPI } from "@/service/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, ReactNode, useContext, useState } from "react";
 
 // --- INTERFACES ---
 export interface CartItem {
@@ -90,10 +84,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
       if (showLoading) setLoading(false);
     }
   };
-
-  useEffect(() => {
-    refreshCart(true); // Lần đầu load app thì cần hiện loading
-  }, []);
 
   // --- 2. Thêm vào giỏ hàng (POST) ---
   const addToCart = async (

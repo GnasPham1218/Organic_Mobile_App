@@ -1,9 +1,23 @@
 import CategoryDetailView from "@/components/screens/category/CategoryDetailView";
+import AddToCartModal from "@/components/screens/product/AddToCartModal";
+ // Đảm bảo đường dẫn đúng
 import { useCart } from "@/context/cart/CartContext";
-import { getProductCardListAPI, getProductsByCategoryAPI } from "@/service/api";
+import {
+  getBestPromotionByProductId,
+  getProductCardListAPI,
+  getProductsByCategoryAPI,
+} from "@/service/api";
+import { formatCategoryName } from "@/utils/formatters";
+import { Ionicons } from "@expo/vector-icons"; // Icon cho nút Scroll
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 // Định nghĩa kiểu sắp xếp
 export type SortOrder = "default" | "price_asc" | "price_desc" | "name_asc";
@@ -13,46 +27,63 @@ const PAGE_SIZE = 10;
 export default function CategoryDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-
-  // Params: id (categoryID hoặc 'all-products'), name (tên danh mục)
   const { id, name } = params;
 
   // Context Giỏ hàng
   const { cart, addToCart } = useCart();
 
-  // --- STATE ---
-  // SỬA: Dùng IProductCard[] thay vì Product[] (Mock)
+  // --- REFS ---
+  // Ref để điều khiển cuộn trang
+  const flatListRef = useRef<FlatList>(null);
+
+  // --- STATE DATA ---
   const [products, setProducts] = useState<IProductCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoryName, setCategoryName] = useState<string>(() => {
+    if (id === "all-products") return "Tất cả sản phẩm";
+    if (name) return Array.isArray(name) ? name[0] : name;
+    return "Danh mục";
+  });
 
-  // Pagination
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Filter & Sort UI
+  // --- STATE UI & FILTER ---
   const [sortOrder, setSortOrder] = useState<SortOrder>("default");
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-
-  // State lọc giá (hiện tại chỉ lưu UI, chờ API update)
   const [appliedMinPrice, setAppliedMinPrice] = useState<number | null>(null);
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false); // State hiển thị nút scroll
 
-  // Tính tổng số lượng item trong giỏ (để hiện badge)
+  // --- STATE MODAL ADD TO CART ---
+  const [isAddToCartVisible, setIsAddToCartVisible] = useState(false);
+  const [selectedProductForModal, setSelectedProductForModal] =
+    useState<any>(null); // Type ProductData của Modal
+
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // --- FETCH DATA FUNCTION ---
+  // --- EFFECT: CATEGORY NAME ---
+  useEffect(() => {
+    const resolveCategoryName = async () => {
+      if (id === "all-products") {
+        setCategoryName("Tất cả sản phẩm");
+        return;
+      }
+      setCategoryName(formatCategoryName(Array.isArray(name) ? name[0] : name));
+    };
+    resolveCategoryName();
+  }, [id, name]);
+
+  // --- EFFECT: FETCH PRODUCTS ---
   const fetchProducts = useCallback(
     async (pageNum: number, sort: SortOrder, isRefresh = false) => {
       try {
-        if (pageNum === 1 && !isRefresh) setLoading(true);
-
+        setLoading(true);
         let response;
-        // Kiểm tra logic: Lấy tất cả hay lấy theo category
         if (id === "all-products") {
           response = await getProductCardListAPI(pageNum, PAGE_SIZE, sort);
         } else {
-          // Ép kiểu id về number vì params.id là string
           response = await getProductsByCategoryAPI(
             Number(id),
             pageNum,
@@ -62,16 +93,39 @@ export default function CategoryDetailScreen() {
         }
 
         if (response && response.data && response.data.data) {
-          const newData = response.data.data.result;
+          const rawProducts = response.data.data.result;
           const meta = response.data.data.meta;
 
-          if (pageNum === 1) {
-            setProducts(newData);
-          } else {
-            setProducts((prev) => [...prev, ...newData]);
-          }
+          const enrichedProducts = await Promise.all(
+            rawProducts.map(async (product) => {
+              try {
+                const promoRes = await getBestPromotionByProductId(product.id);
+                const promoData = promoRes.data?.data;
+                if (promoData) {
+                  return {
+                    ...product,
+                    discount: {
+                      type: promoData.type,
+                      value: promoData.value,
+                    },
+                  };
+                }
+              } catch (err) {}
+              return product;
+            })
+          );
 
-          // Kiểm tra còn trang sau không
+          if (pageNum === 1) {
+            setProducts(enrichedProducts);
+          } else {
+            setProducts((prev) => {
+              const existingIds = new Set(prev.map((p) => p.id));
+              const uniqueNewProducts = enrichedProducts.filter(
+                (p) => !existingIds.has(p.id)
+              );
+              return [...prev, ...uniqueNewProducts];
+            });
+          }
           setHasMore(pageNum < meta.pages);
         }
       } catch (error) {
@@ -83,7 +137,6 @@ export default function CategoryDetailScreen() {
     [id]
   );
 
-  // --- EFFECTS ---
   useEffect(() => {
     setPage(1);
     fetchProducts(1, sortOrder, true);
@@ -110,26 +163,69 @@ export default function CategoryDetailScreen() {
     router.back();
   };
 
-  // SỬA: Hàm này nhận object product thay vì productId để khớp với Type
-  const handleAddToCart = async (product: IProductCard) => {
-    await addToCart(product);
+  // --- LOGIC SCROLL TO TOP ---
+  const handleScrollToTop = () => {
+    // Gọi method scrollToOffset của FlatList thông qua ref
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
-  // Sort Handlers
+  // --- LOGIC ADD TO CART ---
+
+  // 1. Khi bấm nút Add (Giỏ hàng) ở card sản phẩm -> Mở Modal
+  const handleOpenAddToCartModal = (product: IProductCard) => {
+    // Tính toán giá sale để truyền vào modal
+    let salePrice = undefined;
+    if (product.discount) {
+      if (product.discount.type === "PERCENT") {
+        salePrice = product.price * (1 - product.discount.value / 100);
+      } else if (product.discount.type === "FIXED_AMOUNT") {
+        salePrice = product.price - product.discount.value;
+      }
+    }
+
+    // Map dữ liệu sang cấu trúc Modal yêu cầu
+    const modalData = {
+      id: product.id,
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      salePrice: salePrice,
+      quantity: 100, // Giả định tồn kho hoặc lấy từ API nếu có field quantity
+    };
+
+    setSelectedProductForModal(modalData);
+    setIsAddToCartVisible(true);
+  };
+
+  // 2. Khi xác nhận số lượng trong Modal -> Gọi Context AddToCart
+  const handleConfirmAddToCart = async (quantity: number) => {
+    if (selectedProductForModal) {
+      // Tìm lại product gốc (IProductCard) để đảm bảo đúng type cho Context
+      const originalProduct = products.find(
+        (p) => p.id === selectedProductForModal.id
+      );
+
+      if (originalProduct) {
+        // Lưu ý: Hàm addToCart trong context cần hỗ trợ tham số quantity
+        // Ví dụ: addToCart(product, quantity)
+        await addToCart(originalProduct, quantity);
+        // Alert.alert("Thành công", `Đã thêm ${quantity} sản phẩm vào giỏ.`);
+      }
+    }
+    setIsAddToCartVisible(false);
+  };
+
+  // --- HANDLERS FILTER & SORT ---
   const handleSelectSort = (order: SortOrder) => {
     setSortOrder(order);
     setIsSortModalVisible(false);
   };
 
-  // Filter Handlers
   const handleApplyFilters = (min: number | null, max: number | null) => {
     setAppliedMinPrice(min);
     setAppliedMaxPrice(max);
     setIsFilterModalVisible(false);
-    Alert.alert(
-      "Thông báo",
-      "Tính năng lọc giá đang được cập nhật phía server."
-    );
+    Alert.alert("Thông báo", "Tính năng lọc giá đang cập nhật.");
   };
 
   const handleResetFiltersAndSort = () => {
@@ -137,13 +233,6 @@ export default function CategoryDetailScreen() {
     setAppliedMinPrice(null);
     setAppliedMaxPrice(null);
   };
-
-  // --- UI ---
-  const displayCategoryName = name
-    ? (name as string)
-    : id === "all-products"
-      ? "Tất cả sản phẩm"
-      : "Danh mục";
 
   const isFilteredOrSorted =
     sortOrder !== "default" ||
@@ -159,37 +248,55 @@ export default function CategoryDetailScreen() {
           <ActivityIndicator size="large" color="#10B981" />
         </View>
       ) : (
-        <CategoryDetailView
-          // Data lấy từ API
-          products={products}
-          categoryName={displayCategoryName}
-          cartItemCount={cartItemCount}
-          // State
-          isFilteredOrSorted={isFilteredOrSorted}
-          sortOrder={sortOrder}
-          appliedMinPrice={appliedMinPrice}
-          appliedMaxPrice={appliedMaxPrice}
-          isSortModalVisible={isSortModalVisible}
-          isFilterModalVisible={isFilterModalVisible}
-          // Actions
-          onBackPress={handleBackPress}
-          onCartPress={handleCartPress}
-          onProductPress={handleProductPress}
-          onAddToCart={handleAddToCart} // Đã sửa type
-          onFilterPress={() => setIsFilterModalVisible(true)}
-          onCloseFilterModal={() => setIsFilterModalVisible(false)}
-          onApplyFilters={handleApplyFilters}
-          onSortPress={() => setIsSortModalVisible(true)}
-          onCloseSortModal={() => setIsSortModalVisible(false)}
-          onSelectSort={handleSelectSort}
-          onResetFiltersAndSort={handleResetFiltersAndSort}
-          // Infinite Scroll
-          onEndReached={handleLoadMore}
-        />
+        <>
+          <CategoryDetailView
+            // Truyền ref xuống View (Quan trọng: View phải gắn ref này vào FlatList)
+            flatListRef={flatListRef}
+            products={products}
+            categoryName={categoryName}
+            cartItemCount={cartItemCount}
+            isFilteredOrSorted={isFilteredOrSorted}
+            sortOrder={sortOrder}
+            appliedMinPrice={appliedMinPrice}
+            appliedMaxPrice={appliedMaxPrice}
+            isSortModalVisible={isSortModalVisible}
+            isFilterModalVisible={isFilterModalVisible}
+            onBackPress={handleBackPress}
+            onCartPress={handleCartPress}
+            onProductPress={handleProductPress}
+            onAddToCart={handleOpenAddToCartModal} // Đổi handler sang mở modal
+            onFilterPress={() => setIsFilterModalVisible(true)}
+            onCloseFilterModal={() => setIsFilterModalVisible(false)}
+            onApplyFilters={handleApplyFilters}
+            onSortPress={() => setIsSortModalVisible(true)}
+            onCloseSortModal={() => setIsSortModalVisible(false)}
+            onSelectSort={handleSelectSort}
+            onResetFiltersAndSort={handleResetFiltersAndSort}
+            onEndReached={handleLoadMore}
+            // Sự kiện scroll để hiện/ẩn nút (Tùy chọn: cần View hỗ trợ callback onScroll)
+          />
+
+          {/* --- BUTTON SCROLL TO TOP --- */}
+          <TouchableOpacity
+            onPress={handleScrollToTop}
+            className="absolute bottom-6 right-6 w-12 h-12 bg-green-600 rounded-full items-center justify-center shadow-lg shadow-green-900/50 z-50"
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-up" size={24} color="white" />
+          </TouchableOpacity>
+        </>
       )}
 
+      {/* --- ADD TO CART MODAL --- */}
+      <AddToCartModal
+        visible={isAddToCartVisible}
+        product={selectedProductForModal}
+        onClose={() => setIsAddToCartVisible(false)}
+        onConfirm={handleConfirmAddToCart}
+      />
+
       {loading && page > 1 && (
-        <View className="py-2 items-center bg-transparent">
+        <View className="py-2 items-center bg-transparent mb-16">
           <ActivityIndicator size="small" color="#10B981" />
         </View>
       )}

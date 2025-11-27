@@ -27,7 +27,6 @@ declare global {
     data?: T;
   }
 
-
   // Response dạng phân trang từ Spring Boot
   interface ISpringRawResponse<T> {
     meta: {
@@ -212,7 +211,16 @@ declare global {
     updateBy: string | null;
     categoryId: number;
   }
+  // types/product.d.ts hoặc ngay trong file component
+  export interface IDescriptionItem {
+    subtitle: string;
+    text: string;
+  }
 
+  export interface IDescriptionSection {
+    heading: string;
+    items: IDescriptionItem[];
+  }
   // Chi tiết sản phẩm (Response từ API chi tiết)
   interface IProductDetail {
     id: number;
@@ -611,5 +619,25 @@ declare global {
   export interface IUpdateReviewDTO {
     rating: number;
     comment: string;
+  }
+  // =============================================================================
+  // 10. VOUCHERS
+  // =============================================================================
+
+  export type VoucherType = "PERCENT" | "FIXED_AMOUNT" | "FREESHIP";
+
+  export interface IVoucher {
+    id: number;
+    code: string;
+    description: string;
+    typeVoucher: VoucherType;
+    value: number;
+    maxDiscountAmount: number;
+    minOrderValue: number;
+    startDate: string;
+    endDate: string;
+    quantity: number;
+    usedCount: number;
+    active: boolean;
   }
 }

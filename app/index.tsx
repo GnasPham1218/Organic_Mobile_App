@@ -1,3 +1,4 @@
+import { useCart } from "@/context/cart/CartContext";
 import { hasSeenIntro } from "@/utils/introStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // 1. Import thêm AsyncStorage
 import { Redirect } from "expo-router";
@@ -8,22 +9,27 @@ export default function Index() {
   const [isReady, setIsReady] = useState(false); // Biến trạng thái để biết đã load xong dữ liệu chưa
   const [seen, setSeen] = useState<boolean>(false);
   const [hasToken, setHasToken] = useState<boolean>(false);
-
+  const { refreshCart } = useCart();
   useEffect(() => {
     const prepare = async () => {
       try {
-        // 2. Dùng Promise.all để check song song cả 2 (tiết kiệm thời gian load)
         const [introSeen, token] = await Promise.all([
           hasSeenIntro(),
           AsyncStorage.getItem("accessToken"),
         ]);
 
         setSeen(introSeen);
-        setHasToken(!!token); // Dấu !! để ép kiểu về boolean (có chuỗi -> true, null -> false)
+        const has = !!token;
+        setHasToken(has);
+
+        // 👉 CHECK TOKEN TRỰC TIẾP, KHÔNG DÙNG hasToken
+        if (has) {
+          await refreshCart(false);
+        }
       } catch (error) {
         console.error("Lỗi khi kiểm tra khởi động:", error);
       } finally {
-        setIsReady(true); // Đánh dấu đã tải xong
+        setIsReady(true);
       }
     };
 

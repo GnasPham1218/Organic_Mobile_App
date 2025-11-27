@@ -2,9 +2,9 @@ import { SortOrder } from "@/app/category/[id]";
 import React from "react";
 
 // Import các component con
-
 import SortBottomSheet from "@/components/screens/category/SortBottomSheet"; // Check path
 import ProductVerticalGrid from "@/components/screens/product/ProductVerticalGrid";
+import { FlatList } from "react-native";
 import CategoryHeader from "./CategoryHeader";
 import CategoryListEmpty from "./CategoryListEmpty";
 import CategoryListHeader from "./CategoryListHeader";
@@ -22,7 +22,7 @@ interface CategoryDetailViewProps {
   appliedMaxPrice: number | null;
   isSortModalVisible: boolean;
   isFilterModalVisible: boolean;
-
+  flatListRef?: React.RefObject<FlatList<any> | null>;
   onBackPress: () => void;
   onCartPress: () => void;
   onProductPress: (productId: number) => void;
@@ -50,6 +50,7 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({
   appliedMaxPrice,
   isSortModalVisible,
   isFilterModalVisible,
+  flatListRef,
   onBackPress,
   onCartPress,
   onProductPress,
@@ -84,6 +85,7 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({
       />
 
       <ProductVerticalGrid
+        flatListRef={flatListRef}
         products={products}
         onPressProduct={onProductPress}
         onAddToCart={onAddToCart}

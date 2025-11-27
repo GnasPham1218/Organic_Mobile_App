@@ -15,7 +15,7 @@ const POLICY_DATA: PolicySection[] = [
       {
         id: "s1",
         title: "Đối tác vận chuyển",
-        text: "ORGANIC FOODS sử dụng đối tác Giao Hàng Nhanh (GHN) để thực hiện vận chuyển các đơn hàng đến khách hàng.",
+        text: "ORGANIC FOOD sử dụng đối tác Giao Hàng Nhanh (GHN) để thực hiện vận chuyển các đơn hàng đến khách hàng.",
       },
       {
         id: "s2",
@@ -25,7 +25,7 @@ const POLICY_DATA: PolicySection[] = [
       {
         id: "s3",
         title: "Khiếu nại và hủy đơn",
-        text: "Trong trường hợp phát sinh chậm trễ, ORGANIC FOODS sẽ chủ động thông báo. Nếu không thể liên hệ với khách hàng trong vòng 3 ngày, đơn hàng sẽ bị hủy và hoàn tiền. Khi nhận hàng, khách hàng vui lòng kiểm tra kỹ trước khi ký nhận.",
+        text: "Trong trường hợp phát sinh chậm trễ, ORGANIC FOOD sẽ chủ động thông báo. Nếu không thể liên hệ với khách hàng trong vòng 3 ngày, đơn hàng sẽ bị hủy và hoàn tiền. Khi nhận hàng, khách hàng vui lòng kiểm tra kỹ trước khi ký nhận.",
       },
     ],
   },
@@ -38,7 +38,7 @@ const POLICY_DATA: PolicySection[] = [
       {
         id: "rt1",
         title: "Điều kiện đổi trả",
-        text: "ORGANIC FOODS chấp nhận đổi hoặc trả hàng trong các trường hợp sản phẩm bị hư hỏng, lỗi kỹ thuật, giao sai sản phẩm, sai số lượng, cận hạn sử dụng, hoặc giao trễ.",
+        text: "ORGANIC FOOD chấp nhận đổi hoặc trả hàng trong các trường hợp sản phẩm bị hư hỏng, lỗi kỹ thuật, giao sai sản phẩm, sai số lượng, cận hạn sử dụng, hoặc giao trễ.",
       },
       {
         id: "rt2",
@@ -53,7 +53,7 @@ const POLICY_DATA: PolicySection[] = [
       {
         id: "rt4",
         title: "Phương án xử lý",
-        text: "Tùy vào tình trạng, ORGANIC FOODS sẽ đổi sản phẩm mới, gửi bù, hoặc hoàn tiền (toàn phần/một phần). Với hàng tươi sống, khách hàng chỉ cần chụp hình làm bằng chứng, không cần gửi lại sản phẩm.",
+        text: "Tùy vào tình trạng, ORGANIC FOOD sẽ đổi sản phẩm mới, gửi bù, hoặc hoàn tiền (toàn phần/một phần). Với hàng tươi sống, khách hàng chỉ cần chụp hình làm bằng chứng, không cần gửi lại sản phẩm.",
       },
       {
         id: "rt5",

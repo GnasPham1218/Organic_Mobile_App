@@ -13,11 +13,13 @@ import AuthSwitchLink from "@/components/auth/AuthSwitchLink";
 import LoginForm from "@/components/auth/LoginForm";
 import SocialButtons from "@/components/auth/SocialButtons";
 import DividerWithText from "@/components/common/DividerWithText";
+import { useCart } from "@/context/cart/CartContext";
 import { loginAPI } from "@/service/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { refreshCart } = useCart();
   const logo = require("@assets/logo_organic.png");
   const handleLogin = async (payload: {
     emailOrPhone: string;
@@ -40,7 +42,7 @@ export default function LoginScreen() {
         await AsyncStorage.setItem("userInfo", JSON.stringify(userLogin));
 
         console.log("Đã lưu token và thông tin user");
-
+        await refreshCart();
         // 3. Điều hướng sang trang chính (Tab Bar)
         // Dùng 'replace' thay vì 'push' để người dùng không thể back lại trang login
         router.replace("/(tabs)");
@@ -93,7 +95,7 @@ export default function LoginScreen() {
 
           <LoginForm
             onSubmit={handleLogin}
-            onForgotPress={() => console.log("Forgot password")}
+            onForgotPress={() => router.push("/(auth)/forgot-password")}
           />
 
           <DividerWithText text="Hoặc tiếp tục với" />
@@ -107,11 +109,6 @@ export default function LoginScreen() {
             prompt="Chưa có tài khoản?"
             linkText="Đăng ký ngay"
             onPress={() => router.push("/(auth)/sign-up")}
-          />
-          <AuthSwitchLink
-            prompt=""
-            linkText="Tiếp tục mà không đăng nhập"
-            onPress={() => router.push("/(tabs)")}
           />
         </View>
       </ScrollView>

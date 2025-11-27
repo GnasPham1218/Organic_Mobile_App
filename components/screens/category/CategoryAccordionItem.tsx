@@ -1,9 +1,7 @@
-// components/screens/category/CategoryAccordionItem.tsx
-import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-// SỬA: Import FontAwesome5
 import { FontAwesome5 } from "@expo/vector-icons";
-import { CategoryItemData } from "./CategoryView"; // Import kiểu dữ liệu
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
+import { CategoryItemData } from "./CategoryView";
 
 interface CategoryAccordionItemProps {
   item: CategoryItemData;
@@ -39,15 +37,11 @@ const CategoryAccordionItem: React.FC<CategoryAccordionItemProps> = ({
               />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-semibold text-gray-800 mb-1">
+              {/* Đã xóa margin bottom (mb-1) để text căn giữa đẹp hơn khi không có count */}
+              <Text className="text-base font-semibold text-gray-800">
                 {item.name}
               </Text>
-              <View className="flex-row items-center">
-                <FontAwesome5 name="box" size={13} color="#9CA3AF" />
-                <Text className="text-sm text-gray-500 ml-1.5">
-                  {item.productCount} sản phẩm
-                </Text>
-              </View>
+              {/* Đã xóa phần hiển thị số lượng sản phẩm ở đây */}
             </View>
           </View>
           <FontAwesome5 name="chevron-right" size={16} color="#9CA3AF" />
@@ -96,11 +90,9 @@ const CategoryAccordionItem: React.FC<CategoryAccordionItemProps> = ({
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-gray-700 mb-0.5">
+                  {/* Đã xóa margin bottom và phần số lượng sản phẩm con */}
+                  <Text className="text-sm font-medium text-gray-700">
                     {child.name}
-                  </Text>
-                  <Text className="text-xs text-gray-400">
-                    {child.productCount} sản phẩm
                   </Text>
                 </View>
               </View>

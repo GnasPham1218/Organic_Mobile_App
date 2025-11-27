@@ -104,7 +104,7 @@ const OrderCard: React.FC<{ order: IOrder }> = ({ order }) => {
         {/* Footer - Tổng tiền (nổi bật nhất) */}
         <View className="bg-gray-50/70 px-5 py-4 border-t border-gray-100">
           <View className="flex-row items-end justify-between">
-            <Text className="text-sm text-gray-600">Tổng thanh toán</Text>
+            <Text className="text-sm text-gray-600">Tổng đơn hàng</Text>
             <Text className="text-2xl font-extrabold text-orange-600">
               {formatCurrency(totalAmount)}
             </Text>

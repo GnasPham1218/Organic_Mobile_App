@@ -24,6 +24,7 @@ type Props = {
 
   ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
+  flatListRef?: React.RefObject<FlatList<any> | null>;
   contentContainerStyle?: StyleProp<ViewStyle>;
 
   onEndReached?: () => void;
@@ -38,6 +39,7 @@ const ProductVerticalGrid: React.FC<Props> = ({
   rowGap = 12,
   contentPaddingHorizontal = 16,
   showsVerticalScrollIndicator = false,
+  flatListRef,
   onPressProduct,
   onAddToCart,
   ListHeaderComponent,
@@ -92,6 +94,7 @@ const ProductVerticalGrid: React.FC<Props> = ({
   return (
     <FlatList
       data={products}
+      ref={flatListRef}
       keyExtractor={(item) => item.id.toString()}
       renderItem={renderProduct}
       numColumns={numColumns}

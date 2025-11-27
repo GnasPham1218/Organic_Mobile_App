@@ -1,26 +1,23 @@
+import CategoryView, {
+  CategoryItemData,
+} from "@/components/screens/category/CategoryView";
 import {
   CATEGORY_ICON_MAP,
   DEFAULT_CHILD_ICON,
 } from "@/constants/categoryIcons";
-// Xóa các import mock data cũ liên quan đến category
-import CategoryView, {
-  CategoryItemData,
-} from "@/components/screens/category/CategoryView";
-import { mockProducts } from "@/data/mockData"; // Giữ lại nếu bạn muốn map count ảo, hoặc xóa nếu không dùng
-import { getAllCategoriesAPI } from "@/service/api"; // Giả sử đường dẫn file api của bạn
+// Đã xóa import mockProducts
+import { getAllCategoriesAPI } from "@/service/api";
+import { formatCategoryName } from "@/utils/formatters";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 
 // --- LOCAL TYPE DEFINITION ---
-// Interface này giúp TS hiểu dữ liệu thực tế từ JSON (có parentCategoryId)
-// dù global.d.ts định nghĩa khác.
 interface ICategoryAPI extends ICategory {
   parentCategoryId?: number | null;
 }
 
 // --- HELPERS ---
-
 const getCategoryIcon = (categoryName: string, isParent: boolean = false) => {
   if (isParent) {
     const key = categoryName.toLowerCase();
@@ -36,30 +33,11 @@ const getCategoryIcon = (categoryName: string, isParent: boolean = false) => {
   }
 };
 
-// Hàm tính số lượng sản phẩm
-// LƯU Ý: Hiện tại API Category chưa trả về số lượng sản phẩm.
-// Logic dưới đây vẫn dùng mockProducts để demo UI không bị lỗi.
-// Nếu muốn chính xác, Backend cần trả về field 'productCount' hoặc gọi API đếm riêng.
-const getProductCountFromMock = (
-  categoryId: number,
-  allCategories: ICategoryAPI[]
-) => {
-  // Tìm các ID con nếu là cha
-  const childCategories = allCategories.filter(
-    (c) => c.parentCategoryId === categoryId
-  );
-  const targetIds = [categoryId, ...childCategories.map((c) => c.id)];
-
-  // Đếm trong mockProducts (hoặc trả về 0 nếu đã xóa mockProducts)
-  if (!mockProducts) return 0;
-  return mockProducts.filter((p) => targetIds.includes(p.category_id)).length;
-};
+// Đã xóa hàm getProductCountFromMock
 
 // --- COMPONENT CONTAINER ---
 export default function CategoryScreen() {
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
-
-  // State lưu dữ liệu từ API
   const [categories, setCategories] = useState<ICategoryAPI[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -70,7 +48,6 @@ export default function CategoryScreen() {
         setIsLoading(true);
         const res = await getAllCategoriesAPI();
 
-        // Cấu trúc: IBackendRes -> data -> ISpringRawResponse -> result
         if (res.data && res.data.data && res.data.data.result) {
           setCategories(res.data.data.result as ICategoryAPI[]);
         }
@@ -95,59 +72,87 @@ export default function CategoryScreen() {
   };
 
   const handleNavigateToCategory = (categoryId: number) => {
-    router.push(`/category/${categoryId}`);
+    // ✅ Xử lý riêng cho item "Tất cả sản phẩm" (ID = -1)
+    if (categoryId === -1) {
+      router.push({
+        pathname: "/category/[id]",
+        params: {
+          id: "all-products", // Truyền ID đặc biệt này
+          name: "Tất cả sản phẩm",
+        },
+      });
+      return;
+    }
+
+    // Logic cũ cho các danh mục thường
+    const selectedCategory = categories.find((c) => c.id === categoryId);
+    router.push({
+      pathname: "/category/[id]",
+      params: {
+        id: categoryId,
+        name: selectedCategory?.name || "Danh mục",
+      },
+    });
   };
 
   // --- DATA TRANSFORMATION ---
   const categoryData = useMemo<CategoryItemData[]>(() => {
-    if (!categories || categories.length === 0) return [];
+    // 1. Tạo item tĩnh "Tất cả sản phẩm"
+    const allProductsItem: CategoryItemData = {
+      id: -1, // Dùng ID âm để không trùng với ID thật từ database
+      name: "Tất cả sản phẩm",
+      productCount: 0, // API chưa có count, tạm để 0
+      iconConfig: {
+        name: "cubes", // Icon FontAwesome5
+        color: "#10B981", // Màu xanh lá (Primary)
+        bg: "#D1FAE5", // Nền xanh nhạt
+      },
+      isExpanded: false,
+      children: [], // Không có con
+    };
 
-    // 1. Lọc ra danh sách Category Cha (parentCategoryId === null)
+    if (!categories || categories.length === 0) {
+      // Nếu chưa có category load về, ít nhất vẫn hiện nút này
+      return [allProductsItem];
+    }
+
     const parentCategories = categories.filter(
       (c) => c.parentCategoryId === null || c.parentCategoryId === undefined
     );
 
-    return parentCategories.map((parentCategory) => {
-      // 2. Tìm con của category hiện tại
+    const mappedCategories = parentCategories.map((parentCategory) => {
       const childCategories = categories.filter(
         (c) => c.parentCategoryId === parentCategory.id
       );
 
       const isExpanded = expandedCategories.includes(parentCategory.id);
-
-      // Tính count (Dùng mock hoặc set cứng = 0)
-      const productCount = getProductCountFromMock(
-        parentCategory.id,
-        categories
-      );
+      const productCount = 0; // API chưa có count, tạm để 0
       const iconConfig = getCategoryIcon(parentCategory.name, true);
 
-      // 3. Map children sang cấu trúc View cần
       const childrenMapped = childCategories.map((childCategory) => {
-        const childProductCount = getProductCountFromMock(
-          childCategory.id,
-          categories
-        );
+        const childProductCount = 0; // API chưa có count, tạm để 0
         const childIconConfig = getCategoryIcon(childCategory.name, false);
 
         return {
           id: childCategory.id,
-          name: childCategory.name,
+          name: formatCategoryName(childCategory.name),
           productCount: childProductCount,
           iconConfig: childIconConfig,
         };
       });
 
-      // 4. Trả về object hoàn chỉnh
       return {
         id: parentCategory.id,
-        name: parentCategory.name,
+        name: formatCategoryName(parentCategory.name),
         productCount: productCount,
         iconConfig: iconConfig,
         isExpanded: isExpanded,
         children: childrenMapped,
       };
     });
+
+    // 2. Chèn "Tất cả sản phẩm" lên đầu mảng
+    return [allProductsItem, ...mappedCategories];
   }, [categories, expandedCategories]);
 
   // --- RENDER ---
