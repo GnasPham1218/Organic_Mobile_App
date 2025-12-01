@@ -2,6 +2,7 @@ import { useAddress } from "@/context/address/AddressContext";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Modal,
   ScrollView,
@@ -28,6 +29,9 @@ export default function AddressEditModal() {
     wards,
     handleSelectProvince,
     handleSelectDistrict,
+    // ✅ Lấy thêm 2 biến này để xử lý loading
+    isLocationReady,
+    retryFetchLocation,
   } = useAddress();
 
   // State để quản lý việc đang chọn cái gì (Tỉnh, Huyện, hay Xã)
@@ -88,13 +92,38 @@ export default function AddressEditModal() {
 
           {/* CONTENT: Nếu đang chọn Tỉnh/Huyện/Xã thì hiện List, không thì hiện Form */}
           {selectionMode !== "NONE" ? (
-            <FlatList
-              data={getListData()}
-              keyExtractor={(item) => item.Code || item.Name}
-              renderItem={renderSelectionItem}
-              className="flex-1"
-            />
+            <View className="flex-1">
+              {/* ✅ LOGIC HIỂN THỊ LOADING HOẶC DANH SÁCH */}
+              {selectionMode === "PROVINCE" && !isLocationReady ? (
+                <View className="flex-1 justify-center items-center p-4">
+                  <ActivityIndicator size="large" color="#16A34A" />
+                  <Text className="text-gray-500 mt-4 text-center">
+                    Đang tải dữ liệu hành chính...
+                  </Text>
+                  {/* Nút thử lại nếu mạng lỗi */}
+                  <TouchableOpacity
+                    onPress={retryFetchLocation}
+                    className="mt-4 bg-gray-200 px-4 py-2 rounded-lg"
+                  >
+                    <Text className="text-gray-700 font-medium">Thử lại</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <FlatList
+                  data={getListData()}
+                  keyExtractor={(item) => item.Code || item.Name}
+                  renderItem={renderSelectionItem}
+                  className="flex-1"
+                  ListEmptyComponent={
+                    <View className="p-4 items-center mt-10">
+                      <Text className="text-gray-400">Không có dữ liệu</Text>
+                    </View>
+                  }
+                />
+              )}
+            </View>
           ) : (
+            /* FORM NHẬP LIỆU (Giữ nguyên như cũ) */
             <>
               <ScrollView
                 className="p-4"
@@ -129,7 +158,12 @@ export default function AddressEditModal() {
                     >
                       {form.province || "Tỉnh/Thành phố *"}
                     </Text>
-                    <Ionicons name="chevron-down" size={20} color="gray" />
+                    {/* ✅ Hiển thị loading nhỏ bên cạnh nếu chưa tải xong */}
+                    {!isLocationReady ? (
+                      <ActivityIndicator size="small" color="#9CA3AF" />
+                    ) : (
+                      <Ionicons name="chevron-down" size={20} color="gray" />
+                    )}
                   </TouchableOpacity>
 
                   {/* --- Selector Quận/Huyện --- */}

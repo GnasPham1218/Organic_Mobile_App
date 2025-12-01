@@ -45,7 +45,7 @@ const PromotionListView: React.FC<PromotionListViewProps> = ({
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="flex-row items-center justify-center px-4 py-3 bg-white border-b border-gray-100 mt-8">
+      <View className="relative flex-row items-center justify-center border-b border-BORDER bg-STATUS_BAR py-4">
         <View className="absolute left-4 z-10">
           <IconButton
             icon="arrow-back"
@@ -54,7 +54,7 @@ const PromotionListView: React.FC<PromotionListViewProps> = ({
             onPress={onBackPress}
           />
         </View>
-        <Text className="text-center text-xl font-bold text-gray-800">
+        <Text className="text-center text-2xl font-bold text-PRIMARY">
           Khuyến mãi
         </Text>
       </View>

@@ -41,7 +41,7 @@ const PromotionProductCard: React.FC<Props> = ({ item }) => {
       <View className="relative h-24 w-24 items-center justify-center rounded-md border border-gray-100 bg-gray-50">
         <Image source={imageUrl} className="h-20 w-20" resizeMode="contain" />
 
-        {/* Badge % Giảm giá */}
+        {/* Badge % Giảm giá (ĐÃ DỜI VỀ VỊ TRÍ CŨ: góc trên bên trái) */}
         {!isOutOfStock && (
           <View className="absolute left-0 top-0 rounded-br-lg rounded-tl-md bg-red-600 px-1.5 py-0.5">
             <Text className="text-[10px] font-bold text-white">
@@ -60,12 +60,21 @@ const PromotionProductCard: React.FC<Props> = ({ item }) => {
         )}
       </View>
 
-      {/* --- Cột Phải: Thông tin --- */}
+      {/* --- Cột Phải: Thông tin (Tên, Trạng thái, Giá) --- */}
       <View className="ml-3 flex-1 justify-between py-1">
         <View>
+          {/* Tên sản phẩm */}
           <Text className="text-sm font-bold text-gray-800" numberOfLines={2}>
             {item.productName}
           </Text>
+
+          {/* Badge Trạng thái thời gian (Vị trí mới: Dưới tên sản phẩm) */}
+          <View className="mt-1">
+            <PromotionStatusBadge
+              startDate={item.promotionStartDate}
+              endDate={item.promotionEndDate}
+            />
+          </View>
 
           {/* Hiển thị số lượng sắp hết */}
           {item.quantity > 0 && item.quantity < 10 && (
@@ -76,7 +85,7 @@ const PromotionProductCard: React.FC<Props> = ({ item }) => {
         </View>
 
         {/* Giá cả */}
-        <View className="flex-row items-baseline gap-2">
+        <View className="flex-row items-baseline gap-2 mt-1">
           <Text
             className={`text-lg font-bold ${
               isOutOfStock ? "text-gray-500" : "text-red-600"
@@ -89,12 +98,6 @@ const PromotionProductCard: React.FC<Props> = ({ item }) => {
           </Text>
         </View>
       </View>
-
-      {/* --- Badge Trạng thái thời gian --- */}
-      <PromotionStatusBadge
-        startDate={item.promotionStartDate}
-        endDate={item.promotionEndDate}
-      />
     </TouchableOpacity>
   );
 };

@@ -1,10 +1,11 @@
 // components/features/checkout/PaymentHistoryView.tsx
 import React from "react";
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { FlatList, Text, View } from "react-native";
 // import { Stack } from "expo-router"; // ❌ Đã loại bỏ Stack
-import { Ionicons, FontAwesome } from "@expo/vector-icons"; // ✨ Thêm FontAwesome
 import { Payment } from "@/type/payment";
+import { Ionicons } from "@expo/vector-icons"; // ✨ Thêm FontAwesome
 import { PaymentHistoryItem } from "./PaymentHistoryItem";
+import IconButton from "@/components/common/IconButton";
 
 // Định nghĩa props cho View component
 interface PaymentHistoryViewProps {
@@ -23,17 +24,16 @@ export const PaymentHistoryView: React.FC<PaymentHistoryViewProps> = ({
   return (
     // ✨ Cập nhật class nền để nhất quán
     <View className="flex-1 bg-BACKGROUND">
-      
-      {/* ❌ Đã loại bỏ <Stack.Screen ... /> */}
-
       {/* ✨ --- Header tùy chỉnh (Giống OrderHistory) --- */}
       <View className="relative flex-row items-center justify-center border-b border-BORDER bg-STATUS_BAR py-4">
-        <TouchableOpacity
-          onPress={onBackPress}
-          className="absolute left-4 top-0 bottom-0 z-10 flex-row items-center justify-center p-2"
-        >
-          <FontAwesome name="arrow-left" size={20} color={"#1F2937"} />
-        </TouchableOpacity>
+        <View className="absolute left-4 z-10">
+          <IconButton
+            icon="arrow-back"
+            size={22}
+            color="#333"
+            onPress={onBackPress}
+          />
+        </View>
         <Text className="text-center text-xl font-bold text-TEXT_PRIMARY">
           Lịch sử thanh toán
         </Text>

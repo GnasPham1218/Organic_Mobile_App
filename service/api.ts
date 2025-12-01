@@ -1,4 +1,3 @@
-// ...existing code...
 import { AppConfig } from "@/constants/AppConfig"; // Import vào
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -6,7 +5,10 @@ import axios from "axios";
 export const api = axios.create({
   baseURL: AppConfig.BASE_URL, // Sử dụng
   timeout: AppConfig.TIMEOUT,
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  },
 });
 
 export const loginAPI = (emailOrPhone: string, password: string) => {
@@ -37,6 +39,21 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    // Nếu Backend trả về lỗi 401 (Unauthorized) -> Token hết hạn hoặc sai
+    if (error.response && error.response.status === 401) {
+      console.log("Token hết hạn hoặc không hợp lệ. Đang logout...");
+
+      // 1. Xóa token cũ
+      await AsyncStorage.removeItem("accessToken");
+    }
     return Promise.reject(error);
   }
 );
@@ -468,4 +485,14 @@ export const getProductsByPromotionIdAPI = (
       params: { page, size },
     }
   );
+};
+/**
+ * Lấy chi tiết một voucher theo mã code.
+ * Endpoint: GET /api/v1/vouchers/code/{code}
+ * @param code Mã code của voucher
+ */
+export const getVoucherByCodeAPI = (code: string) => {
+  const urlBackend = `/vouchers/code/${code}`;
+  // Giả định backend trả về IBackendRes chứa IResVoucherDTO
+  return api.get<IBackendRes<IResVoucherDTO>>(urlBackend);
 };

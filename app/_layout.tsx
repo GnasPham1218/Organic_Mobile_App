@@ -5,10 +5,10 @@ import { ConfirmProvider } from "@/context/confirm/ConfirmContext";
 import { ToastProvider } from "@/context/notifications/ToastContext";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import "../theme/global.css";
 import { COLORS } from "../theme/tokens";
-import AddressEditModal from "./user/AddressEditModal";
 
 export default function RootLayout() {
   return (
@@ -24,18 +24,23 @@ export default function RootLayout() {
       />
       <ToastProvider>
         <ConfirmProvider>
-          <CartProvider>
-            <AddressProvider>
-              <Stack
-                initialRouteName="index"
-                screenOptions={{ headerShown: false }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              </Stack>
-              <AddressEditModal />
-            </AddressProvider>
-          </CartProvider>
+          <AddressProvider>
+            <CartProvider>
+              <View className="flex-1">
+                <Stack
+                  initialRouteName="index"
+                  screenOptions={{ headerShown: false }}
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                  {/* Nếu có modal khác thì thêm ở đây cũng được */}
+                </Stack>
+              </View>
+            </CartProvider>
+          </AddressProvider>
         </ConfirmProvider>
       </ToastProvider>
     </SafeAreaView>

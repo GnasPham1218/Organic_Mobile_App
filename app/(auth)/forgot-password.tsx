@@ -36,13 +36,12 @@ export default function ForgotPasswordScreen() {
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  // --- Helper hiển thị thông báo (Giả lập showToast) ---
+  // --- Helper hiển thị thông báo ---
   const showToast = (message: string, type: "success" | "error") => {
-    // Nếu bạn có thư viện Toast, hãy thay Alert bằng Toast.show(...)
     Alert.alert(type === "success" ? "Thông báo" : "Lỗi", message);
   };
 
-  // --- LOGIC 1: Gửi OTP (Đã sửa theo yêu cầu của bạn) ---
+  // --- LOGIC 1: Gửi OTP ---
   const handleSendOtp = async () => {
     if (!email || !email.includes("@")) {
       showToast("Vui lòng nhập địa chỉ email hợp lệ.", "error");
@@ -51,27 +50,20 @@ export default function ForgotPasswordScreen() {
 
     try {
       setLoading(true);
-
-      // Gọi API gửi OTP
       const res = await sendForgotPasswordOtpAPI(email);
-
-      // Backend trả về text 200 OK -> Axios return data (là chuỗi text)
-      // Chỉ cần res có dữ liệu (truthy) là coi như thành công
       if (res) {
         showToast("Mã OTP đã được gửi đến email.", "success");
-        setCurrentStep(1); // Chuyển sang bước nhập OTP
-        setCountdown(60); // Bắt đầu đếm ngược
+        setCurrentStep(1);
+        setCountdown(60);
       }
     } catch (error: any) {
       console.log("Send OTP Error:", error);
-
       const msg =
-        error.response?.data?.message || // Nếu server trả JSON lỗi
+        error.response?.data?.message ||
         (typeof error.response?.data === "string"
           ? error.response?.data
-          : "") || // Nếu server trả Text lỗi
-        "Không thể gửi mã OTP. Vui lòng kiểm tra lại email."; // Lỗi mặc định
-
+          : "") ||
+        "Không thể gửi mã OTP. Vui lòng kiểm tra lại email.";
       showToast(msg, "error");
     } finally {
       setLoading(false);
@@ -91,14 +83,12 @@ export default function ForgotPasswordScreen() {
 
     try {
       setLoading(true);
-      // Gọi API Reset
       const res = await resetPasswordAPI({
         email,
         otp,
         newPassword,
       });
 
-      // Tương tự, nếu API trả về text thành công
       if (res) {
         Alert.alert(
           "Thành công",
@@ -124,16 +114,16 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-white"
+      className="flex-1 bg-gray-50"
     >
       <ScrollView contentContainerClassName="flex-grow justify-center px-6">
         {/* Header */}
         <View className="items-center mb-8">
-          <View className="h-20 w-20 bg-green-100 rounded-full items-center justify-center mb-4">
+          <View className="h-20 w-20 bg-[#E6F3E6] rounded-full items-center justify-center mb-4">
             <FontAwesome
               name={currentStep === 0 ? "unlock-alt" : "shield"}
               size={36}
-              color="#15803d"
+              color="#6B8E23"
             />
           </View>
           <Text className="text-2xl font-bold text-gray-800">
@@ -149,13 +139,12 @@ export default function ForgotPasswordScreen() {
         {/* --- STEP 0: Form Nhập Email --- */}
         {currentStep === 0 && (
           <View className="gap-y-4">
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">
-                Email đăng ký
-              </Text>
+            <View className="gap-2">
+              <Text className="text-gray-700 font-semibold">Email đăng ký</Text>
               <TextInput
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-800"
+                className="w-full bg-[#E6F3E6] rounded-xl px-4 py-3.5 text-gray-800"
                 placeholder="example@gmail.com"
+                placeholderTextColor="#A0A0A0"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
@@ -166,7 +155,9 @@ export default function ForgotPasswordScreen() {
             <TouchableOpacity
               onPress={handleSendOtp}
               disabled={loading}
-              className={`w-full py-4 rounded-xl mt-2 items-center ${loading ? "bg-gray-400" : "bg-green-600"}`}
+              className={`w-full py-4 rounded-xl mt-2 items-center ${
+                loading ? "bg-gray-400" : "bg-[#8BC34A]"
+              }`}
             >
               <Text className="text-white font-bold text-lg">
                 {loading ? "Đang gửi..." : "Gửi mã OTP"}
@@ -179,13 +170,12 @@ export default function ForgotPasswordScreen() {
         {currentStep === 1 && (
           <View className="gap-y-4">
             {/* Input OTP */}
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">
-                Mã OTP (6 số)
-              </Text>
+            <View className="gap-2">
+              <Text className="text-gray-700 font-semibold">Mã OTP (6 số)</Text>
               <TextInput
-                className="w-full bg-gray-50 border border-green-500 rounded-xl p-4 text-center text-2xl font-bold tracking-widest text-gray-800"
+                className="w-full bg-[#E6F3E6] rounded-xl px-4 py-3.5 text-center text-2xl font-bold tracking-widest text-gray-800"
                 placeholder="000000"
+                placeholderTextColor="#A0A0A0"
                 keyboardType="number-pad"
                 maxLength={6}
                 value={otp}
@@ -194,38 +184,39 @@ export default function ForgotPasswordScreen() {
             </View>
 
             {/* Input Pass Mới */}
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">
-                Mật khẩu mới
-              </Text>
-              <View className="flex-row items-center w-full bg-gray-50 border border-gray-300 rounded-xl px-4">
+            <View className="gap-2">
+              <Text className="text-gray-700 font-semibold">Mật khẩu mới</Text>
+              <View className="relative">
                 <TextInput
-                  className="flex-1 py-4 text-gray-800"
+                  className="bg-[#E6F3E6] rounded-xl px-4 py-3.5 text-gray-800 pr-12"
                   placeholder="Nhập mật khẩu mới"
+                  placeholderTextColor="#A0A0A0"
                   secureTextEntry={!showPassword}
                   value={newPassword}
                   onChangeText={setNewPassword}
                 />
                 <TouchableOpacity
+                  className="absolute right-4 top-3.5"
                   onPress={() => setShowPassword(!showPassword)}
                 >
                   <FontAwesome
                     name={showPassword ? "eye" : "eye-slash"}
                     size={20}
-                    color="gray"
+                    color="#666"
                   />
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Input Confirm Pass */}
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">
+            <View className="gap-2">
+              <Text className="text-gray-700 font-semibold">
                 Nhập lại mật khẩu
               </Text>
               <TextInput
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-800"
+                className="w-full bg-[#E6F3E6] rounded-xl px-4 py-3.5 text-gray-800"
                 placeholder="Nhập lại mật khẩu mới"
+                placeholderTextColor="#A0A0A0"
                 secureTextEntry={!showPassword}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -235,7 +226,9 @@ export default function ForgotPasswordScreen() {
             <TouchableOpacity
               onPress={handleResetPassword}
               disabled={loading}
-              className={`w-full py-4 rounded-xl mt-2 items-center ${loading ? "bg-gray-400" : "bg-green-600"}`}
+              className={`w-full py-4 rounded-xl mt-2 items-center ${
+                loading ? "bg-gray-400" : "bg-[#8BC34A]"
+              }`}
             >
               <Text className="text-white font-bold text-lg">
                 {loading ? "Đang xử lý..." : "Xác nhận đổi mật khẩu"}
@@ -249,7 +242,9 @@ export default function ForgotPasswordScreen() {
               className="items-center mt-2 p-2"
             >
               <Text
-                className={`${countdown > 0 ? "text-gray-400" : "text-green-600 font-bold"}`}
+                className={`${
+                  countdown > 0 ? "text-gray-400" : "text-[#6B8E23] font-bold"
+                }`}
               >
                 {countdown > 0
                   ? `Gửi lại mã sau ${countdown}s`

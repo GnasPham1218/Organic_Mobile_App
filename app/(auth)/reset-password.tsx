@@ -45,7 +45,6 @@ export default function ResetPasswordScreen() {
       setLoading(true);
 
       // Gọi API Reset Password
-      // Payload phải khớp với interface IResetPasswordRequest ở backend
       await resetPasswordAPI({
         email: email || "",
         otp: otp,
@@ -72,7 +71,7 @@ export default function ResetPasswordScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-white"
+      className="flex-1 bg-gray-50"
     >
       <ScrollView contentContainerClassName="flex-grow justify-center px-6">
         <View className="items-center mb-6">
@@ -87,13 +86,12 @@ export default function ResetPasswordScreen() {
 
         <View className="gap-y-4">
           {/* Nhập OTP */}
-          <View>
-            <Text className="text-sm font-medium text-gray-700 mb-1">
-              Mã OTP
-            </Text>
+          <View className="gap-2">
+            <Text className="text-gray-700 font-semibold">Mã OTP</Text>
             <TextInput
-              className="w-full bg-gray-50 border border-gray-300 rounded-xl p-4 text-center text-xl font-bold tracking-widest text-gray-800"
+              className="w-full bg-[#E6F3E6] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-widest text-gray-800"
               placeholder="000000"
+              placeholderTextColor="#A0A0A0"
               keyboardType="number-pad"
               maxLength={6}
               value={otp}
@@ -102,36 +100,39 @@ export default function ResetPasswordScreen() {
           </View>
 
           {/* Mật khẩu mới */}
-          <View>
-            <Text className="text-sm font-medium text-gray-700 mb-1">
-              Mật khẩu mới
-            </Text>
-            <View className="flex-row items-center w-full bg-gray-50 border border-gray-300 rounded-xl px-4">
+          <View className="gap-2">
+            <Text className="text-gray-700 font-semibold">Mật khẩu mới</Text>
+            <View className="relative">
               <TextInput
-                className="flex-1 py-4 text-gray-800"
+                className="bg-[#E6F3E6] rounded-xl px-4 py-3.5 text-gray-800 pr-12"
                 placeholder="Nhập mật khẩu mới"
+                placeholderTextColor="#A0A0A0"
                 secureTextEntry={!showPassword}
                 value={newPassword}
                 onChangeText={setNewPassword}
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <TouchableOpacity
+                className="absolute right-4 top-3.5"
+                onPress={() => setShowPassword(!showPassword)}
+              >
                 <FontAwesome
                   name={showPassword ? "eye" : "eye-slash"}
                   size={20}
-                  color="gray"
+                  color="#666"
                 />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Xác nhận mật khẩu */}
-          <View>
-            <Text className="text-sm font-medium text-gray-700 mb-1">
+          <View className="gap-2">
+            <Text className="text-gray-700 font-semibold">
               Xác nhận mật khẩu
             </Text>
             <TextInput
-              className="w-full bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-800"
+              className="w-full bg-[#E6F3E6] rounded-xl px-4 py-3.5 text-gray-800"
               placeholder="Nhập lại mật khẩu mới"
+              placeholderTextColor="#A0A0A0"
               secureTextEntry={!showPassword}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -142,7 +143,7 @@ export default function ResetPasswordScreen() {
             onPress={handleResetPassword}
             disabled={loading}
             className={`w-full py-4 rounded-xl mt-4 items-center ${
-              loading ? "bg-gray-400" : "bg-green-600"
+              loading ? "bg-gray-400" : "bg-[#8BC34A]"
             }`}
           >
             <Text className="text-white font-bold text-lg">
@@ -151,7 +152,9 @@ export default function ResetPasswordScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.back()} className="mt-2">
-            <Text className="text-center text-gray-500">Quay lại</Text>
+            <Text className="text-center text-gray-500 font-medium">
+              Quay lại
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

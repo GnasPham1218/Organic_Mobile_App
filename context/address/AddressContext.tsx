@@ -27,7 +27,9 @@ interface AddressContextType {
   provinces: IProvince[];
   districts: IDistrict[];
   wards: IWard[];
-
+  isLocationReady: boolean; // ✅ Mới: Trạng thái tải data hành chính
+  selectedAddress: ICustomerAddress | null;
+  setSelectedAddress: (addr: ICustomerAddress | null) => void;
   // Form State
   showAddEditModal: boolean;
   setShowAddEditModal: (v: boolean) => void;
@@ -42,6 +44,7 @@ interface AddressContextType {
   saveAddress: () => Promise<void>;
   deleteAddress: (id: number) => Promise<void>;
   setDefaultAddress: (id: number) => Promise<void>;
+  retryFetchLocation: () => void; // ✅ Mới: Hàm thử tải lại data
 
   // Helper select hành chính
   handleSelectProvince: (provinceName: string) => void;
@@ -56,12 +59,15 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
   const [userId, setUserId] = useState<number | null>(null);
   const [addresses, setAddresses] = useState<ICustomerAddress[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedAddress, setSelectedAddress] =
+    useState<ICustomerAddress | null>(null);
 
   // Data hành chính
   const [vietnamData, setVietnamData] = useState<IProvince[]>([]);
   const [provinces, setProvinces] = useState<IProvince[]>([]);
   const [districts, setDistricts] = useState<IDistrict[]>([]);
   const [wards, setWards] = useState<IWard[]>([]);
+  const [isLocationReady, setIsLocationReady] = useState(false); // ✅ State mới
 
   // Modal & Form State
   const [showAddEditModal, setShowAddEditModal] = useState(false);
@@ -79,20 +85,25 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
     defaultAddress: false,
   });
 
-  // 1. Fetch dữ liệu hành chính Việt Nam khi mount
+  // 1. Fetch dữ liệu hành chính Việt Nam
+  const fetchAdministrativeUnits = async () => {
+    try {
+      console.log("Đang tải dữ liệu hành chính..."); // ✅ Log
+      const response = await fetch(
+        "https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json"
+      );
+      const data = await response.json();
+      setVietnamData(data);
+      setProvinces(data);
+      setIsLocationReady(true); // ✅ Đánh dấu đã tải xong
+      console.log("Tải dữ liệu hành chính thành công:", data.length, "tỉnh");
+    } catch (error) {
+      console.error("Lỗi tải data hành chính:", error);
+      setIsLocationReady(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAdministrativeUnits = async () => {
-      try {
-        const response = await fetch(
-          "https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json"
-        );
-        const data = await response.json();
-        setVietnamData(data);
-        setProvinces(data);
-      } catch (error) {
-        console.error("Lỗi tải data hành chính:", error);
-      }
-    };
     fetchAdministrativeUnits();
   }, []);
 
@@ -103,11 +114,20 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(true);
       const res = await getAddressesByUserIdAPI(uid);
       if (res.data && res.data.data) {
-        // Sort: Mặc định lên đầu
         const sorted = res.data.data.sort(
           (a, b) => Number(b.defaultAddress) - Number(a.defaultAddress)
         );
         setAddresses(sorted);
+        if (sorted.length > 0) {
+          const defaultAddr = sorted.find((a) => a.defaultAddress) || sorted[0];
+          setSelectedAddress((prev) => {
+            if (!prev) return defaultAddr;
+            const exists = sorted.find((a) => a.id === prev.id);
+            return exists ? prev : defaultAddr;
+          });
+        } else {
+          setSelectedAddress(null);
+        }
       }
     } catch (error) {
       console.log("Lỗi tải danh sách địa chỉ:", error);
@@ -134,8 +154,8 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
       note: "",
       defaultAddress: false,
     });
-    setDistricts([]); // Reset huyện
-    setWards([]); // Reset xã
+    setDistricts([]);
+    setWards([]);
     setShowAddEditModal(true);
   };
 
@@ -152,23 +172,27 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
       defaultAddress: addr.defaultAddress,
     });
 
-    // Logic tái tạo danh sách Huyện/Xã dựa trên tên đã lưu (Khá phức tạp vì cần tìm ngược lại ID)
-    // Để đơn giản: Khi sửa, nếu muốn đổi địa chỉ hành chính thì người dùng chọn lại từ đầu (Tỉnh -> Huyện -> Xã)
-    const selectedProv = vietnamData.find((p) => p.Name === addr.province);
-    if (selectedProv) {
-      setDistricts(selectedProv.Districts);
-      const selectedDist = selectedProv.Districts.find(
-        (d) => d.Name === addr.district
-      );
-      if (selectedDist) {
-        setWards(selectedDist.Wards);
+    // Logic tái tạo danh sách Huyện/Xã
+    if (vietnamData.length > 0) {
+      const selectedProv = vietnamData.find((p) => p.Name === addr.province);
+      if (selectedProv) {
+        setDistricts(selectedProv.Districts);
+        const selectedDist = selectedProv.Districts.find(
+          (d) => d.Name === addr.district
+        );
+        if (selectedDist) {
+          setWards(selectedDist.Wards);
+        }
       }
+    } else {
+      // Nếu data chưa tải xong mà mở Modal sửa, thử tải lại hoặc cảnh báo
+      console.log("Chưa có data hành chính để fill dropdown");
     }
 
     setShowAddEditModal(true);
   };
 
-  // 4. Logic Chọn Hành chính (Cascading)
+  // 4. Logic Chọn Hành chính
   const handleSelectProvince = (provinceName: string) => {
     const province = vietnamData.find((p) => p.Name === provinceName);
     setForm((prev) => ({
@@ -190,7 +214,6 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
   // 5. CRUD Actions
   const saveAddress = async () => {
     if (!userId) return;
-    // Validate cơ bản
     if (
       !form.receiverName ||
       !form.phone ||
@@ -205,7 +228,6 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       if (editingAddress) {
-        // --- UPDATE ---
         const payload: IUpdateCustomerAddressDTO = {
           receiverName: form.receiverName,
           phone: form.phone,
@@ -219,9 +241,8 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
         await updateAddressAPI(editingAddress.id, payload);
         Alert.alert("Thành công", "Cập nhật địa chỉ thành công");
       } else {
-        // --- CREATE ---
         const payload: ICreateCustomerAddressDTO = {
-          userId: userId,
+          user: { id: userId },
           receiverName: form.receiverName,
           phone: form.phone,
           province: form.province,
@@ -236,7 +257,7 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       setShowAddEditModal(false);
-      fetchAddresses(userId); // Reload list
+      fetchAddresses(userId);
     } catch (error) {
       console.log("Save address error:", error);
       Alert.alert("Lỗi", "Không thể lưu địa chỉ. Vui lòng thử lại.");
@@ -246,6 +267,9 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteAddress = async (id: number) => {
     try {
       await deleteAddressAPI(id);
+      if (selectedAddress?.id === id) {
+        setSelectedAddress(null);
+      }
       if (userId) fetchAddresses(userId);
     } catch (error) {
       Alert.alert("Lỗi", "Không thể xóa địa chỉ này.");
@@ -269,6 +293,7 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
         provinces,
         districts,
         wards,
+        isLocationReady, // ✅ Export trạng thái
         showAddEditModal,
         setShowAddEditModal,
         form,
@@ -282,6 +307,9 @@ export const AddressProvider: React.FC<{ children: React.ReactNode }> = ({
         setDefaultAddress,
         handleSelectProvince,
         handleSelectDistrict,
+        selectedAddress,
+        setSelectedAddress,
+        retryFetchLocation: fetchAdministrativeUnits, // ✅ Export hàm retry
       }}
     >
       {children}

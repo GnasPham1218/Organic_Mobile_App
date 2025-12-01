@@ -94,24 +94,33 @@ const ProfileDetail: React.FC<ProfileDetailProps> = ({
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-BACKGROUND">
       {/* ===== Header ===== */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-100 mt-8">
-        <TouchableOpacity onPress={onBack} className="p-2">
-          <FontAwesome name="arrow-left" size={20} color="#333" />
-        </TouchableOpacity>
-
-        <Text className="text-lg font-bold text-gray-800">Hồ sơ cá nhân</Text>
-
-        {isEditable ? (
-          <TouchableOpacity onPress={handlePressSave} className="p-2">
-            <Text className="text-green-600 font-bold text-base">Lưu</Text>
+      <View className="relative flex-row items-center justify-center border-b border-BORDER bg-STATUS_BAR py-4">
+        {/* Back Button (Absolute Left) */}
+        <View className="absolute left-4 z-10">
+          <TouchableOpacity onPress={onBack} className="p-2">
+            <FontAwesome name="arrow-left" size={22} color="#333" />
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={onRequestEdit} className="p-2">
-            <FontAwesome name="pencil" size={20} color="#333" />
-          </TouchableOpacity>
-        )}
+        </View>
+
+        {/* Title (Center) */}
+        <Text className="text-center text-xl font-bold text-TEXT_PRIMARY">
+          Hồ sơ cá nhân
+        </Text>
+
+        {/* Action Button (Absolute Right) */}
+        <View className="absolute right-4 z-10">
+          {isEditable ? (
+            <TouchableOpacity onPress={handlePressSave} className="p-2">
+              <Text className="text-green-600 font-bold text-base">Lưu</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={onRequestEdit} className="p-2">
+              <FontAwesome name="pencil" size={20} color="#333" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>

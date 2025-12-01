@@ -103,10 +103,10 @@ const ShippingAddress: React.FC<ShippingAddressProps> = ({ onBack }) => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-BACKGROUND">
       {/* Header */}
-      <View className="flex-row items-center justify-center px-4 py-2 bg-white border-b border-gray-100 mt-8">
-        <View className="absolute left-4 top-2">
+      <View className="relative flex-row items-center justify-center border-b border-BORDER bg-STATUS_BAR py-4">
+        <View className="absolute left-4 z-10">
           <IconButton
             icon="arrow-back"
             size={22}
@@ -114,7 +114,7 @@ const ShippingAddress: React.FC<ShippingAddressProps> = ({ onBack }) => {
             onPress={onBack}
           />
         </View>
-        <Text className="text-center text-xl font-bold text-gray-800 pt-2">
+        <Text className="text-center text-xl font-bold text-TEXT_PRIMARY">
           Địa chỉ của tôi
         </Text>
       </View>
@@ -144,14 +144,7 @@ const ShippingAddress: React.FC<ShippingAddressProps> = ({ onBack }) => {
       />
 
       {/* Nút Thêm mới (Sticky Bottom) */}
-      <View
-        className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100"
-        style={{
-          paddingBottom: bottom || 16,
-          paddingTop: 12,
-          paddingHorizontal: 16,
-        }}
-      >
+      <View className="absolute bottom-0 left-0 right-0 p-4 mb-3 bg-white border-t border-gray-100">
         <TouchableOpacity
           onPress={openAddModal}
           className="bg-green-600 py-3.5 rounded-xl flex-row justify-center items-center shadow-sm"
@@ -165,9 +158,6 @@ const ShippingAddress: React.FC<ShippingAddressProps> = ({ onBack }) => {
         </TouchableOpacity>
       </View>
 
-      {/* ✨ Modal Thêm/Sửa Địa chỉ 
-         Được import từ file riêng, tự nó quản lý logic hiển thị dựa trên Context
-      */}
       <AddressEditModal />
     </View>
   );

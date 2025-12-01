@@ -551,7 +551,9 @@ declare global {
     street: string;
     note?: string;
     defaultAddress?: boolean;
-    userId?: number;
+    user: {
+      id: number;
+    };
   }
 
   export interface IUpdateCustomerAddressDTO {

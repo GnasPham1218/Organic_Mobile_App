@@ -1,3 +1,4 @@
+import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -146,7 +147,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             onPress={() => setShowPassword(!showPassword)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text className="text-xl">{showPassword ? "🙈" : "👁️"}</Text>
+            <FontAwesome5
+              name={showPassword ? "eye" : "eye-slash"}
+              size={20}
+              color="#666"
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -172,17 +177,20 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text className="text-xl">{showConfirmPassword ? "🙈" : "👁️"}</Text>
+            <FontAwesome5
+              name={showConfirmPassword ? "eye" : "eye-slash"}
+              size={20}
+              color="#666"
+            />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* --- Hiển thị Lỗi --- */}
       {error ? (
-        <View className="bg-red-50 p-3 rounded-lg border border-red-100">
-          <Text className="text-red-600 text-sm text-center font-medium">
-            ⚠️ {error}
-          </Text>
+        <View className="bg-red-50 p-3 rounded-lg border border-red-100 flex-row items-center justify-center gap-2">
+          <FontAwesome5 name="exclamation-circle" size={16} color="#DC2626" />
+          <Text className="text-red-600 text-sm font-medium">{error}</Text>
         </View>
       ) : null}
 
