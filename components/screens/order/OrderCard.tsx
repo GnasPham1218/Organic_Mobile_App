@@ -1,5 +1,5 @@
 import { AppConfig } from "@/constants/AppConfig";
-import { formatCurrency, formatOrderId } from "@/utils/formatters";
+import { formatCurrency, formatOrderCode } from "@/utils/formatters";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React, { useMemo } from "react";
@@ -30,7 +30,7 @@ const OrderCard: React.FC<{ order: IOrder }> = ({ order }) => {
         <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
           <View>
             <Text className="text-lg font-extrabold text-gray-900">
-              Đơn hàng {formatOrderId(order.id)}
+              Đơn hàng {formatOrderCode(order.id)}
             </Text>
             <Text className="text-sm text-gray-500 mt-0.5">
               {new Date(order.orderAt).toLocaleDateString("vi-VN", {

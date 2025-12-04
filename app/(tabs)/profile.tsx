@@ -263,11 +263,6 @@ const ProfileScreen = () => {
                 }}
               />
               <ProfileMenuItem
-                icon="credit-card"
-                label="Lịch sử thanh toán"
-                onPress={() => router.push("/user/payment_history")}
-              />
-              <ProfileMenuItem
                 icon="exchange"
                 label="Lịch sử đổi trả"
                 onPress={() => router.push("/return/return_history")}

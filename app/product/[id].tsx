@@ -21,7 +21,6 @@ import {
   getBestPromotionByProductId,
   getProductDetailAPI,
   getProductImagesAPI,
-  // ✅ Import API Review Mới
   getReviewsByProductIdAPI,
   updateReviewAPI,
 } from "@/service/api";

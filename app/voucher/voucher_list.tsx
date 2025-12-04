@@ -30,14 +30,13 @@ const VoucherListScreen = () => {
   const fetchVouchers = async () => {
     try {
       const res = await getVouchersAPI();
-      if (res.data) {
-        // Xử lý tùy theo cấu trúc response của axios interceptor
-        // @ts-ignore
-        const list = res.data.data as IVoucher[];
-        setVouchers(list);
-      }
+      const rawData = res.data?.data?.result;
+
+      const list: IVoucher[] = Array.isArray(rawData) ? rawData : [];
+      setVouchers(list);
     } catch (error) {
       console.log("Lỗi tải voucher", error);
+      setVouchers([]); // ← Thêm dòng này để chắc chắn không bị undefined
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -64,7 +63,7 @@ const VoucherListScreen = () => {
 
   // --- 3. Logic Lọc & Sắp xếp (Updated fields) ---
   const filteredVouchers = useMemo(() => {
-    let result = [...vouchers]; // Clone mảng để không ảnh hưởng state gốc
+    let result = [...(vouchers ?? [])];
 
     // A. Lọc theo loại
     if (selectedType === "freeship") {

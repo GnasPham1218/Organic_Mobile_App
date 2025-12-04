@@ -4,11 +4,11 @@ export enum AppMode {
   LAN = "LAN",
   TUNNEL = "TUNNEL",
 }
-
+// thay đổi AppMode tùy theo chế độ
 const MODE: AppMode = AppMode.LAN as AppMode;
 
 // LAN IP
-const LAN_IP = "192.168.1.14";
+const LAN_IP = "192.168.1.14"; // chạy ipconfig để biết ip address
 const LAN_PORT = "8080";
 
 // NGROK URL

@@ -628,7 +628,7 @@ declare global {
 
   export type VoucherType = "PERCENT" | "FIXED_AMOUNT" | "FREESHIP";
 
-  export interface IVoucher {
+  interface IVoucher {
     id: number;
     code: string;
     description: string;
@@ -646,16 +646,16 @@ declare global {
   // =============================================================================
   // 11. PROMOTIONS
   // =============================================================================
-  export type PromotionType = "PERCENT" | "FIXED_AMOUNT";
+  type PromotionType = "PERCENT" | "FIXED_AMOUNT";
 
-  export interface IPromotion {
+  interface IPromotion {
     id: number;
     name: string;
     type: PromotionType;
     value: number;
     active: boolean;
   }
-  export interface IPromotionProduct {
+  interface IPromotionProduct {
     productId: number;
     productName: string;
     slug: string;
@@ -667,5 +667,156 @@ declare global {
     promotionEndDate: string;
     promotionType: "PERCENT" | "FIXED_AMOUNT";
     promotionValue: number;
+  }
+  interface CreatePaymentRequest {
+    amount: number;
+    description?: string;
+    buyerName?: string;
+    buyerPhone?: string;
+    orderId?: number; // ID của đơn hàng hoặc ID thanh toán tùy logic backend
+  }
+  interface IPaymentResponse {
+    bin: string;
+    accountNumber: string;
+    accountName: string;
+    amount: number;
+    description: string;
+    orderCode: number; // Cái này quan trọng để check status
+    currency: string;
+    paymentLinkId: string;
+    status: string;
+    checkoutUrl: string;
+    qrCode: string; // Cái này quan trọng để hiện QR
+  }
+
+  // 2. Định nghĩa kiểu dữ liệu trả về khi check status
+  interface IPaymentStatus {
+    id: number;
+    status: string; // "PENDING" | "SUCCESS" | "FAILED" | "CANCELED"
+  }
+  interface ResInvoiceDTO {
+    id: number;
+    createAt: string; // Instant map sang string (ISO date)
+    deliverFee: number;
+    discountAmount: number;
+    subtotal: number;
+
+    // --- Các trường tính toán mới ---
+    taxRate: number;
+    taxAmount: number;
+    total: number;
+    // --------------------------------
+
+    status: "UNPAID" | "PAID" | "CANCELLED"; // StatusInvoice enum
+
+    // Mối quan hệ (IDs)
+    orderId: number;
+    customerId?: number; // nullable
+    employeeId?: number; // nullable
+    paymentId?: number;
+    voucherId?: number;
+  }
+  interface IReqInvoice {
+    deliverFee: number;
+    discountAmount: number;
+    subtotal: number;
+    status: "UNPAID" | "PAID" | "CANCELLED"; // StatusInvoice enum
+
+    // --- Các trường tính toán từ Client ---
+    taxRate: number;
+    taxAmount: number;
+    total: number;
+    // ----------------------------------------
+
+    // Mối quan hệ (IDs)
+    orderId: number;
+    customerId?: number;
+    employeeId?: number;
+    paymentId?: number;
+    voucherId?: number;
+  }
+  interface Invoice {
+    id?: number;
+
+    deliverFee?: number;
+    discountAmount?: number;
+    subtotal?: number;
+
+    taxRate?: number;
+    taxAmount?: number;
+    total?: number;
+
+    status?: "UNPAID" | "PAID" | "CANCELLED";
+  }
+  // --- Type cho Request (Gửi đi) ---
+  interface ICartItemRequest {
+    productId: number;
+    quantity: number;
+    price: number;
+  }
+
+  interface IReqPlaceOrder {
+    // 1. Thông tin người nhận
+    receiverName: string;
+    receiverPhone: string;
+    shipAddress: string;
+    note: string;
+
+    // 2. Thông tin thanh toán & Tài chính
+    paymentMethod: string;
+    voucherId: number | null; // Bên Java là Long (có thể null)
+    subtotal: number; // Bên Java là double
+    shippingFee: number;
+    taxAmount: number;
+    discountAmount: number;
+    totalPrice: number;
+
+    // 3. Danh sách sản phẩm
+    cartItems: ICartItemRequest[];
+  }
+
+  // --- Type cho Response (Nhận về) ---
+  interface IResPlaceOrder {
+    id: number; // Order ID
+    totalPrice: number;
+    paymentMethod: string;
+    receiverName: string;
+    receiverPhone: string;
+    address: string;
+    paymentStatus: string;
+  }
+  interface IResOrderDetailItem {
+    productId: number;
+    productName: string;
+    productImage: string;
+    productSlug: string;
+    quantity: number;
+    price: number;
+  }
+
+  interface IResOrderDTO {
+    id: number;
+    orderAt: string;
+    note: string;
+    statusOrder: string;
+    estimatedDate: string;
+    actualDate: string | null;
+
+    // Giao hàng
+    shipAddress: string;
+    receiverName: string;
+    receiverPhone: string;
+
+    // Tài chính
+    paymentMethod: string;
+    paymentStatus: string;
+    totalPrice: number;
+    subtotal: number;
+    shippingFee: number;
+    taxAmount: number;
+    discountAmount: number;
+
+    // Chi tiết sản phẩm
+    orderDetails: IResOrderDetailItem[];
   }
 }

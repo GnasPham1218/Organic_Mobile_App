@@ -431,8 +431,7 @@ export const mockProducts: Product[] = [
 
 export const mockBanners = [
   require("@/assets/banners/b1.jpg"),
-  require("@/assets/banners/b2.jpg"), // Sửa lại để không bị trùng
-  require("@/assets/banners/b2.jpg"), // Sửa lại để không bị trùng
+  require("@/assets/banners/b2.jpg"),
 ];
 
 // ## BƯỚC 3: Sửa lại các định nghĩa Type cho nhất quán ##

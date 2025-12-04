@@ -1,8 +1,12 @@
-// context/cart/CartContext.tsx
-
 import { AppConfig } from "@/constants/AppConfig";
 import { useToast } from "@/context/notifications/ToastContext";
-import { addToCartAPI, getMyCartAPI, updateCartAPI } from "@/service/api";
+// ✅ UPDATE 1: Import clearCartAPI
+import {
+  addToCartAPI,
+  clearCartAPI,
+  getMyCartAPI,
+  updateCartAPI,
+} from "@/service/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { createContext, ReactNode, useContext, useState } from "react";
@@ -27,8 +31,8 @@ interface CartContextType {
   addToCart: (product: any, quantity?: number) => Promise<boolean>;
   decrementItem: (productId: number) => Promise<void>;
   removeFromCart: (productId: number) => Promise<void>;
-  clearCart: () => void;
-  // ✅ UPDATE 1: Cho phép truyền tham số optional showLoading
+  // ✅ UPDATE 2: Cập nhật type cho clearCart (nhận userId và trả về Promise)
+  clearCart: (userId: number) => Promise<void>;
   refreshCart: (showLoading?: boolean) => Promise<void>;
 }
 
@@ -43,7 +47,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
   const router = useRouter();
 
   // --- 1. Lấy Giỏ Hàng Từ Server ---
-  // ✅ UPDATE 2: Thêm tham số showLoading (mặc định = true)
   const refreshCart = async (showLoading = true) => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
@@ -52,7 +55,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
         return;
       }
 
-      // Chỉ hiện loading nếu được yêu cầu (ví dụ: lúc mới mở app)
       if (showLoading) setLoading(true);
 
       const res = await getMyCartAPI();
@@ -80,7 +82,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error) {
       console.log("Lỗi tải giỏ hàng:", error);
     } finally {
-      // Chỉ tắt loading nếu trước đó đã bật
       if (showLoading) setLoading(false);
     }
   };
@@ -103,10 +104,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
 
       const pid = product.id || product.product_id;
 
-      // Gọi API thêm
       await addToCartAPI(pid, quantity);
-
-      // ✅ UPDATE 3: Gọi refreshCart(false) -> Cập nhật ngầm, KHÔNG hiện loading
       await refreshCart(false);
 
       showToast("success", "Đã cập nhật giỏ hàng");
@@ -136,7 +134,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
 
     try {
       if (newQuantity > 0) {
-        // Optimistic Update (Cập nhật giao diện trước khi gọi API)
         setCart((prev) =>
           prev.map((item) =>
             item.id === productId ? { ...item, quantity: newQuantity } : item
@@ -148,17 +145,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
       }
     } catch (error: any) {
       showToast("error", "Lỗi cập nhật giỏ hàng");
-      // Nếu lỗi thì load lại data cũ, không hiện loading
       refreshCart(false);
     }
   };
 
-  // --- 4. Xóa sản phẩm ---
+  // --- 4. Xóa từng sản phẩm ---
   const removeFromCart = async (productId: number) => {
     try {
-      // Optimistic Update
       setCart((prev) => prev.filter((item) => item.id !== productId));
-
       await updateCartAPI(productId, 0);
       showToast("success", "Đã xóa sản phẩm");
     } catch (error) {
@@ -167,11 +161,28 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const clearCart = () => {
-    setCart([]);
+  // --- 5. Xóa toàn bộ giỏ hàng (API) ---
+  // ✅ UPDATE 3: Implement hàm clearCart gọi API
+  const clearCart = async (userId: number) => {
+    try {
+      // Gọi API xóa trên server
+      await clearCartAPI(userId);
+
+      // Xóa state client
+      setCart([]);
+
+      // (Optional) Có thể show toast hoặc không tùy UX
+      // showToast("success", "Giỏ hàng đã được làm trống");
+    } catch (error: any) {
+      console.log("Clear Cart Error:", error);
+      showToast("error", "Lỗi khi làm trống giỏ hàng");
+
+      // Nếu lỗi, sync lại dữ liệu để đảm bảo tính đúng đắn
+      await refreshCart(false);
+    }
   };
 
-  // --- 5. Tính tổng tiền ---
+  // --- 6. Tính tổng tiền ---
   const totalPrice = cart.reduce((sum: number, item: CartItem) => {
     return sum + item.price * item.quantity;
   }, 0);

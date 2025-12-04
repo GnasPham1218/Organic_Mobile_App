@@ -273,6 +273,9 @@ export const updateCartAPI = (productId: number, quantity: number) => {
   // ✅ CHỈ GỌI PUT
   return api.put<IBackendRes<void>>(urlBackend, data); // Trả về void (hoặc DTO nếu Backend trả 200)
 };
+export const clearCartAPI = (userId: number) => {
+  return api.delete(`/api/v1/cart/clear/${userId}`);
+};
 // =============================================================================
 //  PRODUCT DETAIL & IMAGE API
 // =============================================================================
@@ -495,4 +498,51 @@ export const getVoucherByCodeAPI = (code: string) => {
   const urlBackend = `/vouchers/code/${code}`;
   // Giả định backend trả về IBackendRes chứa IResVoucherDTO
   return api.get<IBackendRes<IResVoucherDTO>>(urlBackend);
+};
+
+export const PaymentAPI = {
+  // 1. Tạo link thanh toán
+  createPayment: async (data: CreatePaymentRequest) => {
+    const response = await api.post<IBackendRes<IPaymentResponse>>(
+      `/payments/create`,
+      data
+    );
+    return response.data;
+  },
+
+  // 2. Check trạng thái
+  checkStatus: async (paymentId: number) => {
+    const response = await api.get<IBackendRes<IPaymentStatus>>(
+      `/payments/status/${paymentId}`
+    );
+    return response.data;
+  },
+  // 3. Hủy thanh toán
+  cancelPayment: async (paymentId: number) => {
+    const response = await api.patch<IBackendRes<any>>(
+      `/payments/${paymentId}`,
+      {
+        status: "CANCELLED",
+      }
+    );
+    return response.data;
+  },
+};
+
+/**
+ * API Đặt hàng dành cho User (Checkout)
+ * Endpoint: POST /api/v1/orders/place-order
+ * Xử lý: Tạo Order -> Trừ kho -> Tạo Invoice -> Trả về kết quả để thanh toán
+ */
+export const placeOrderAPI = (data: IReqPlaceOrder) => {
+  const urlBackend = `/orders/place-order`;
+  return api.post<IBackendRes<IResPlaceOrder>>(urlBackend, data);
+};
+/**
+ * Lấy chi tiết đơn hàng (Dành cho User - Success Page)
+ * Endpoint: GET /api/v1/orders/user/{id}
+ */
+export const getOrderByIdV2API = (id: number) => {
+  const urlBackend = `/orders/user/${id}`;
+  return api.get<IBackendRes<IResOrderDTO>>(urlBackend);
 };

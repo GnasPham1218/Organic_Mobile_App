@@ -1,6 +1,6 @@
 // components/ui/SectionHeader.tsx
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 interface SectionHeaderProps {
   title: string;
@@ -11,7 +11,7 @@ interface SectionHeaderProps {
 const SectionHeader: React.FC<SectionHeaderProps> = ({
   title,
   onSeeAllPress,
-  seeAllText = "Xem tất cả",
+  seeAllText = "",
 }) => {
   return (
     <View className="flex-row items-center justify-between px-4 mt-4 mb-2">

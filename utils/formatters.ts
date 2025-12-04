@@ -11,11 +11,7 @@ export const formatCurrency = (amount: number) => {
 export const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("vi-VN");
 };
-//Hàm format mã đơn hàng
-export const formatOrderId = (id: number) => {
-  // padStart(3, '0'): Đảm bảo chuỗi luôn có ít nhất 3 ký tự, thiếu thì điền số 0 vào trước
-  return `#DH${id.toString().padStart(3, "0")}`;
-};
+
 export const formatCategoryName = (name: string) => {
   if (!name) return "";
 
@@ -49,4 +45,18 @@ export const formatDescriptionToJson = (rawString: string): string | null => {
     console.error("Lỗi format description:", error);
     return null;
   }
+};
+/**
+ * Format ID thành mã đơn hàng (VD: 13 -> DH000013)
+ * @param id - Số ID của đơn hàng
+ * @param prefix - Tiền tố (mặc định là DH)
+ * @param length - Độ dài phần số (mặc định là 6)
+ */
+export const formatOrderCode = (
+  id: number | string,
+  prefix: string = "DH",
+  length: number = 6
+): string => {
+  if (!id) return "";
+  return `${prefix}${id.toString().padStart(length, "0")}`;
 };

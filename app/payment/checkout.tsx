@@ -2,16 +2,25 @@ import CartHeader from "@/components/screens/cart/CartHeader";
 import { useAddress } from "@/context/address/AddressContext";
 import { useCart } from "@/context/cart/CartContext";
 import { useToast } from "@/context/notifications/ToastContext";
-
-import { getAccountAPI, getVoucherByCodeAPI } from "@/service/api";
+// 🆕 Import API
+import {
+  getAccountAPI,
+  getVoucherByCodeAPI,
+  PaymentAPI,
+  placeOrderAPI,
+} from "@/service/api";
 import { formatCurrency } from "@/utils/formatters";
 
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard"; // 🆕 Dùng expo-clipboard để copy
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
+  Linking, // 🆕 Dùng để mở link ảnh QR
+  Modal,
   ScrollView,
   Text,
   TextInput,
@@ -20,8 +29,34 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+// --- HELPER FUNCTION ---
+const formatOrderCode = (id: number): string => {
+  return id.toString().padStart(6, "0");
+};
+
+// 🆕 Helper lấy tên ngân hàng
+const getBankName = (bin: string) => {
+  const banks: Record<string, string> = {
+    "970422": "MBBank (Quân Đội)",
+    "970436": "Vietcombank",
+    "970415": "VietinBank",
+    "970418": "BIDV",
+    "970405": "Agribank",
+    "970407": "Techcombank",
+    "970423": "TPBank",
+    "970432": "VPBank",
+  };
+  return banks[bin] || "Ngân hàng";
+};
+
+// 🆕 Helper format thời gian mm:ss
+const formatTime = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
+};
+
 // --- ĐỊNH NGHĨA KIỂU DỮ LIỆU ---
-// 🆕 Update: Chỉ còn COD và BANK_TRANSFER, bỏ momo, cod viết hoa
 type PaymentMethodValue = "COD" | "BANK_TRANSFER";
 
 // --- COMPONENT LỰA CHỌN THANH TOÁN ---
@@ -77,7 +112,6 @@ export default function CheckoutScreen() {
   const { selectedAddress, initData, addresses, loading } = useAddress();
 
   // --- STATE ---
-  // 🆕 Update: Default state là "COD" viết hoa
   const [selectedMethod, setSelectedMethod] =
     useState<PaymentMethodValue>("COD");
   const [isLoading, setIsLoading] = useState(false);
@@ -91,6 +125,15 @@ export default function CheckoutScreen() {
   const [appliedVoucher, setAppliedVoucher] = useState<IResVoucherDTO | null>(
     null
   );
+
+  // 🆕 State cho Modal Thanh toán
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState<IPaymentResponse | null>(null);
+
+  // 🆕 State Countdown Timer (10 phút = 600 giây)
+  const [timeLeft, setTimeLeft] = useState(600);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- EFFECT: LẤY THÔNG TIN USER KHI VÀO MÀN HÌNH ---
   useEffect(() => {
@@ -126,115 +169,136 @@ export default function CheckoutScreen() {
     }
   }, [userInfo, addresses.length, initData]);
 
-  // --- TÍNH TOÁN TỔNG TIỀN ---
+  // --- LOGIC POLLING & TIMER ---
+  useEffect(() => {
+    if (showPaymentModal && paymentInfo) {
+      // 1. Reset timer
+      setTimeLeft(600);
 
-  // 1. Tạm tính (Subtotal)
+      // 2. Start Countdown
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            // Hết giờ
+            clearInterval(timerRef.current!);
+            clearInterval(pollingRef.current!);
+            setShowPaymentModal(false);
+            showToast("info", "Hết thời gian thanh toán");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // 3. Start Polling Check Status (mỗi 5s)
+      pollingRef.current = setInterval(async () => {
+        try {
+          // Lưu ý: paymentInfo.orderCode chính là ID dùng để check status
+          const res = await PaymentAPI.checkStatus(paymentInfo.orderCode);
+
+          // Giả sử response trả về dạng: { data: { status: "PAID" }, ... } hoặc trực tiếp { status: "PAID" }
+          // Tùy vào cấu trúc API của bạn. Dựa trên prompt: "status chỉ trả về status thôi"
+          const status = res.data?.status || res.data;
+
+          console.log("Checking status...", status);
+
+          if (status === "PAID" || status === "SUCCESS") {
+            clearInterval(timerRef.current!);
+            clearInterval(pollingRef.current!);
+            setShowPaymentModal(false);
+            setPaymentInfo(null);
+            clearCart();
+            showToast("success", "Thanh toán thành công!");
+            router.replace({
+              pathname: "/payment/order_success",
+              params: { orderId: paymentInfo.orderCode.toString() },
+            });
+          } else if (status === "CANCELED") {
+            clearInterval(timerRef.current!);
+            clearInterval(pollingRef.current!);
+            setShowPaymentModal(false);
+            showToast("error", "Giao dịch đã bị hủy");
+          }
+        } catch (error) {
+          console.log("Lỗi check status payment", error);
+        }
+      }, 5000); // Check mỗi 5 giây
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [showPaymentModal, paymentInfo]);
+
+  // --- TÍNH TOÁN TỔNG TIỀN ---
   const subtotal = cart.reduce((sum, item) => {
     const unit = item.salePrice ?? item.price;
     return sum + unit * item.quantity;
   }, 0);
 
-  // 2. Thuế VAT (8% trên tạm tính)
   const taxRate = 0.08;
   const taxAmount = Math.round(subtotal * taxRate);
-
-  // 3. Phí vận chuyển
-  // Mặc định 25k, nếu đơn > 500k thì miễn phí
   const shippingFee = subtotal > 500000 ? 0 : 25000;
+  const totalAmountRaw = subtotal + taxAmount + shippingFee - discountAmount;
+  const totalAmount = totalAmountRaw > 0 ? totalAmountRaw : 0;
 
   // --- LOGIC VOUCHER ---
-
-  // Hàm kiểm tra tính hợp lệ của Voucher
   const validateVoucher = (voucher: IResVoucherDTO, orderValue: number) => {
     const now = new Date();
     const startDate = new Date(voucher.startDate);
     const endDate = new Date(voucher.endDate);
 
-    // 1. Kiểm tra Active
-    if (!voucher.active) {
-      throw new Error("Voucher này hiện đang bị khóa.");
-    }
-
-    // 2. Kiểm tra thời gian
-    if (now < startDate) {
-      throw new Error("Voucher chưa đến đợt áp dụng.");
-    }
-    if (now > endDate) {
-      throw new Error("Voucher đã hết hạn sử dụng.");
-    }
-
-    // 3. Kiểm tra số lượng
-    if (voucher.quantity <= voucher.usedCount) {
+    if (!voucher.active) throw new Error("Voucher này hiện đang bị khóa.");
+    if (now < startDate) throw new Error("Voucher chưa đến đợt áp dụng.");
+    if (now > endDate) throw new Error("Voucher đã hết hạn sử dụng.");
+    if (voucher.quantity <= voucher.usedCount)
       throw new Error("Voucher đã hết lượt sử dụng.");
-    }
-
-    // 4. Kiểm tra giá trị đơn hàng tối thiểu
     if (orderValue < voucher.minOrderValue) {
       throw new Error(
-        `Đơn hàng phải từ ${formatCurrency(voucher.minOrderValue)} để áp dụng mã này.`
+        `Đơn hàng phải từ ${formatCurrency(
+          voucher.minOrderValue
+        )} để áp dụng mã này.`
       );
     }
   };
 
-  // Hàm tính toán tiền giảm giá
   const calculateDiscount = (
     voucher: IResVoucherDTO,
     orderSubtotal: number,
     shipFee: number
   ) => {
     let discount = 0;
-
     if (voucher.typeVoucher === "PERCENT") {
-      // Giảm theo phần trăm
       discount = orderSubtotal * (voucher.value / 100);
-      // Kiểm tra giảm tối đa
       if (discount > voucher.maxDiscountAmount) {
         discount = voucher.maxDiscountAmount;
       }
     } else if (voucher.typeVoucher === "FIXED_AMOUNT") {
-      // Giảm số tiền cố định
       discount = voucher.value;
     } else if (voucher.typeVoucher === "FREESHIP") {
-      // Miễn phí vận chuyển (Giảm bằng đúng phí ship hiện tại)
       discount = shipFee;
     }
-
     return Math.round(discount);
   };
 
-  // 4. Tổng cộng (Tính lại mỗi khi render hoặc dependency thay đổi)
-  // Đảm bảo không âm
-  const totalAmountRaw = subtotal + taxAmount + shippingFee - discountAmount;
-  const totalAmount = totalAmountRaw > 0 ? totalAmountRaw : 0;
-
-  // Xử lý Voucher khi nhấn Áp dụng
   const handleApplyVoucher = async () => {
     if (!voucherCode.trim()) {
       showToast("error", "Vui lòng nhập mã voucher");
       return;
     }
-
-    // Reset state trước khi check
     setDiscountAmount(0);
     setAppliedVoucher(null);
     setIsCheckingVoucher(true);
 
     try {
-      // Gọi API lấy thông tin voucher
       const res = await getVoucherByCodeAPI(voucherCode.trim());
-
       if (res.data && res.data.data) {
         const voucher = res.data.data;
-
-        // Validate voucher
         validateVoucher(voucher, subtotal);
-
-        // Tính toán giảm giá
         const discount = calculateDiscount(voucher, subtotal, shippingFee);
-
         setAppliedVoucher(voucher);
         setDiscountAmount(discount);
-
         showToast(
           "success",
           `Áp dụng mã thành công! Giảm ${formatCurrency(discount)}`
@@ -243,7 +307,6 @@ export default function CheckoutScreen() {
         showToast("error", "Không tìm thấy mã voucher.");
       }
     } catch (error: any) {
-      // Xử lý lỗi từ API hoặc lỗi validation ném ra
       const msg =
         error.message ||
         (error.response?.data?.message ??
@@ -256,20 +319,17 @@ export default function CheckoutScreen() {
     }
   };
 
-  // 🆕 Hàm hủy Voucher
   const handleRemoveVoucher = () => {
     setAppliedVoucher(null);
     setDiscountAmount(0);
-    setVoucherCode(""); // Xóa text trong ô input luôn cho sạch (tùy chọn)
+    setVoucherCode("");
     showToast("info", "Đã hủy mã giảm giá");
   };
 
-  // Effect: Nếu Subtotal thay đổi (VD: user quay lại sửa giỏ hàng), cần check lại voucher đã áp dụng
   useEffect(() => {
     if (appliedVoucher) {
       try {
         validateVoucher(appliedVoucher, subtotal);
-        // Nếu vẫn hợp lệ, tính lại giá (vì subtotal đổi thì giảm giá % có thể đổi)
         const newDiscount = calculateDiscount(
           appliedVoucher,
           subtotal,
@@ -277,7 +337,6 @@ export default function CheckoutScreen() {
         );
         setDiscountAmount(newDiscount);
       } catch (e) {
-        // Nếu không còn hợp lệ (VD: tổng tiền giảm xuống dưới mức tối thiểu)
         setAppliedVoucher(null);
         setDiscountAmount(0);
         showToast(
@@ -286,10 +345,10 @@ export default function CheckoutScreen() {
         );
       }
     }
-  }, [subtotal, shippingFee]); // Chạy lại khi tiền hàng hoặc phí ship thay đổi
+  }, [subtotal, shippingFee]);
 
-  // Xử lý Thanh toán
-  const handlePayment = () => {
+  // --- XỬ LÝ THANH TOÁN ---
+  const handlePayment = async () => {
     if (cart.length === 0) return;
 
     if (!selectedAddress) {
@@ -299,41 +358,85 @@ export default function CheckoutScreen() {
 
     setIsLoading(true);
 
-    let paymentData = {
-      amount: totalAmount,
-      subtotal: subtotal,
-      tax: taxAmount,
-      shipping_fee: shippingFee,
-      discount: discountAmount,
-      voucher_code: appliedVoucher ? appliedVoucher.code : null, // Gửi kèm mã voucher nếu có
-      voucher_id: appliedVoucher ? appliedVoucher.id : null, // Gửi kèm ID voucher nếu cần
-      method: "COD",
-      provider: "Giao Hàng Nhanh",
-      status: "pending",
-      address_id: selectedAddress.id,
-      user_id: userInfo?.id,
-      items: cart.map((item) => ({
-        product_id: item.id,
+    try {
+      const fullAddress = `${selectedAddress.street}, ${selectedAddress.ward}, ${selectedAddress.district}, ${selectedAddress.province}`;
+
+      const cartItemsRequest: ICartItemRequest[] = cart.map((item) => ({
+        productId: item.id,
         quantity: item.quantity,
-        price: item.price,
-      })),
-    };
+        price: item.salePrice ?? item.price,
+      }));
 
-    // 🆕 Update: Logic cho Bank Transfer
-    if (selectedMethod === "BANK_TRANSFER") {
-      paymentData.method = "BANK_TRANSFER";
-      paymentData.provider = "BANK";
-    }
-    // Không còn case momo nữa
+      const orderPayload: IReqPlaceOrder = {
+        receiverName: selectedAddress.receiverName,
+        receiverPhone: selectedAddress.phone,
+        shipAddress: fullAddress,
+        note: selectedAddress.note,
+        paymentMethod: selectedMethod,
 
-    console.log("Đang gửi lên server:", paymentData);
+        // --- THÊM MỚI ---
+        voucherId: appliedVoucher ? appliedVoucher.id : null, // Gửi ID voucher
+        subtotal: subtotal, // Gửi tạm tính
+        shippingFee: shippingFee, // Gửi phí ship
+        taxAmount: taxAmount, // Gửi thuế
+        discountAmount: discountAmount, // Gửi số tiền giảm
+        totalPrice: totalAmount, // Tổng tiền cuối cùng
+        // ----------------
 
-    setTimeout(() => {
+        cartItems: cartItemsRequest,
+      };
+      console.log("Payload gửi đi:", JSON.stringify(orderPayload, null, 2)); // Log để kiểm tra
+      const resOrder = await placeOrderAPI(orderPayload);
+
+      if (resOrder.data && resOrder.data.data) {
+        const orderId = resOrder.data.data.id;
+
+        if (selectedMethod === "COD") {
+          setIsLoading(false);
+          clearCart();
+          showToast("success", "Đặt hàng thành công!");
+          router.replace({
+            pathname: "/payment/order_success",
+            params: { orderId: orderId.toString() },
+          });
+        } else if (selectedMethod === "BANK_TRANSFER") {
+          const formattedId = formatOrderCode(orderId);
+          const safeDescription = `Thanh toan DH${formattedId}`.substring(
+            0,
+            25
+          );
+
+          const paymentRequest: CreatePaymentRequest = {
+            amount: Math.round(totalAmount),
+            orderId: orderId,
+            description: safeDescription,
+            buyerName: selectedAddress.receiverName,
+            buyerPhone: selectedAddress.phone,
+          };
+
+          const resPayment = await PaymentAPI.createPayment(paymentRequest);
+          const paymentData = resPayment.data as unknown as IPaymentResponse;
+
+          if (paymentData) {
+            setPaymentInfo(paymentData);
+            setShowPaymentModal(true);
+            setIsLoading(false);
+          } else {
+            throw new Error("Không nhận được thông tin thanh toán");
+          }
+        }
+      } else {
+        throw new Error("Không tạo được đơn hàng. Vui lòng thử lại.");
+      }
+    } catch (error: any) {
+      console.error("❌ Lỗi thanh toán chi tiết:", error);
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "Có lỗi xảy ra khi xử lý đơn hàng";
+      showToast("error", `Lỗi: ${msg}`);
       setIsLoading(false);
-      showToast("success", "Đặt hàng thành công!");
-      clearCart();
-      router.replace("/(tabs)");
-    }, 2000);
+    }
   };
 
   const handlePressSelectAddress = () => {
@@ -344,6 +447,20 @@ export default function CheckoutScreen() {
       });
     } else {
       router.push("/(modals)/select_address");
+    }
+  };
+
+  // 🆕 Xử lý copy text
+  const handleCopy = async (text: string) => {
+    await Clipboard.setStringAsync(text);
+    showToast("success", "Đã sao chép vào bộ nhớ tạm!");
+  };
+
+  // 🆕 Xử lý tải/mở ảnh QR
+  const handleDownloadQR = () => {
+    if (paymentInfo?.qrCode) {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(paymentInfo.qrCode)}`;
+      Linking.openURL(qrUrl);
     }
   };
 
@@ -433,7 +550,6 @@ export default function CheckoutScreen() {
             Mã giảm giá
           </Text>
           <View className="flex-row items-center">
-            {/* 🆕 Update: Input sẽ bị disable khi đã áp dụng voucher */}
             <TextInput
               value={voucherCode}
               onChangeText={setVoucherCode}
@@ -446,8 +562,6 @@ export default function CheckoutScreen() {
               }`}
               autoCapitalize="characters"
             />
-
-            {/* 🆕 Update: Logic hiển thị nút bấm */}
             <TouchableOpacity
               onPress={
                 appliedVoucher ? handleRemoveVoucher : handleApplyVoucher
@@ -479,7 +593,6 @@ export default function CheckoutScreen() {
             Tóm tắt đơn hàng
           </Text>
 
-          {/* Tạm tính */}
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-gray-600">Tạm tính</Text>
             <Text className="text-sm font-medium">
@@ -487,7 +600,6 @@ export default function CheckoutScreen() {
             </Text>
           </View>
 
-          {/* Thuế VAT */}
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-gray-600">Thuế VAT (8%)</Text>
             <Text className="text-sm font-medium">
@@ -495,7 +607,6 @@ export default function CheckoutScreen() {
             </Text>
           </View>
 
-          {/* Phí vận chuyển */}
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-gray-600">Phí vận chuyển</Text>
             {shippingFee === 0 ? (
@@ -509,7 +620,6 @@ export default function CheckoutScreen() {
             )}
           </View>
 
-          {/* Logic hiển thị freeship suggestion nếu chưa đủ điều kiện */}
           {subtotal > 0 && subtotal < 500000 && (
             <View className="mb-2 bg-blue-50 p-2 rounded border border-blue-100">
               <Text className="text-xs text-blue-700 text-center">
@@ -519,7 +629,6 @@ export default function CheckoutScreen() {
             </View>
           )}
 
-          {/* Giảm giá */}
           {discountAmount > 0 && (
             <View className="flex-row justify-between mb-3">
               <Text className="text-sm text-green-600">Giảm giá (Voucher)</Text>
@@ -531,7 +640,6 @@ export default function CheckoutScreen() {
 
           <View className="h-px bg-gray-200" />
 
-          {/* Tổng cộng */}
           <View className="flex-row justify-between mt-3">
             <Text className="text-base font-bold text-gray-900">Tổng cộng</Text>
             <Text className="text-base font-bold text-green-600">
@@ -554,8 +662,8 @@ export default function CheckoutScreen() {
           />
 
           <PaymentOption
-            label="Chuyển khoản ngân hàng"
-            icon="card-outline"
+            label="Chuyển khoản ngân hàng (BANK_TRANSFER)"
+            icon="qr-code-outline"
             value="BANK_TRANSFER"
             isSelected={selectedMethod === "BANK_TRANSFER"}
             onSelect={() => setSelectedMethod("BANK_TRANSFER")}
@@ -583,11 +691,184 @@ export default function CheckoutScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-white text-base font-semibold">
-              Đặt hàng ( {formatCurrency(totalAmount)} ){" "}
+              {selectedMethod === "BANK_TRANSFER"
+                ? `Thanh toán (${formatCurrency(totalAmount)})`
+                : `Đặt hàng (${formatCurrency(totalAmount)})`}
             </Text>
           )}
         </TouchableOpacity>
       </View>
+
+      {/* 🆕 MODAL THANH TOÁN QR */}
+      <Modal
+        visible={showPaymentModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowPaymentModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/60 p-4">
+          <View className="bg-white w-full rounded-2xl p-5 shadow-lg max-h-[90%]">
+            {/* Header Modal */}
+            <View className="flex-row justify-between items-center mb-4">
+              <View>
+                <Text className="text-xl font-bold text-gray-800">
+                  Thanh toán
+                </Text>
+                <Text className="text-sm text-red-500 font-medium mt-1">
+                  Hết hạn trong: {formatTime(timeLeft)}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            {paymentInfo && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* QR Code */}
+                <View className="items-center mb-6">
+                  <View className="p-2 border border-green-500 rounded-xl bg-white shadow-sm relative">
+                    {paymentInfo.qrCode ? (
+                      <Image
+                        source={{
+                          uri: `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
+                            paymentInfo.qrCode
+                          )}`,
+                        }}
+                        style={{ width: 220, height: 220 }}
+                        className="rounded-lg"
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <View
+                        style={{ width: 220, height: 220 }}
+                        className="justify-center items-center bg-gray-100"
+                      >
+                        <Text className="text-gray-400">Không có mã QR</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Nút tải ảnh */}
+                  <TouchableOpacity
+                    onPress={handleDownloadQR}
+                    className="flex-row items-center mt-3 bg-gray-100 py-2 px-4 rounded-full"
+                  >
+                    <Ionicons
+                      name="download-outline"
+                      size={18}
+                      color="#4B5563"
+                    />
+                    <Text className="ml-2 text-gray-600 font-medium text-xs">
+                      Tải ảnh QR
+                    </Text>
+                  </TouchableOpacity>
+
+                  <Text className="text-center text-sm text-gray-500 mt-3 italic">
+                    Tự động kiểm tra trạng thái mỗi 5 giây...
+                  </Text>
+                </View>
+
+                {/* Thông tin chi tiết */}
+                <View className="bg-gray-50 p-4 rounded-xl space-y-4 mb-2">
+                  <InfoRow
+                    label="Ngân hàng"
+                    value={getBankName(paymentInfo.bin)}
+                    isCopyable
+                    onCopy={() => handleCopy(getBankName(paymentInfo.bin))}
+                  />
+
+                  <InfoRow
+                    label="Số tài khoản"
+                    value={paymentInfo.accountNumber}
+                    isCopyable
+                    onCopy={() => handleCopy(paymentInfo.accountNumber)}
+                  />
+                  <InfoRow
+                    label="Chủ tài khoản"
+                    value={paymentInfo.accountName}
+                  />
+                  <InfoRow
+                    label="Số tiền"
+                    value={formatCurrency(paymentInfo.amount)}
+                    highlight
+                    isCopyable
+                    onCopy={() => handleCopy(paymentInfo.amount.toString())}
+                  />
+                  <InfoRow
+                    label="Nội dung"
+                    value={paymentInfo.description}
+                    isCopyable
+                    onCopy={() => handleCopy(paymentInfo.description)}
+                  />
+                </View>
+                {/* --- Nút Hủy Thanh Toán --- */}
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      await PaymentAPI.cancelPayment(paymentInfo.orderCode);
+                      showToast("info", "Bạn đã hủy thanh toán");
+                      setShowPaymentModal(false);
+
+                      // Ngưng polling
+                      if (timerRef.current) clearInterval(timerRef.current);
+                      if (pollingRef.current) clearInterval(pollingRef.current);
+                    } catch (e) {
+                      console.log("Lỗi hủy thanh toán", e);
+                      showToast("error", "Không thể hủy thanh toán");
+                    }
+                  }}
+                  className="mt-4 bg-red-500 py-3 rounded-xl items-center"
+                >
+                  <Text className="text-white font-semibold">
+                    HỦY THANH TOÁN
+                  </Text>
+                </TouchableOpacity>
+                <View className="items-center py-4">
+                  <ActivityIndicator color="#16A34A" />
+                  <Text className="text-xs text-gray-400 mt-2">
+                    Đang chờ thanh toán...
+                  </Text>
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
+
+// Helper Component
+const InfoRow = ({
+  label,
+  value,
+  highlight = false,
+  isCopyable = false,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+  isCopyable?: boolean;
+  onCopy?: () => void;
+}) => (
+  <View className="flex-row justify-between items-center mb-2">
+    <Text className="text-gray-500 text-sm w-1/3">{label}:</Text>
+    <View className="flex-1 flex-row justify-end items-center gap-2">
+      <Text
+        className={`text-right text-sm font-medium ${
+          highlight ? "text-red-600 font-bold text-base" : "text-gray-800"
+        } flex-1`}
+        numberOfLines={2}
+      >
+        {value}
+      </Text>
+      {isCopyable && (
+        <TouchableOpacity onPress={onCopy} className="p-1 bg-gray-200 rounded">
+          <Ionicons name="copy-outline" size={14} color="#374151" />
+        </TouchableOpacity>
+      )}
+    </View>
+  </View>
+);
