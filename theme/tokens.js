@@ -1,0 +1,18 @@
+const ICON_SIZE = { MAIN: 24, SEARCH: 16, CLEAR: 16 };
+
+const COLORS = {
+  PRIMARY: "#2E7D32",
+  ACCENT: "#F59E0B",
+  BACKGROUND: "#FFFFFF",
+  BORDER: "#E7ECE9",
+  TEXT_PRIMARY: "#1B4332",
+  TEXT_SECONDARY: "#5F6F65",
+  TEXT_SEARCH: "#0F0F05FF",
+  INPUT_BG: "#E6F3E6",
+  STATUS_BAR: "#FAFAF6",
+};
+
+module.exports = {
+  ICON_SIZE,
+  COLORS,
+};

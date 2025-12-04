@@ -1,0 +1,1337 @@
+// data/mockData.ts
+import { Payment } from "@/type/payment";
+import type { ImageSourcePropType } from "react-native";
+// data/mockData.ts
+
+// Lưu ý: Đường dẫn đến ảnh ('@/assets/...') cần khớp với cấu trúc thư mục của bạn.
+
+// ▼▼▼ BƯỚC 1: ĐỊNH NGHĨA TYPE CHO PRODUCT ▼▼▼
+
+/**
+ * Định nghĩa cho một hình ảnh phụ của sản phẩm
+ */
+export interface ProductImage {
+  image_id: number;
+  image_url: ImageSourcePropType;
+}
+
+/**
+ * Định nghĩa cho một chứng nhận của sản phẩm
+ */
+export interface Certificate {
+  certificate_id: number;
+  name: string;
+  image_url: ImageSourcePropType;
+}
+
+/**
+ * Định nghĩa cấu trúc đầy đủ của một sản phẩm
+ */
+export interface Product {
+  product_id: number;
+  category_id: number;
+  name: string;
+  price: number;
+  salePrice?: number; // Dùng ? vì không phải sản phẩm nào cũng có
+  rating_avg: number;
+  image: ImageSourcePropType;
+  images: ProductImage[];
+  description: string;
+  unit: string;
+  origin_address: string;
+  quantity: number;
+  mfg_date: string;
+  exp_date: string;
+  certificates: Certificate[];
+}
+
+// ▲▲▲ KẾT THÚC PHẦN ĐỊNH NGHĨA TYPE ▲▲▲
+
+// Giả định bạn có các Category với ID:
+// 1: Trái cây
+// 2: Rau củ
+// 3: Thịt, cá, trứng
+// 4: Sữa & Sản phẩm từ sữa
+// 5: Bánh & Ngũ cốc
+
+// ## BƯỚC 2: Hợp nhất thành một nguồn dữ liệu sản phẩm duy nhất ##
+// ▼▼▼ GÁN TYPE "Product[]" VÀO MẢNG ▼▼▼
+export const mockProducts: Product[] = [
+  {
+    product_id: 1,
+    category_id: 3, // Trái cây
+    name: "Táo Fuji hữu cơ 1kg",
+    price: 85000.0,
+    salePrice: 69000.0, // Thêm salePrice
+    rating_avg: 4.85,
+    image: require("@/assets/products/tao.png"),
+    images: [
+      { image_id: 101, image_url: require("@/assets/products/tao.png") },
+      { image_id: 102, image_url: require("@/assets/products/tao.png") },
+    ],
+    description:
+      "Táo Fuji hữu cơ được trồng theo tiêu chuẩn nghiêm ngặt, giữ trọn vị ngọt, giòn tan và hương thơm tự nhiên. Sản phẩm không chứa thuốc trừ sâu, an toàn cho cả gia đình.",
+    unit: "kg",
+    origin_address: "Nông trại hữu cơ GreenFarm, Đà Lạt, Lâm Đồng",
+    quantity: 150,
+    mfg_date: "2025-10-20",
+    exp_date: "2025-11-20",
+    certificates: [
+      {
+        certificate_id: 1,
+        name: "VietGAP",
+        image_url: require("@/assets/certs/vietgap.png"),
+      },
+      {
+        certificate_id: 2,
+        name: "USDA Organic",
+        image_url: require("@/assets/certs/usda_organic.png"),
+      },
+    ],
+  },
+  {
+    product_id: 2,
+    category_id: 38, // Sữa & Sản phẩm từ sữa
+    name: "Sữa chua Hy Lạp nguyên chất 180g",
+    price: 42000.0,
+    rating_avg: 4.9,
+    image: require("@/assets/products/yogurt.png"),
+    images: [
+      { image_id: 103, image_url: require("@/assets/products/yogurt.png") },
+    ],
+    description:
+      "Sữa chua Hy Lạp sánh mịn, giàu protein và ít đường. Sản phẩm được lên men tự nhiên từ sữa tươi nguyên chất từ bò ăn cỏ, tốt cho hệ tiêu hóa và hỗ trợ duy trì vóc dáng.",
+    unit: "hộp",
+    origin_address: "Công ty sữa DalatMilk, Lâm Đồng",
+    quantity: 85,
+    mfg_date: "2025-10-18",
+    exp_date: "2025-11-05",
+    certificates: [
+      {
+        certificate_id: 3,
+        name: "ISO 22000",
+        image_url: require("@/assets/certs/iso22000.png"),
+      },
+    ],
+  },
+  {
+    product_id: 3,
+    category_id: 10, // Rau củ
+    name: "Cà rốt Đà Lạt baby 500g",
+    price: 32000.0,
+    rating_avg: 4.7,
+    image: require("@/assets/products/carrot.png"),
+    images: [
+      { image_id: 104, image_url: require("@/assets/products/carrot.png") },
+    ],
+    description:
+      "Cà rốt baby tươi ngon từ vùng đất Đà Lạt, có màu cam đậm, vị ngọt tự nhiên và giàu Vitamin A. Thích hợp để ăn sống, chế biến các món xào, hoặc luộc.",
+    unit: "túi 500g",
+    origin_address: "Hợp tác xã rau sạch Xuân Hương, Đà Lạt, Lâm Đồng",
+    quantity: 200,
+    mfg_date: "2025-10-21",
+    exp_date: "2025-10-28",
+    certificates: [
+      {
+        certificate_id: 1,
+        name: "VietGAP",
+        image_url: require("@/assets/certs/vietgap.png"),
+      },
+    ],
+  },
+  {
+    product_id: 4,
+    category_id: 13,
+    name: "Thịt ba rọi heo thảo mộc 500g",
+    price: 115000.0,
+    rating_avg: 4.95,
+    image: require("@/assets/products/pork.png"),
+    images: [
+      { image_id: 105, image_url: require("@/assets/products/pork.png") },
+    ],
+    description:
+      "Thịt ba rọi từ heo được nuôi bằng thức ăn thảo mộc, đảm bảo thịt thơm ngon, săn chắc và an toàn. Tỷ lệ nạc mỡ cân bằng, phù hợp cho các món kho, luộc, hoặc nướng.",
+    unit: "khay 500g",
+    origin_address: "Trang trại MeatDeli, Hà Nam",
+    quantity: 60,
+    mfg_date: "2025-10-22",
+    exp_date: "2025-10-25",
+    certificates: [
+      {
+        certificate_id: 4,
+        name: "GlobalG.A.P.",
+        image_url: require("@/assets/certs/globalgap.png"),
+      },
+      {
+        certificate_id: 3,
+        name: "ISO 22000",
+        image_url: require("@/assets/certs/iso22000.png"),
+      },
+    ],
+  },
+  {
+    product_id: 5,
+    category_id: 9, // Rau củ
+    name: "Cải bó xôi Baby 300g",
+    price: 28000.0,
+    rating_avg: 4.75,
+    image: require("@/assets/products/spinach.png"),
+    images: [
+      { image_id: 106, image_url: require("@/assets/products/spinach.png") },
+    ],
+    description:
+      "Cải bó xôi (rau chân vịt) non, lá mềm và vị ngọt thanh. Đây là loại rau giàu sắt và vitamin, lý tưởng để nấu canh, xào tỏi hoặc làm sinh tố xanh.",
+    unit: "bó 300g",
+    origin_address: "Trang trại rau sạch VinEco, Tam Đảo, Vĩnh Phúc",
+    quantity: 180,
+    mfg_date: "2025-10-22",
+    exp_date: "2025-10-26",
+    certificates: [
+      {
+        certificate_id: 1,
+        name: "VietGAP",
+        image_url: require("@/assets/certs/vietgap.png"),
+      },
+    ],
+  },
+  {
+    product_id: 6,
+    category_id: 4, // Trái cây
+    name: "Nho đen không hạt Mỹ 500g",
+    price: 95000.0,
+    salePrice: 79000.0, // Thêm salePrice
+    rating_avg: 4.8,
+    image: require("@/assets/products/grapes.png"),
+    images: [
+      { image_id: 107, image_url: require("@/assets/products/grapes.png") },
+    ],
+    description:
+      "Nho đen không hạt nhập khẩu có vị ngọt đậm đà, vỏ mỏng và mọng nước. Sản phẩm là món tráng miệng tuyệt vời và cung cấp nhiều chất chống oxy hóa.",
+    unit: "hộp 500g",
+    origin_address: "Sunview Vineyards, California, USA",
+    quantity: 95,
+    mfg_date: "2025-10-15",
+    exp_date: "2025-11-10",
+    certificates: [
+      {
+        certificate_id: 4,
+        name: "GlobalG.A.P.",
+        image_url: require("@/assets/certs/globalgap.png"),
+      },
+    ],
+  },
+  {
+    product_id: 7,
+    category_id: 4, // Trái cây
+    name: "Nho đen không hạt Mỹ 500g",
+    price: 95000.0,
+    salePrice: 79000.0, // Thêm salePrice
+    rating_avg: 4.8,
+    image: require("@/assets/products/grapes.png"),
+    images: [
+      { image_id: 107, image_url: require("@/assets/products/grapes.png") },
+    ],
+    description:
+      "Nho đen không hạt nhập khẩu có vị ngọt đậm đà, vỏ mỏng và mọng nước. Sản phẩm là món tráng miệng tuyệt vời và cung cấp nhiều chất chống oxy hóa.",
+    unit: "hộp 500g",
+    origin_address: "Sunview Vineyards, California, USA",
+    quantity: 95,
+    mfg_date: "2025-10-15",
+    exp_date: "2025-11-10",
+    certificates: [
+      {
+        certificate_id: 4,
+        name: "GlobalG.A.P.",
+        image_url: require("@/assets/certs/globalgap.png"),
+      },
+    ],
+  },
+
+  {
+    product_id: 8,
+    category_id: 4, // Trái Cây Nhập Khẩu
+    name: "Kiwi vàng New Zealand 4 quả",
+    price: 120000.0,
+    salePrice: 99000.0,
+    rating_avg: 4.7,
+    image: require("@/assets/products/kiwi.png"),
+    images: [
+      { image_id: 108, image_url: require("@/assets/products/kiwi.png") },
+    ],
+    description:
+      "Kiwi vàng New Zealand với vị ngọt thanh, thơm mát và giàu vitamin C. Quả chín đều, ruột vàng đẹp mắt, thích hợp cho bữa ăn nhẹ lành mạnh.",
+    unit: "hộp 4 quả",
+    origin_address: "Zespri, New Zealand",
+    quantity: 75,
+    mfg_date: "2025-10-18",
+    exp_date: "2025-11-15",
+    certificates: [
+      {
+        certificate_id: 4,
+        name: "GlobalG.A.P.",
+        image_url: require("@/assets/certs/globalgap.png"),
+      },
+    ],
+  },
+  {
+    product_id: 9,
+    category_id: 19, // Ngũ Cốc Hữu Cơ
+    name: "Yến mạch hữu cơ 500g",
+    price: 65000.0,
+    rating_avg: 4.6,
+    image: require("@/assets/products/oats.png"),
+    images: [
+      { image_id: 109, image_url: require("@/assets/products/oats.png") },
+    ],
+    description:
+      "Yến mạch hữu cơ nguyên chất, giàu chất xơ và dinh dưỡng. Thích hợp cho bữa sáng healthy, nấu cháo hoặc làm bánh.",
+    unit: "túi 500g",
+    origin_address: "Công ty Organic Oats, Úc",
+    quantity: 120,
+    mfg_date: "2025-09-15",
+    exp_date: "2026-03-15",
+    certificates: [
+      {
+        certificate_id: 2,
+        name: "USDA Organic",
+        image_url: require("@/assets/certs/usda_organic.png"),
+      },
+    ],
+  },
+  {
+    product_id: 10,
+    category_id: 20, // Gạo Hữu Cơ
+    name: "Gạo lứt hữu cơ 1kg",
+    price: 55000.0,
+    salePrice: 45000.0,
+    rating_avg: 4.8,
+    image: require("@/assets/products/rice.png"),
+    images: [
+      { image_id: 110, image_url: require("@/assets/products/rice.png") },
+    ],
+    description:
+      "Gạo lứt hữu cơ giàu dinh dưỡng, chất xơ và vitamin. Gạo thơm ngon, dẻo mềm, tốt cho sức khỏe và người ăn kiêng.",
+    unit: "túi 1kg",
+    origin_address: "Nông trại hữu cơ Mekong, Đồng Tháp",
+    quantity: 200,
+    mfg_date: "2025-10-01",
+    exp_date: "2026-04-01",
+    certificates: [
+      {
+        certificate_id: 1,
+        name: "VietGAP",
+        image_url: require("@/assets/certs/vietgap.png"),
+      },
+    ],
+  },
+  {
+    product_id: 11,
+    category_id: 37, // Sữa Tươi
+    name: "Sữa tươi hữu cơ 1 lít",
+    price: 48000.0,
+    rating_avg: 4.7,
+    image: require("@/assets/products/milk.png"),
+    images: [
+      { image_id: 111, image_url: require("@/assets/products/milk.png") },
+    ],
+    description:
+      "Sữa tươi hữu cơ từ bò ăn cỏ tự nhiên, không chứa kháng sinh và hormone tăng trưởng. Sữa thơm ngon, bổ dưỡng cho cả gia đình.",
+    unit: "hộp 1 lít",
+    origin_address: "Trang trại sữa Organic Milk, Ba Vì, Hà Nội",
+    quantity: 150,
+    mfg_date: "2025-10-20",
+    exp_date: "2025-11-05",
+    certificates: [
+      {
+        certificate_id: 1,
+        name: "VietGAP",
+        image_url: require("@/assets/certs/vietgap.png"),
+      },
+    ],
+  },
+  // {
+  //   product_id: 8,
+  //   category_id: 4, // Trái Cây Nhập Khẩu
+  //   name: "Kiwi vàng New Zealand 4 quả",
+  //   price: 120000.0,
+  //   salePrice: 99000.0,
+  //   rating_avg: 4.7,
+  //   image: require("@/assets/products/kiwi.png"),
+  //   images: [
+  //     { image_id: 108, image_url: require("@/assets/products/kiwi.png") },
+  //   ],
+  //   description:
+  //     "Kiwi vàng New Zealand với vị ngọt thanh, thơm mát và giàu vitamin C. Quả chín đều, ruột vàng đẹp mắt, thích hợp cho bữa ăn nhẹ lành mạnh.",
+  //   unit: "hộp 4 quả",
+  //   origin_address: "Zespri, New Zealand",
+  //   quantity: 75,
+  //   mfg_date: "2025-10-18",
+  //   exp_date: "2025-11-15",
+  //   certificates: [
+  //     {
+  //       certificate_id: 4,
+  //       name: "GlobalG.A.P.",
+  //       image_url: require("@/assets/certs/globalgap.png"),
+  //     },
+  //   ],
+  // },
+  // {
+  //   product_id: 8,
+  //   category_id: 4, // Trái Cây Nhập Khẩu
+  //   name: "Kiwi vàng New Zealand 4 quả",
+  //   price: 120000.0,
+  //   salePrice: 99000.0,
+  //   rating_avg: 4.7,
+  //   image: require("@/assets/products/kiwi.png"),
+  //   images: [
+  //     { image_id: 108, image_url: require("@/assets/products/kiwi.png") },
+  //   ],
+  //   description:
+  //     "Kiwi vàng New Zealand với vị ngọt thanh, thơm mát và giàu vitamin C. Quả chín đều, ruột vàng đẹp mắt, thích hợp cho bữa ăn nhẹ lành mạnh.",
+  //   unit: "hộp 4 quả",
+  //   origin_address: "Zespri, New Zealand",
+  //   quantity: 75,
+  //   mfg_date: "2025-10-18",
+  //   exp_date: "2025-11-15",
+  //   certificates: [
+  //     {
+  //       certificate_id: 4,
+  //       name: "GlobalG.A.P.",
+  //       image_url: require("@/assets/certs/globalgap.png"),
+  //     },
+  //   ],
+  // },
+  // {
+  //   product_id: 8,
+  //   category_id: 4, // Trái Cây Nhập Khẩu
+  //   name: "Kiwi vàng New Zealand 4 quả",
+  //   price: 120000.0,
+  //   salePrice: 99000.0,
+  //   rating_avg: 4.7,
+  //   image: require("@/assets/products/kiwi.png"),
+  //   images: [
+  //     { image_id: 108, image_url: require("@/assets/products/kiwi.png") },
+  //   ],
+  //   description:
+  //     "Kiwi vàng New Zealand với vị ngọt thanh, thơm mát và giàu vitamin C. Quả chín đều, ruột vàng đẹp mắt, thích hợp cho bữa ăn nhẹ lành mạnh.",
+  //   unit: "hộp 4 quả",
+  //   origin_address: "Zespri, New Zealand",
+  //   quantity: 75,
+  //   mfg_date: "2025-10-18",
+  //   exp_date: "2025-11-15",
+  //   certificates: [
+  //     {
+  //       certificate_id: 4,
+  //       name: "GlobalG.A.P.",
+  //       image_url: require("@/assets/certs/globalgap.png"),
+  //     },
+  //   ],
+  // },
+];
+
+export const mockBanners = [
+  require("@/assets/banners/b1.jpg"),
+  require("@/assets/banners/b2.jpg"),
+];
+
+// ## BƯỚC 3: Sửa lại các định nghĩa Type cho nhất quán ##
+
+// Lấy kiểu dữ liệu trực tiếp từ mảng mockProducts đã được hợp nhất
+// Dòng này vẫn hoạt động và giờ sẽ tương đương với type "Product"
+export type ProductType = (typeof mockProducts)[0];
+
+// Dùng ProductType (hoặc Product) để định nghĩa ProductInfo, loại bỏ trường quantity không cần thiết
+export type ProductInfo = Omit<ProductType, "quantity">;
+
+// ======================================================
+// PHẦN 2: DỮ LIỆU ĐƠN HÀNG (ĐÃ SỬA LẠI)
+// ======================================================
+export type OrderStatus = "processing" | "shipping" | "completed" | "cancelled";
+
+export type Order = {
+  id: string;
+  status: OrderStatus; // <-- Dùng type mới
+  totalItems: number;
+  items: Product[]; // <-- SỬ DỤNG TYPE PRODUCT ĐÃ ĐỊNH NGHĨA
+  subtotal: number;
+  delivery_fee: number;
+  tax_amount: number;
+  discount_amount: number;
+  voucher_code?: string;
+  final_total: number;
+  ship_address: string;
+  order_at: string; // <-- THÊM MỚI: Ngày tạo đơn (dạng ISO String)
+};
+
+export const mockHistoryOrders: Order[] = [
+  // --- Đơn hàng lịch sử (mới) ---
+  {
+    id: "DH112233",
+    status: "completed",
+    items: [mockProducts[1]],
+    totalItems: 1,
+    subtotal: 35000,
+    delivery_fee: 15000,
+    tax_amount: 0,
+    discount_amount: 0,
+    final_total: 50000,
+    ship_address: "789 Đường G, Quận 5, TP. Hồ Chí Minh",
+    order_at: "2025-11-01T08:00:00.000Z", // <-- Tuần trước
+  },
+  {
+    id: "DH445566",
+    status: "cancelled",
+    items: [mockProducts[2], mockProducts[0]],
+    totalItems: 2,
+    subtotal: 101000, // 32k + 69k
+    delivery_fee: 15000,
+    tax_amount: 0,
+    discount_amount: 0,
+    final_total: 116000,
+    ship_address: "101 Đường H, Quận 7, TP. Hồ Chí Minh",
+    order_at: "2025-11-04T11:20:00.000Z", // <-- Ngày hôm qua
+  },
+];
+// ▼▼▼ BƯỚC 2: SỬA LẠI DATA MẪU ▼▼▼
+export const mockOngoingOrders: Order[] = [
+  // --- Đơn hàng đang giao (từ data cũ) ---
+  {
+    id: "DH789123",
+    status: "processing",
+    items: [mockProducts[0], mockProducts[4], mockProducts[2]],
+    totalItems: 3,
+    subtotal: 129000,
+    delivery_fee: 15000,
+    tax_amount: 0,
+    discount_amount: 20000,
+    voucher_code: "GIAM20K",
+    final_total: 124000,
+    ship_address: "123 Đường ABC, Phường 1, Quận 1, TP. Hồ Chí Minh",
+    order_at: "2025-11-05T10:30:00.000Z", // <-- Ngày hôm nay
+  },
+  {
+    id: "DH564879",
+    status: "shipping",
+    items: [mockProducts[3], mockProducts[5]],
+    totalItems: 2,
+    subtotal: 194000,
+    delivery_fee: 15000,
+    tax_amount: 10450,
+    discount_amount: 0,
+    final_total: 219450,
+    ship_address: "456 Đường XYZ, Phường 2, Quận 3, TP. Hồ Chí Minh",
+    order_at: "2025-11-04T15:00:00.000Z", // <-- Ngày hôm qua
+  },
+];
+export const mockAllOrders: Order[] = [
+  ...mockOngoingOrders,
+  ...mockHistoryOrders,
+];
+// ▼▼▼ THÊM MỚI: Định nghĩa cho Khiếu nại ▼▼▼
+export type ReturnStatus = "pending" | "approved" | "rejected" | "canceled";
+export type ReturnMethod = "refund" | "exchange";
+
+export type ReturnRequest = {
+  return_id: string; // Mã khiếu nại (ví dụ: KN12345)
+  order_id: string; // Mã đơn hàng gốc
+  status: ReturnStatus;
+  items: Product[]; // <-- SỬ DỤNG TYPE PRODUCT ĐÃ ĐỊNH NGHĨA
+  totalItems: number;
+  reason: string;
+  method: ReturnMethod;
+  images: ImageSourcePropType[];
+  created_at: string; // Ngày tạo khiếu nại
+  resolved_at?: string; // Ngày duyệt (quan trọng để lọc)
+};
+
+// ▼▼▼ THÊM MỚI: Data mẫu cho Khiếu nại ▼▼▼
+// (Chúng ta sẽ dùng lại 'items' từ các đơn hàng đã hoàn thành)
+export const mockReturnRequests: ReturnRequest[] = [
+  {
+    return_id: "KN11223",
+    order_id: "DH112233", // Đơn hàng đã hoàn thành
+    status: "approved",
+    items: mockAllOrders.find((o) => o.id === "DH112233")?.items || [],
+    totalItems: 1,
+    reason: "Sản phẩm bị hỏng.",
+    method: "refund",
+    images: [],
+    created_at: "2025-11-02T10:00:00.000Z",
+    resolved_at: "2025-11-03T09:00:00.000Z", // Đã duyệt
+  },
+  {
+    return_id: "KN44556",
+    order_id: "DH445566", // Đơn hàng đã hủy (ví dụ)
+    status: "pending",
+    items: mockAllOrders.find((o) => o.id === "DH445566")?.items || [],
+    totalItems: 2,
+    reason: "Giao nhầm sản phẩm.",
+    method: "exchange",
+    images: [
+      require("@/assets/products/pork.png"),
+      require("@/assets/products/pork.png"),
+    ],
+    created_at: "2025-11-05T08:00:00.000Z",
+    // resolved_at: undefined (vì đang 'pending')
+  },
+];
+export type VoucherType = "percent" | "fixed_amount" | "freeship";
+
+export type Voucher = {
+  voucher_id: string;
+  code: string;
+  description: string;
+  type: VoucherType;
+  value: number;
+  max_discount_amount?: number;
+  min_order_value: number;
+  end_date: string;
+  quantity: number; // <-- THÊM MỚI
+  used_count: number; // <-- THÊM MỚI
+};
+
+// ▼▼▼ SỬA 2: Thêm data cho 'quantity' và 'used_count' ▼▼▼
+export const mockVouchers: Voucher[] = [
+  {
+    voucher_id: "v1",
+    code: "FREESHIP20K",
+    description: "Miễn phí vận chuyển tối đa 20.000 VNĐ",
+    type: "freeship",
+    value: 20000,
+    max_discount_amount: 20000,
+    min_order_value: 50000,
+    end_date: "2025-12-31T23:59:00.000Z",
+    quantity: 100,
+    used_count: 50, // (Còn)
+  },
+  {
+    voucher_id: "v2",
+    code: "GIAM10PT",
+    description: "Giảm 10% cho đơn hàng rau củ",
+    type: "percent",
+    value: 10,
+    max_discount_amount: 30000,
+    min_order_value: 100000,
+    end_date: "2025-11-30T23:59:00.000Z",
+    quantity: 200,
+    used_count: 150, // (Còn)
+  },
+  {
+    voucher_id: "v3",
+    code: "GIAM50K",
+    description: "Giảm 50.000 VNĐ cho đơn từ 250.000 VNĐ",
+    type: "fixed_amount",
+    value: 50000,
+    min_order_value: 250000,
+    end_date: "2025-12-15T23:59:00.000Z",
+    quantity: 100,
+    used_count: 100, // (Hết mã)
+  },
+  {
+    voucher_id: "v4",
+    code: "FREESHIPMAX",
+    description: "Miễn phí vận chuyển",
+    type: "freeship",
+    value: 15000,
+    max_discount_amount: 15000,
+    min_order_value: 0,
+    end_date: "2025-12-01T23:59:00.000Z",
+    quantity: 50,
+    used_count: 50, // (Hết mã)
+  },
+  {
+    voucher_id: "v5",
+    code: "HETHAN",
+    description: "Giảm 100.000 VNĐ (Đã hết hạn)",
+    type: "fixed_amount",
+    value: 100000,
+    min_order_value: 500000,
+    end_date: "2025-11-01T23:59:00.000Z", // (Hết hạn)
+    quantity: 100,
+    used_count: 10,
+  },
+];
+// ======================================================
+// PHẦN 3: DỮ LIỆU CHAT (Giữ nguyên)
+// ======================================================
+export type ChatMessage = {
+  id: string;
+  text: string;
+  sender: "user" | "support";
+  timestamp: string;
+};
+
+export const mockChatHistory: ChatMessage[] = [
+  {
+    id: "msg1",
+    text: "Xin chào! Tôi có thể giúp gì cho bạn?",
+    sender: "support",
+    timestamp: "10:30 AM",
+  },
+  {
+    id: "msg2",
+    text: "Chào bạn, tôi muốn hỏi về tình trạng đơn hàng DH789123.",
+    sender: "user",
+    timestamp: "10:31 AM",
+  },
+  {
+    id: "msg3",
+    text: "Dạ, để tôi kiểm tra. Đơn hàng của bạn đang được xử lý và sẽ sớm được giao đi ạ.",
+    sender: "support",
+    timestamp: "10:32 AM",
+  },
+];
+
+export interface Review {
+  review_id: number;
+  product_id: number;
+  customer_user_id: number;
+  comment: string;
+  rating: number;
+  create_at: string; // YYYY-MM-DD
+}
+
+export const mockReviews: Review[] = [
+  // Táo Fuji (product_id: 1)
+  {
+    review_id: 1,
+    product_id: 1,
+    customer_user_id: 1,
+    rating: 5,
+    comment:
+      "Táo rất giòn và ngọt, đúng chuẩn hữu cơ. Mua về cả nhà ai cũng khen. Sẽ mua lại lần sau!",
+    create_at: "2025-10-22",
+  },
+  {
+    review_id: 2,
+    product_id: 1,
+    customer_user_id: 2,
+    rating: 4,
+    comment:
+      "Táo tươi, mọng nước nhưng có một vài quả hơi nhỏ. Về tổng thể thì chất lượng vẫn rất tốt.",
+    create_at: "2025-10-21",
+  },
+
+  // Sữa chua Hy Lạp (product_id: 2)
+  {
+    review_id: 3,
+    product_id: 2,
+    customer_user_id: 3,
+    rating: 5,
+    comment:
+      "Sữa chua đặc, sánh mịn và không bị ngọt gắt. Mình hay ăn kèm với hoa quả và granola, rất ngon và bổ dưỡng.",
+    create_at: "2025-10-20",
+  },
+
+  // Cà rốt baby (product_id: 3)
+  {
+    review_id: 4,
+    product_id: 3,
+    customer_user_id: 4,
+    rating: 5,
+    comment:
+      "Cà rốt non nên rất ngọt, bé nhà mình rất thích ăn. Kích thước nhỏ xinh, tiện để chế biến đồ ăn dặm.",
+    create_at: "2025-10-22",
+  },
+
+  // Thịt ba rọi heo (product_id: 4)
+  {
+    review_id: 5,
+    product_id: 4,
+    customer_user_id: 5,
+    rating: 5,
+    comment:
+      "Thịt rất tươi và thơm, không có mùi hôi. Mình dùng để nướng và kho tàu đều ngon tuyệt. Tỷ lệ nạc mỡ hoàn hảo.",
+    create_at: "2025-10-23",
+  },
+  {
+    review_id: 6,
+    product_id: 4,
+    customer_user_id: 6,
+    rating: 4,
+    comment:
+      "Giao hàng nhanh, thịt được đóng gói cẩn thận. Chỉ là giá hơi cao một chút so với thị trường nhưng chất lượng thì không chê được.",
+    create_at: "2025-10-22",
+  },
+
+  // Cải bó xôi (product_id: 5)
+  {
+    review_id: 7,
+    product_id: 5,
+    customer_user_id: 7,
+    rating: 5,
+    comment:
+      "Rau tươi xanh, non mơn mởn. Nấu canh hay xào tỏi đều giữ được độ ngọt. Rất hài lòng.",
+    create_at: "2025-10-23",
+  },
+
+  // Nho đen Mỹ (product_id: 6, 7)
+  {
+    review_id: 8,
+    product_id: 6,
+    customer_user_id: 8,
+    rating: 5,
+    comment:
+      "Nho ngọt lịm, không hạt, vỏ mỏng. Đợt này mua được giá sale nên càng thích. Sẽ ủng hộ shop dài dài.",
+    create_at: "2025-10-18",
+  },
+  {
+    review_id: 9,
+    product_id: 6,
+    customer_user_id: 9,
+    rating: 5,
+    comment:
+      "Trái nho to đều, không bị dập nát. Rửa sạch để tủ lạnh ăn rất đã. Món ăn vặt yêu thích của mình.",
+    create_at: "2025-10-19",
+  },
+  {
+    review_id: 10,
+    product_id: 7,
+    customer_user_id: 10,
+    rating: 4,
+    comment:
+      "Nho ngon, chất lượng ổn. Hộp 500g hơi ít so với gia đình mình, lần sau sẽ mua nhiều hơn.",
+    create_at: "2025-10-20",
+  },
+];
+export const mockUsers = [
+  {
+    user_id: 1,
+    name: "Minh Anh",
+    avatar_url: "https://i.pravatar.cc/150?u=minhanh",
+  },
+  {
+    user_id: 2,
+    name: "Hoàng Long",
+    avatar_url: "https://i.pravatar.cc/150?u=hoanglong",
+  },
+  {
+    user_id: 3,
+    name: "Thanh Hằng",
+    avatar_url: "https://i.pravatar.cc/150?u=thanhhang",
+  },
+  {
+    user_id: 4,
+    name: "Gia đình bé Bông",
+    avatar_url: "https://i.pravatar.cc/150?u=giadinhbebong",
+  },
+  {
+    user_id: 5,
+    name: "Đức Thịnh",
+    avatar_url: "https://i.pravatar.cc/150?u=ducthinh",
+  },
+  {
+    user_id: 6,
+    name: "Phương Thảo",
+    avatar_url: "https://i.pravatar.cc/150?u=phuongthao",
+  },
+  {
+    user_id: 7,
+    name: "Anh Khoa",
+    avatar_url: "https://i.pravatar.cc/150?u=anhkhoa",
+  },
+  {
+    user_id: 8,
+    name: "Ngọc Lan",
+    avatar_url: "https://i.pravatar.cc/150?u=ngoclan",
+  },
+  {
+    user_id: 9,
+    name: "Bảo Châu",
+    avatar_url: "https://i.pravatar.cc/150?u=baochau",
+  },
+  {
+    user_id: 10,
+    name: "Tiến Dũng",
+    avatar_url: "https://i.pravatar.cc/150?u=tiendung",
+  },
+];
+export type Promotion = {
+  promotion_id: number;
+  name: string;
+  type: "percent" | "fixed_amount";
+  value: number;
+  is_active: boolean;
+};
+
+export type PromotionDetail = {
+  promotion_id: number;
+  product_id: number; // Sẽ khớp với product_id trong mockProducts
+  start_date: string; // Dùng string ISO cho đơn giản
+  end_date: string; // Dùng string ISO
+};
+
+// --- 2. Data mẫu cho Promotion ---
+
+export const mockPromotions: Promotion[] = [
+  {
+    promotion_id: 1,
+    name: "Giảm giá trái cây nhập khẩu",
+    type: "percent",
+    value: 15,
+    is_active: true,
+  },
+  {
+    promotion_id: 2,
+    name: "Flash Sale rau củ tươi",
+    type: "fixed_amount",
+    value: 5000,
+    is_active: true,
+  },
+  {
+    promotion_id: 3,
+    name: "Khuyến mãi sữa chua (Đã hết)",
+    type: "percent",
+    value: 30,
+    is_active: false,
+  },
+];
+
+// --- 3. Data mẫu cho Promotion_detail ---
+// (Liên kết Promotion với mockProducts của bạn)
+
+export const mockPromotionDetails: PromotionDetail[] = [
+  // Chi tiết cho "Giảm giá trái cây nhập khẩu" (ID: 1)
+  {
+    promotion_id: 1,
+    product_id: 1, // Táo Fuji hữu cơ 1kg
+    start_date: "2025-11-01T00:00:00Z",
+    end_date: "2025-11-10T23:59:59Z",
+  },
+  {
+    promotion_id: 1,
+    product_id: 6, // Nho đen không hạt Mỹ 500g
+    start_date: "2025-11-01T00:00:00Z",
+    end_date: "2025-11-10T23:59:59Z",
+  },
+
+  // Chi tiết cho "Flash Sale rau củ tươi" (ID: 2)
+  {
+    promotion_id: 2,
+    product_id: 3, // Cà rốt Đà Lạt baby 500g
+    start_date: "2025-10-25T00:00:00Z",
+    end_date: "2025-11-05T23:59:59Z",
+  },
+  {
+    promotion_id: 2,
+    product_id: 5, // Cải bó xôi Baby 300g
+    start_date: "2025-10-25T00:00:00Z",
+    end_date: "2025-11-05T23:59:59Z",
+  },
+
+  // Chi tiết cho "Khuyến mãi sữa chua (Đã hết)" (ID: 3)
+  {
+    promotion_id: 3,
+    product_id: 2, // Sữa chua Hy Lạp nguyên chất 180g
+    start_date: "2025-09-01T00:00:00Z",
+    end_date: "2025-09-30T23:59:59Z",
+  },
+];
+// data/mockCategories.ts
+export const mockCategories = [
+  // Quà Tặng Trái cây - parent: null
+  {
+    id: 1,
+    slug: "hop-qua-trai-cay",
+    name: "Quà Tặng Trái cây",
+    parent_id: null,
+  },
+  // Trái Cây Theo Mùa - parent: null
+  {
+    id: 2,
+    slug: "trai-cay-theo-mua",
+    name: "Trái Cây Theo Mùa",
+    parent_id: null,
+  },
+  // Children của Trái Cây Theo Mùa (id: 2)
+  {
+    id: 3,
+    slug: "trai-cay-viet",
+    name: "Trái Cây Việt",
+    parent_id: 2,
+  },
+  {
+    id: 4,
+    slug: "trai-cay-nhap-khau",
+    name: "Trái Cây Nhập Khẩu",
+    parent_id: 2,
+  },
+  {
+    id: 5,
+    slug: "trai-cay-say-dong-lanh",
+    name: "Trái Cây Sấy - Đông Lạnh",
+    parent_id: 2,
+  },
+  {
+    id: 6,
+    slug: "nuoc-ep-trai-cay-tuoi",
+    name: "Nước Ép Trái Cây Tươi",
+    parent_id: 2,
+  },
+  // Bếp O - Ready To Eat - parent: null
+  {
+    id: 7,
+    slug: "bep-org-ready-to-eat",
+    name: "Bếp O - Ready To Eat",
+    parent_id: null,
+  },
+  // Rau Củ Quả - parent: null
+  {
+    id: 8,
+    slug: "rau-cu-qua",
+    name: "Rau Củ Quả",
+    parent_id: null,
+  },
+  // Children của Rau Củ Quả (id: 8)
+  {
+    id: 9,
+    slug: "rau-la-huu-co",
+    name: "Rau lá hữu cơ",
+    parent_id: 8,
+  },
+  {
+    id: 10,
+    slug: "cu-qua-huu-co",
+    name: "Củ Quả hữu cơ",
+    parent_id: 8,
+  },
+  {
+    id: 11,
+    slug: "nam",
+    name: "Nấm",
+    parent_id: 8,
+  },
+  // Tươi Sống - parent: null
+  {
+    id: 12,
+    slug: "tuoi-song",
+    name: "Tươi Sống",
+    parent_id: null,
+  },
+  // Children của Tươi Sống (id: 12)
+  {
+    id: 13,
+    slug: "thit-heo-huu-co",
+    name: "Thịt Heo Hữu Cơ",
+    parent_id: 12,
+  },
+  {
+    id: 14,
+    slug: "thit-gia-cam-trung",
+    name: "Thịt Gia Cầm - Trứng",
+    parent_id: 12,
+  },
+  {
+    id: 15,
+    slug: "kho-mot-nang",
+    name: "Khô & Một Nắng",
+    parent_id: 12,
+  },
+  // Bếp O - Ready To Cook - parent: null
+  {
+    id: 16,
+    slug: "ready-to-cook",
+    name: "Bếp O - Ready To Cook",
+    parent_id: null,
+  },
+  // Thực Phẩm Khô - parent: null
+  {
+    id: 17,
+    slug: "thuc-pham-kho",
+    name: "Thực Phẩm Khô",
+    parent_id: null,
+  },
+  // Children của Thực Phẩm Khô (id: 17)
+  {
+    id: 18,
+    slug: "cac-loai-hat-huu-co",
+    name: "Các Loại Hạt Hữu Cơ",
+    parent_id: 17,
+  },
+  {
+    id: 19,
+    slug: "hat-ngu-coc-huu-co",
+    name: "Ngũ Cốc Hữu Cơ",
+    parent_id: 17,
+  },
+  {
+    id: 20,
+    slug: "gao-huu-co",
+    name: "Gạo Hữu Cơ",
+    parent_id: 17,
+  },
+  {
+    id: 21,
+    slug: "mi-nui-huu-co",
+    name: "Mì & Nui Hữu Cơ",
+    parent_id: 17,
+  },
+  {
+    id: 22,
+    slug: "banh-keo-socola",
+    name: "Bánh Kẹo & Socola",
+    parent_id: 17,
+  },
+  {
+    id: 23,
+    slug: "do-kho-khac",
+    name: "Đồ Khô Khác",
+    parent_id: 17,
+  },
+  {
+    id: 24,
+    slug: "nguyen-lieu-lam-banh",
+    name: "Nguyên Liệu Làm Bánh",
+    parent_id: 17,
+  },
+  {
+    id: 25,
+    slug: "snack-organic",
+    name: "Snack Organic",
+    parent_id: 17,
+  },
+  // Gia Vị & Phụ Liệu - parent: null
+  {
+    id: 26,
+    slug: "gia-vi-phu-lieu",
+    name: "Gia Vị & Phụ Liệu",
+    parent_id: null,
+  },
+  // Children của Gia Vị & Phụ Liệu (id: 26)
+  {
+    id: 27,
+    slug: "gia-vi",
+    name: "Gia Vị",
+    parent_id: 26,
+  },
+  {
+    id: 28,
+    slug: "nguyen-phu-lieu",
+    name: "Nguyên - Phụ Liệu",
+    parent_id: 26,
+  },
+  {
+    id: 29,
+    slug: "mat-ong-1",
+    name: "Mật Ong",
+    parent_id: 26,
+  },
+  // Đồ Uống Tốt Sức Khỏe - parent: null
+  {
+    id: 30,
+    slug: "do-uong-huu-co",
+    name: "Đồ Uống Tốt Sức Khỏe",
+    parent_id: null,
+  },
+  // Children của Đồ Uống Tốt Sức Khỏe (id: 30)
+  {
+    id: 31,
+    slug: "tra-huu-co",
+    name: "Trà Hữu Cơ",
+    parent_id: 30,
+  },
+  {
+    id: 32,
+    slug: "caffee-huu-co",
+    name: "Cà Phê Hữu Cơ",
+    parent_id: 30,
+  },
+  {
+    id: 33,
+    slug: "nuoc-ep-huu-co",
+    name: "Nước Ép Hữu Cơ",
+    parent_id: 30,
+  },
+  {
+    id: 34,
+    slug: "nuoc-uong-co-con",
+    name: "Đồ Uống Có Cồn",
+    parent_id: 30,
+  },
+  // Bơ - Sữa - parent: null
+  {
+    id: 35,
+    slug: "bo-sua",
+    name: "Bơ - Sữa",
+    parent_id: null,
+  },
+  // Children của Bơ - Sữa (id: 35)
+  {
+    id: 36,
+    slug: "sua-hat",
+    name: "Sữa Hạt",
+    parent_id: 35,
+  },
+  {
+    id: 37,
+    slug: "sua-tuoi",
+    name: "Sữa Tươi",
+    parent_id: 35,
+  },
+  {
+    id: 38,
+    slug: "sua-chua",
+    name: "Sữa Chua",
+    parent_id: 35,
+  },
+  {
+    id: 39,
+    slug: "bo-phomai",
+    name: "Bơ & Phomai",
+    parent_id: 35,
+  },
+  {
+    id: 40,
+    slug: "sua-dac",
+    name: "Sữa Đặc",
+    parent_id: 35,
+  },
+  // Mẹ & Bé - parent: null
+  {
+    id: 41,
+    slug: "nhom-me-va-be",
+    name: "Mẹ & Bé",
+    parent_id: null,
+  },
+  // Children của Mẹ & Bé (id: 41)
+  {
+    id: 42,
+    slug: "thuc-pham-cho-me",
+    name: "Thực Phẩm Cho Mẹ",
+    parent_id: 41,
+  },
+  {
+    id: 43,
+    slug: "thuc-pham-cho-be",
+    name: "Thực Phẩm Cho Bé",
+    parent_id: 41,
+  },
+  {
+    id: 44,
+    slug: "suc-khoe-cho-be",
+    name: "Sức Khoẻ Cho Bé",
+    parent_id: 41,
+  },
+  {
+    id: 45,
+    slug: "do-dung-cho-be",
+    name: "Đồ Dùng Cho Bé",
+    parent_id: 41,
+  },
+];
+
+export type CategoryType = {
+  id: number;
+  slug: string;
+  name: string;
+  parent_id: number | null;
+};
+
+// Helper function để lấy categories theo parent_id
+export const getCategoriesByParentId = (parentId: number | null) => {
+  return mockCategories.filter((category) => category.parent_id === parentId);
+};
+
+// Helper function để lấy tất cả categories cha (parent_id = null)
+export const getParentCategories = () => {
+  return mockCategories.filter((category) => category.parent_id === null);
+};
+
+// Helper function để lấy tất cả children của một category
+export const getChildCategories = (parentId: number) => {
+  return mockCategories.filter((category) => category.parent_id === parentId);
+};
+// Helper function để lấy category bằng ID
+export const getCategoryById = (id: number) => {
+  return mockCategories.find((category) => category.id === id);
+};
+// --- DỮ LIỆU MOCK MỚI (Dán đè lên mock cũ) ---
+
+// Interface mới khớp với bảng Customer_Address
+export interface Address {
+  address_id: number;
+  user_id: number;
+  receiver_name: string;
+  phone: string;
+  province: string;
+  district: string;
+  ward: string;
+  street: string;
+  is_default: boolean;
+  note?: string | null;
+}
+
+// Dữ liệu mẫu mới
+export const mockAddresses: Address[] = [
+  {
+    address_id: 1,
+    user_id: 1,
+    receiver_name: "Sang đẹp traii",
+    phone: "0123 456 789",
+    province: "TP. Hồ Chí Minh",
+    district: "Quận 1",
+    ward: "Phường Bến Nghé",
+    street: "123 Đường ABC",
+    is_default: true,
+    note: "Giao giờ hành chính",
+  },
+  {
+    address_id: 2,
+    user_id: 1,
+    receiver_name: "Nguyễn Văn A",
+    phone: "0987 654 321",
+    province: "TP. Hồ Chí Minh",
+    district: "Quận 1",
+    ward: "Phường Bến Nghé",
+    street: "Tòa nhà Bitexco, 2 Hải Triều",
+    is_default: false,
+    note: null,
+  },
+  {
+    address_id: 3,
+    user_id: 1,
+    receiver_name: "Ahihi",
+    phone: "0123 987 654",
+    province: "TP. Hồ Chí Minh",
+    district: "Quận Phú Nhuận",
+    ward: "Phường 10",
+    street: "456 Đường XYZ",
+    is_default: false,
+    note: "Gọi trước khi giao",
+  },
+]; // Giả sử @/ trỏ về thư mục gốc
+
+export const mockPayments: Payment[] = [
+  {
+    payment_id: 101,
+    method: "E-Wallet",
+    provider: "Ví MoMo",
+    status: "success",
+    amount: 215000,
+    created_at: "2025-11-09T10:30:00Z",
+  },
+  {
+    payment_id: 102,
+    method: "COD",
+    provider: "Thanh toán khi nhận hàng",
+    status: "success",
+    amount: 180000,
+    created_at: "2025-11-08T14:45:00Z",
+  },
+  {
+    payment_id: 103,
+    method: "Credit Card",
+    provider: "VNPay",
+    status: "success",
+    amount: 350000,
+    created_at: "2025-11-07T09:15:00Z",
+  },
+  {
+    payment_id: 104,
+    method: "E-Wallet",
+    provider: "Ví MoMo",
+    status: "pending",
+    amount: 85000,
+    created_at: "2025-11-10T16:00:00Z",
+  },
+];

@@ -1,13 +1,14 @@
 /** @type {import('tailwindcss').Config} */
+const { COLORS } = require("./theme/tokens.js");
+
 module.exports = {
-  // NOTE: Update this to include the paths to all files that contain Nativewind classes.
-  content: [
-    "./app/**/*.{js,jsx,ts,tsx}", 
-    "./components/**/*.{js,jsx,ts,tsx}"
-  ],
+  content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
+  darkMode: "media", // hoặc "class" nếu muốn tự toggle
   theme: {
-    extend: {},
+    extend: {
+      colors: COLORS,
+    },
   },
   plugins: [],
-}
+};
