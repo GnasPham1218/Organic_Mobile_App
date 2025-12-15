@@ -191,6 +191,10 @@ export const getOrderDetailFullAPI = (orderId: number) => {
   // Backend trả về data là một mảng danh sách sản phẩm trong đơn
   return api.get<IBackendRes<IOrderDetailFull[]>>(urlBackend);
 };
+
+export const cancelCodOrderAPI = (orderId: number) => {
+  return api.post(`/orders/cancel/user-cod/${orderId}`);
+};
 /**
  * Lấy danh sách sản phẩm có khuyến mãi tốt nhất (Phân trang)
  * Endpoint: /products/best-promotion
@@ -274,7 +278,7 @@ export const updateCartAPI = (productId: number, quantity: number) => {
   return api.put<IBackendRes<void>>(urlBackend, data); // Trả về void (hoặc DTO nếu Backend trả 200)
 };
 export const clearCartAPI = (userId: number) => {
-  return api.delete(`/api/v1/cart/clear/${userId}`);
+  return api.delete(`/cart/clear/${userId}`);
 };
 // =============================================================================
 //  PRODUCT DETAIL & IMAGE API
@@ -537,6 +541,11 @@ export const PaymentAPI = {
 export const placeOrderAPI = (data: IReqPlaceOrder) => {
   const urlBackend = `/orders/place-order`;
   return api.post<IBackendRes<IResPlaceOrder>>(urlBackend, data);
+};
+export const cancelOrderAPI = (orderId: number) => {
+  const urlBackend = `/orders/cancel/${orderId}`;
+  // Gọi đến endpoint mới đã thêm vào OrderController
+  return api.post<IBackendRes<any>>(urlBackend);
 };
 /**
  * Lấy chi tiết đơn hàng (Dành cho User - Success Page)

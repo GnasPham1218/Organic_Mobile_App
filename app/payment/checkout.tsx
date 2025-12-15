@@ -4,6 +4,7 @@ import { useCart } from "@/context/cart/CartContext";
 import { useToast } from "@/context/notifications/ToastContext";
 // 🆕 Import API
 import {
+  cancelOrderAPI,
   getAccountAPI,
   getVoucherByCodeAPI,
   PaymentAPI,
@@ -129,6 +130,7 @@ export default function CheckoutScreen() {
   // 🆕 State cho Modal Thanh toán
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<IPaymentResponse | null>(null);
+  const [createdOrderId, setCreatedOrderId] = useState<number | null>(null);
 
   // 🆕 State Countdown Timer (10 phút = 600 giây)
   const [timeLeft, setTimeLeft] = useState(600);
@@ -207,7 +209,20 @@ export default function CheckoutScreen() {
             clearInterval(pollingRef.current!);
             setShowPaymentModal(false);
             setPaymentInfo(null);
-            clearCart();
+
+            // 🆕 CẬP NHẬT: Lấy User ID để xóa giỏ hàng (Banking)
+            try {
+              const jsonUser = await AsyncStorage.getItem("userInfo");
+              if (jsonUser) {
+                const userObj = JSON.parse(jsonUser);
+                // Truyền ID vào hàm clearCart
+                await clearCart(userObj.id);
+                console.log("Đã xóa giỏ hàng (Banking) cho user:", userObj.id);
+              }
+            } catch (error) {
+              console.log("Lỗi lấy ID user xóa giỏ (Banking):", error);
+            }
+
             showToast("success", "Thanh toán thành công!");
             router.replace({
               pathname: "/payment/order_success",
@@ -346,6 +361,36 @@ export default function CheckoutScreen() {
       }
     }
   }, [subtotal, shippingFee]);
+  // 🆕 HÀM XỬ LÝ HỦY ĐƠN HÀNG (Dùng cho cả nút Hủy và nút X)
+  const handleCancelTransaction = async () => {
+    // Kiểm tra state createdOrderId (73) thay vì paymentInfo
+    if (!createdOrderId) {
+      console.log("❌ Lỗi: Không tìm thấy ID đơn hàng gốc");
+      setShowPaymentModal(false);
+      return;
+    }
+
+    console.log("🚀 Đang gửi yêu cầu hủy đơn ID (Gốc):", createdOrderId);
+
+    try {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (pollingRef.current) clearInterval(pollingRef.current);
+
+      // Gọi API với ID đúng (73)
+      await cancelOrderAPI(createdOrderId);
+
+      showToast("info", "Đã hủy đơn hàng và giao dịch");
+    } catch (error: any) {
+      console.log("❌ Lỗi Backend:", error.response?.data);
+      const msg = error.response?.data?.message || "Lỗi khi hủy đơn hàng";
+      showToast("error", msg);
+    } finally {
+      setShowPaymentModal(false);
+      setPaymentInfo(null);
+      setCreatedOrderId(null); // Reset ID
+      setTimeLeft(600);
+    }
+  };
 
   // --- XỬ LÝ THANH TOÁN ---
   const handlePayment = async () => {
@@ -390,10 +435,24 @@ export default function CheckoutScreen() {
 
       if (resOrder.data && resOrder.data.data) {
         const orderId = resOrder.data.data.id;
+        setCreatedOrderId(orderId);
 
         if (selectedMethod === "COD") {
           setIsLoading(false);
-          clearCart();
+
+          // 🆕 CẬP NHẬT: Lấy User ID để xóa giỏ hàng
+          try {
+            const jsonUser = await AsyncStorage.getItem("userInfo");
+            if (jsonUser) {
+              const userObj = JSON.parse(jsonUser);
+              // Truyền ID vào hàm clearCart
+              await clearCart(userObj.id);
+              console.log("Đã xóa giỏ hàng cho user:", userObj.id);
+            }
+          } catch (error) {
+            console.log("Lỗi lấy ID user để xóa giỏ:", error);
+          }
+
           showToast("success", "Đặt hàng thành công!");
           router.replace({
             pathname: "/payment/order_success",
@@ -704,7 +763,7 @@ export default function CheckoutScreen() {
         visible={showPaymentModal}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowPaymentModal(false)}
+        onRequestClose={handleCancelTransaction}
       >
         <View className="flex-1 justify-center items-center bg-black/60 p-4">
           <View className="bg-white w-full rounded-2xl p-5 shadow-lg max-h-[90%]">
@@ -718,7 +777,7 @@ export default function CheckoutScreen() {
                   Hết hạn trong: {formatTime(timeLeft)}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
+              <TouchableOpacity onPress={handleCancelTransaction}>
                 <Ionicons name="close" size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
@@ -804,20 +863,7 @@ export default function CheckoutScreen() {
                 </View>
                 {/* --- Nút Hủy Thanh Toán --- */}
                 <TouchableOpacity
-                  onPress={async () => {
-                    try {
-                      await PaymentAPI.cancelPayment(paymentInfo.orderCode);
-                      showToast("info", "Bạn đã hủy thanh toán");
-                      setShowPaymentModal(false);
-
-                      // Ngưng polling
-                      if (timerRef.current) clearInterval(timerRef.current);
-                      if (pollingRef.current) clearInterval(pollingRef.current);
-                    } catch (e) {
-                      console.log("Lỗi hủy thanh toán", e);
-                      showToast("error", "Không thể hủy thanh toán");
-                    }
-                  }}
+                  onPress={handleCancelTransaction}
                   className="mt-4 bg-red-500 py-3 rounded-xl items-center"
                 >
                   <Text className="text-white font-semibold">

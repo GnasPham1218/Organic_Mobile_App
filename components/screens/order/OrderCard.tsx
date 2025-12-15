@@ -1,5 +1,5 @@
 import { AppConfig } from "@/constants/AppConfig";
-import { formatCurrency, formatOrderCode } from "@/utils/formatters";
+import { formatOrderCode } from "@/utils/formatters";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React, { useMemo } from "react";
@@ -98,16 +98,6 @@ const OrderCard: React.FC<{ order: IOrder }> = ({ order }) => {
 
             {/* Số lượng sản phẩm */}
             <Text className="text-sm text-gray-600">{itemCount} sản phẩm</Text>
-          </View>
-        </View>
-
-        {/* Footer - Tổng tiền (nổi bật nhất) */}
-        <View className="bg-gray-50/70 px-5 py-4 border-t border-gray-100">
-          <View className="flex-row items-end justify-between">
-            <Text className="text-sm text-gray-600">Tổng đơn hàng</Text>
-            <Text className="text-2xl font-extrabold text-orange-600">
-              {formatCurrency(totalAmount)}
-            </Text>
           </View>
         </View>
       </TouchableOpacity>

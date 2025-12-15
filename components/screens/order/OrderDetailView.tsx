@@ -3,10 +3,10 @@ import StatusBadge from "@/components/screens/order/StatusBadge";
 import { AppConfig } from "@/constants/AppConfig";
 import { formatCurrency, formatOrderCode } from "@/utils/formatters";
 import { FontAwesome } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react"; // Đã thêm useMemo
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
-// --- Interface (Giữ nguyên như bạn cung cấp) ---
+// --- Interface (Giữ nguyên) ---
 export interface IResOrderDetailItem {
   productId: number;
   productName: string;
@@ -72,20 +72,43 @@ type OrderDetailViewProps = {
   onCancelOrder?: () => void;
   onConfirmReception?: () => void;
   onReportIssue?: () => void;
+  onRepurchase?: (order: IResOrderDTO) => void;
 };
 
 const OrderDetailView: React.FC<OrderDetailViewProps> = ({
   order,
   items,
-  // totalAmount, // Biến này thực tế = order.totalPrice nên có thể dùng trực tiếp order.totalPrice
   onBackPress,
   onCancelOrder,
   onConfirmReception,
   onReportIssue,
+  onRepurchase,
 }) => {
   const status = order.statusOrder
     ? order.statusOrder.toUpperCase()
     : "PENDING";
+
+  // --- LOGIC MỚI: Kiểm tra điều kiện đổi trả (7 ngày) ---
+  const isReturnable = useMemo(() => {
+    // 1. Phải là trạng thái DELIVERED
+    if (status !== "DELIVERED") return false;
+
+    // 2. Phải có ngày giao hàng thực tế
+    if (!order.actualDate) return false;
+
+    const deliveryDate = new Date(order.actualDate);
+    const currentDate = new Date();
+
+    // Tính khoảng cách thời gian (ms)
+    const differenceInTime = currentDate.getTime() - deliveryDate.getTime();
+
+    // Quy đổi ra ngày (1 ngày = 1000ms * 60s * 60m * 24h)
+    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+    // Cho phép trả nếu <= 7 ngày
+    return differenceInDays <= 7;
+  }, [status, order.actualDate]);
+  // -----------------------------------------------------
 
   return (
     <View className="flex-1 bg-BACKGROUND">
@@ -183,7 +206,7 @@ const OrderDetailView: React.FC<OrderDetailViewProps> = ({
             ))}
           </View>
 
-          {/* 3. TỔNG KẾT ĐƠN HÀNG (Đã cập nhật hiển thị Thuế & Voucher) */}
+          {/* 3. TỔNG KẾT ĐƠN HÀNG */}
           <View className="mt-4 rounded-xl border border-BORDER bg-white p-4">
             <Text className="mb-4 text-lg font-bold text-TEXT_PRIMARY">
               Tổng kết đơn hàng
@@ -218,8 +241,6 @@ const OrderDetailView: React.FC<OrderDetailViewProps> = ({
             <View className="my-2 border-t border-dashed border-gray-200" />
 
             {/* --- CÁC DÒNG TIỀN --- */}
-
-            {/* Tạm tính */}
             <View className="flex-row justify-between mt-2">
               <Text className="text-base text-TEXT_SECONDARY">Tạm tính</Text>
               <Text className="text-base text-TEXT_SECONDARY">
@@ -227,7 +248,6 @@ const OrderDetailView: React.FC<OrderDetailViewProps> = ({
               </Text>
             </View>
 
-            {/* Phí vận chuyển */}
             <View className="flex-row justify-between mt-2">
               <Text className="text-base text-TEXT_SECONDARY">
                 Phí vận chuyển
@@ -237,7 +257,6 @@ const OrderDetailView: React.FC<OrderDetailViewProps> = ({
               </Text>
             </View>
 
-            {/* Thuế (Chỉ hiện nếu > 0) */}
             {(order.taxAmount || 0) > 0 && (
               <View className="flex-row justify-between mt-2">
                 <Text className="text-base text-TEXT_SECONDARY">
@@ -249,7 +268,6 @@ const OrderDetailView: React.FC<OrderDetailViewProps> = ({
               </View>
             )}
 
-            {/* Voucher / Giảm giá (Chỉ hiện nếu > 0) */}
             {(order.discountAmount || 0) > 0 && (
               <View className="flex-row justify-between mt-2">
                 <Text className="text-base text-TEXT_SECONDARY">
@@ -261,7 +279,6 @@ const OrderDetailView: React.FC<OrderDetailViewProps> = ({
               </View>
             )}
 
-            {/* Tổng tiền cuối cùng */}
             <View className="mt-4 border-t border-dashed border-BORDER pt-4">
               <View className="flex-row justify-between">
                 <Text className="text-lg font-bold text-TEXT_PRIMARY">
@@ -277,9 +294,10 @@ const OrderDetailView: React.FC<OrderDetailViewProps> = ({
       </ScrollView>
 
       {/* 4. Footer Buttons */}
-      {status !== "CANCELLED" && (
-        <View className="border-t border-BORDER bg-white p-4 shadow-lg min-h-[80px]">
-          {(status === "PENDING" || status === "PROCESSING") && (
+      <View className="border-t border-BORDER bg-white p-4 shadow-lg min-h-[80px]">
+        {/* Nút Hủy (Chỉ hiện khi PENDING/PROCESSING & COD) */}
+        {(status === "PENDING" || status === "PROCESSING") &&
+          order.paymentMethod === "COD" && (
             <TouchableOpacity
               onPress={onCancelOrder}
               className="rounded-lg border border-red-600 py-3 bg-white"
@@ -291,31 +309,55 @@ const OrderDetailView: React.FC<OrderDetailViewProps> = ({
             </TouchableOpacity>
           )}
 
-          {status === "SHIPPING" && (
-            <TouchableOpacity
-              onPress={onConfirmReception}
-              className="rounded-lg bg-PRIMARY py-3"
-              activeOpacity={0.7}
-            >
-              <Text className="text-center text-base font-bold text-white">
-                Đã nhận được hàng
+        {/* Thông báo không hủy được */}
+        {(status === "PENDING" || status === "PROCESSING") &&
+          order.paymentMethod !== "COD" && (
+            <View className="py-2">
+              <Text className="text-center text-gray-400 italic text-sm">
+                Đơn hàng thanh toán trực tuyến không thể hủy tại đây
               </Text>
-            </TouchableOpacity>
+            </View>
           )}
 
-          {status === "DELIVERED" && (
-            <TouchableOpacity
-              onPress={onReportIssue}
-              className="rounded-lg border border-amber-500 bg-amber-50 py-3"
-              activeOpacity={0.7}
-            >
-              <Text className="text-center text-base font-bold text-amber-600">
-                Yêu cầu Trả hàng / Khiếu nại
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
+        {/* Nút Đã nhận hàng */}
+        {status === "SHIPPING" && (
+          <TouchableOpacity
+            onPress={onConfirmReception}
+            className="rounded-lg bg-PRIMARY py-3"
+            activeOpacity={0.7}
+          >
+            <Text className="text-center text-base font-bold text-white">
+              Đã nhận được hàng
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* --- Nút Khiếu nại/Trả hàng (Chỉ hiện nếu còn trong thời hạn 7 ngày) --- */}
+        {isReturnable && (
+          <TouchableOpacity
+            onPress={onReportIssue}
+            className="rounded-lg border border-amber-500 bg-amber-50 py-3 mb-3"
+            activeOpacity={0.7}
+          >
+            <Text className="text-center text-base font-bold text-amber-600">
+              Yêu cầu Trả hàng / Khiếu nại
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* [4] NÚT MUA LẠI */}
+        {(status === "DELIVERED" || status === "CANCELLED") && onRepurchase && (
+          <TouchableOpacity
+            onPress={() => onRepurchase(order)}
+            className="rounded-lg bg-PRIMARY py-3"
+            activeOpacity={0.7}
+          >
+            <Text className="text-center text-base font-bold text-white">
+              Mua lại đơn hàng
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };

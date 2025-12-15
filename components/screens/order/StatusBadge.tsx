@@ -21,7 +21,7 @@ const statusConfig: Record<string, StatusDisplayConfig> = {
     textColorClass: "text-amber-700",
     iconColor: "#b45309", // amber-700
     icon: "clock-o",
-    text: "Đang xử lý",
+    text: "Đang chờ duyệt",
   },
   PROCESSING: {
     bgColor: "bg-amber-100",

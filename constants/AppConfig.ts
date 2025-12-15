@@ -8,7 +8,7 @@ export enum AppMode {
 const MODE: AppMode = AppMode.LAN as AppMode;
 
 // LAN IP
-const LAN_IP = "192.168.1.14"; // chạy ipconfig để biết ip address
+const LAN_IP = "192.168.1.6"; // chạy ipconfig để biết ip address
 const LAN_PORT = "8080";
 
 // NGROK URL

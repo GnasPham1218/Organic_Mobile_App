@@ -14,7 +14,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import SocialButtons from "@/components/auth/SocialButtons";
 import DividerWithText from "@/components/common/DividerWithText";
 import { useCart } from "@/context/cart/CartContext";
-import { loginAPI } from "@/service/api";
+import { getAccountAPI, loginAPI } from "@/service/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
@@ -26,52 +26,62 @@ export default function LoginScreen() {
     password: string;
   }) => {
     try {
+      // BƯỚC 1: GỌI LOGIN ĐỂ LẤY TOKEN
       const res = await loginAPI(payload.emailOrPhone, payload.password);
-
-      // Dựa trên log của bạn: res.data chứa { data: { access_token: "...", userLogin: {...} } }
       const responseData = res.data;
 
       if (responseData && responseData.data) {
-        const { access_token, userLogin } = responseData.data;
+        const { access_token } = responseData.data;
 
-        // 2. Lưu token và thông tin user vào AsyncStorage
-        // Token là chuỗi nên lưu trực tiếp
+        // BƯỚC 2: LƯU TOKEN TRƯỚC (QUAN TRỌNG)
+        // Phải lưu token thì api tiếp theo mới xác thực được
         await AsyncStorage.setItem("accessToken", access_token);
 
-        // Object userLogin cần chuyển thành chuỗi JSON trước khi lưu
-        await AsyncStorage.setItem("userInfo", JSON.stringify(userLogin));
+        // ============================================================
+        // 🆕 BƯỚC 3: GỌI NGAY API LẤY PROFILE ĐỂ CÓ DỮ LIỆU ĐẦY ĐỦ NHẤT
+        // ============================================================
+        console.log("Đang đồng bộ dữ liệu user đầy đủ...");
+        try {
+          const userRes = await getAccountAPI();
 
-        console.log("Đã lưu token và thông tin user");
+          if (userRes.data && userRes.data.data && userRes.data.data.user) {
+            const fullUserInfo = userRes.data.data.user;
+
+            // Lưu dữ liệu ĐẦY ĐỦ (có sđt, avatar...) vào máy
+            await AsyncStorage.setItem(
+              "userInfo",
+              JSON.stringify(fullUserInfo)
+            );
+            console.log("✅ Đã lưu Full User Info:", fullUserInfo.id);
+          } else {
+            // Fallback: Nếu API profile lỗi thì tạm dùng dữ liệu từ Login
+            // (Dù thiếu nhưng đỡ hơn không có gì)
+            await AsyncStorage.setItem(
+              "userInfo",
+              JSON.stringify(responseData.data.userLogin)
+            );
+          }
+        } catch (profileError) {
+          console.log(
+            "⚠️ Lỗi fetch profile ngầm, dùng tạm data login:",
+            profileError
+          );
+          await AsyncStorage.setItem(
+            "userInfo",
+            JSON.stringify(responseData.data.userLogin)
+          );
+        }
+
+        // BƯỚC 4: REFRESH CART & CHUYỂN TRANG
         await refreshCart();
-        // 3. Điều hướng sang trang chính (Tab Bar)
-        // Dùng 'replace' thay vì 'push' để người dùng không thể back lại trang login
         router.replace("/(tabs)");
       } else {
         Alert.alert("Lỗi", "Cấu trúc dữ liệu trả về không hợp lệ");
       }
     } catch (err: any) {
-      // ===> THÊM LOG ĐỂ DEBUG <===
-      console.log("========== LOGIN ERROR DETAILS ==========");
-      if (err.response) {
-        // Server có phản hồi nhưng báo lỗi (400, 401, 500...)
-        console.log("Status Code:", err.response.status);
-        console.log("Server Data:", err.response.data);
-      } else if (err.request) {
-        // Không nhận được phản hồi (Sai IP, mất mạng, server chưa chạy)
-        console.log("Network Error: Không kết nối được tới Server.");
-        console.log("Kiểm tra lại IP và Wifi.");
-      } else {
-        // Lỗi code JS (ví dụ biến undefined)
-        console.log("Code Error:", err.message);
-      }
-      console.log("=========================================");
-
-      // Chỉ hiển thị Alert phù hợp
-      Alert.alert(
-        "Đăng nhập thất bại",
-        // Hiển thị lỗi từ server nếu có, ngược lại hiện thông báo chung
-        err.response?.data?.message || err.message || "Vui lòng thử lại sau."
-      );
+      // ... giữ nguyên phần xử lý lỗi cũ
+      console.log("Login Error", err);
+      Alert.alert("Đăng nhập thất bại", err.message);
     }
   };
 
